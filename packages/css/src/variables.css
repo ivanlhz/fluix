@@ -1,0 +1,21 @@
+/* ==========================================================================
+   Fluix CSS Custom Properties
+   Override these to theme all components.
+   ========================================================================== */
+
+:root {
+	/* ---- Dimensions ---- */
+	--fluix-height: 40px;
+	--fluix-width: 350px;
+
+	/* ---- Timing ---- */
+	--fluix-duration: 600ms;
+
+	/* ---- State Colors (oklch for perceptual uniformity) ---- */
+	--fluix-state-success: oklch(0.723 0.219 142.136);
+	--fluix-state-loading: oklch(0.556 0 0);
+	--fluix-state-error: oklch(0.637 0.237 25.331);
+	--fluix-state-warning: oklch(0.795 0.184 86.047);
+	--fluix-state-info: oklch(0.685 0.169 237.323);
+	--fluix-state-action: oklch(0.623 0.214 259.815);
+}

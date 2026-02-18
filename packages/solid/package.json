@@ -1,0 +1,40 @@
+{
+  "name": "@fluix/solid",
+  "version": "0.0.1",
+  "description": "Solid.js adapter for Fluix UI components.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@fluix/core": "workspace:*",
+    "@fluix/css": "workspace:*",
+    "solid-js": ">=1.8"
+  },
+  "devDependencies": {
+    "@fluix/core": "workspace:*",
+    "solid-js": "^1.9.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  }
+}

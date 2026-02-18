@@ -1,0 +1,365 @@
+/* ==========================================================================
+   Fluix Toast Component Styles
+   All selectors use [data-fluix-*] attributes — framework-agnostic.
+   ========================================================================== */
+
+/* ---- Viewport (container for all toasts at a position) ---- */
+
+[data-fluix-viewport] {
+	position: fixed;
+	z-index: 50;
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	pointer-events: none;
+	max-width: calc(100vw - 1.5rem);
+	contain: layout style;
+}
+
+/* Vertical edge */
+[data-fluix-viewport][data-position^="top"] {
+	top: 0;
+	flex-direction: column-reverse;
+}
+
+[data-fluix-viewport][data-position^="bottom"] {
+	bottom: 0;
+	flex-direction: column;
+}
+
+/* Horizontal alignment */
+[data-fluix-viewport][data-position$="left"] {
+	left: 0;
+	align-items: flex-start;
+}
+
+[data-fluix-viewport][data-position$="right"] {
+	right: 0;
+	align-items: flex-end;
+}
+
+[data-fluix-viewport][data-position$="center"] {
+	left: 50%;
+	transform: translateX(-50%);
+	align-items: center;
+}
+
+/* Stacking animation: unready toasts collapse margin to slide in */
+[data-fluix-viewport][data-position^="top"]
+	[data-fluix-toast]:not([data-ready="true"]) {
+	margin-bottom: calc(-1 * (var(--fluix-height) + 0.75rem));
+}
+
+[data-fluix-viewport][data-position^="bottom"]
+	[data-fluix-toast]:not([data-ready="true"]) {
+	margin-top: calc(-1 * (var(--fluix-height) + 0.75rem));
+}
+
+/* ---- Toast root ---- */
+
+[data-fluix-toast] {
+	position: relative;
+	cursor: pointer;
+	pointer-events: auto;
+	touch-action: none;
+	border: 0;
+	background: transparent;
+	padding: 0;
+	font-family: inherit;
+	width: var(--fluix-width);
+	height: var(--_h, var(--fluix-height));
+	opacity: 0;
+	transform: translateZ(0) scale(0.95);
+	transform-origin: center;
+	contain: layout style;
+	overflow: visible;
+}
+
+[data-fluix-toast][data-state="loading"] {
+	cursor: default;
+}
+
+/* Ready state: fully visible with transitions */
+[data-fluix-toast][data-ready="true"] {
+	opacity: 1;
+	transform: translateZ(0) scale(1);
+	transition:
+		transform calc(var(--fluix-duration) * 0.66) var(--fluix-spring-easing),
+		opacity calc(var(--fluix-duration) * 0.66) var(--fluix-spring-easing),
+		margin-bottom calc(var(--fluix-duration) * 0.66) var(--fluix-spring-easing),
+		margin-top calc(var(--fluix-duration) * 0.66) var(--fluix-spring-easing),
+		height var(--fluix-duration) var(--fluix-spring-easing);
+}
+
+/* Entry direction */
+[data-fluix-viewport][data-position^="top"]
+	[data-fluix-toast]:not([data-ready="true"]) {
+	transform: translateY(-6px) scale(0.95);
+}
+
+[data-fluix-viewport][data-position^="bottom"]
+	[data-fluix-toast]:not([data-ready="true"]) {
+	transform: translateY(6px) scale(0.95);
+}
+
+/* Exit */
+[data-fluix-toast][data-ready="true"][data-exiting="true"] {
+	opacity: 0;
+	pointer-events: none;
+}
+
+[data-fluix-viewport][data-position^="top"]
+	[data-fluix-toast][data-ready="true"][data-exiting="true"] {
+	transform: translateY(-6px) scale(0.95);
+}
+
+[data-fluix-viewport][data-position^="bottom"]
+	[data-fluix-toast][data-ready="true"][data-exiting="true"] {
+	transform: translateY(6px) scale(0.95);
+}
+
+/* ---- SVG Canvas (gooey filter container) ---- */
+
+[data-fluix-canvas] {
+	position: absolute;
+	left: 0;
+	right: 0;
+	pointer-events: none;
+	transform: translateZ(0);
+	contain: layout style;
+	overflow: visible;
+}
+
+[data-fluix-canvas][data-edge="top"] {
+	bottom: 0;
+	transform: scaleY(-1) translateZ(0);
+}
+
+[data-fluix-canvas][data-edge="bottom"] {
+	top: 0;
+}
+
+[data-fluix-svg] {
+	overflow: visible;
+}
+
+/* ---- Header (icon + title) ---- */
+
+[data-fluix-header] {
+	position: absolute;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	padding: 0.5rem;
+	height: var(--fluix-height);
+	overflow: hidden;
+	left: var(--_px, 0px);
+	transform: var(--_ht);
+	max-width: var(--_pw);
+}
+
+[data-fluix-toast][data-ready="true"] [data-fluix-header] {
+	transition:
+		transform var(--fluix-duration) var(--fluix-spring-easing),
+		left var(--fluix-duration) var(--fluix-spring-easing),
+		max-width var(--fluix-duration) var(--fluix-spring-easing);
+}
+
+[data-fluix-header][data-edge="top"] {
+	bottom: 0;
+}
+
+[data-fluix-header][data-edge="bottom"] {
+	top: 0;
+}
+
+/* Header morphing layers */
+[data-fluix-header-stack] {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	height: 100%;
+}
+
+[data-fluix-header-inner] {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	white-space: nowrap;
+	opacity: 1;
+	filter: blur(0px);
+	transform: translateZ(0);
+}
+
+[data-fluix-header-inner][data-layer="current"] {
+	position: relative;
+	z-index: 1;
+	animation: fluix-header-enter var(--fluix-duration) var(--fluix-spring-easing) both;
+}
+
+[data-fluix-header-inner][data-layer="current"]:not(:only-child),
+[data-fluix-header-inner][data-exiting="true"] {
+	will-change: opacity, filter;
+}
+
+[data-fluix-header-inner][data-layer="prev"] {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 0;
+	pointer-events: none;
+}
+
+[data-fluix-header-inner][data-exiting="true"] {
+	animation: fluix-header-exit calc(var(--fluix-duration) * 0.7) ease forwards;
+}
+
+/* ---- Badge (icon container) ---- */
+
+[data-fluix-badge] {
+	display: flex;
+	height: 24px;
+	width: 24px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	box-sizing: border-box;
+	border-radius: 9999px;
+	color: var(--fluix-tone, currentColor);
+	background-color: var(--fluix-tone-bg, transparent);
+}
+
+/* ---- Title ---- */
+
+[data-fluix-title] {
+	font-size: 0.825rem;
+	line-height: 1rem;
+	font-weight: 500;
+	text-transform: capitalize;
+	color: var(--fluix-tone, currentColor);
+}
+
+/* ---- State color resolution ---- */
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state] {
+	--_c: var(--fluix-state-success);
+}
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state="loading"] {
+	--_c: var(--fluix-state-loading);
+}
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state="error"] {
+	--_c: var(--fluix-state-error);
+}
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state="warning"] {
+	--_c: var(--fluix-state-warning);
+}
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state="info"] {
+	--_c: var(--fluix-state-info);
+}
+
+:is([data-fluix-badge], [data-fluix-title], [data-fluix-button])[data-state="action"] {
+	--_c: var(--fluix-state-action);
+}
+
+:is([data-fluix-badge], [data-fluix-title])[data-state] {
+	--fluix-tone: var(--_c);
+	--fluix-tone-bg: color-mix(in oklch, var(--_c) 20%, transparent);
+}
+
+/* ---- Content (expandable description area) ---- */
+
+[data-fluix-content] {
+	position: absolute;
+	left: 0;
+	z-index: 10;
+	width: 100%;
+	pointer-events: none;
+	opacity: var(--_co, 0);
+}
+
+[data-fluix-content]:not([data-visible="true"]) {
+	content-visibility: hidden;
+}
+
+[data-fluix-toast][data-ready="true"] [data-fluix-content] {
+	transition: opacity calc(var(--fluix-duration) * 0.08) ease
+		calc(var(--fluix-duration) * 0.04);
+}
+
+[data-fluix-content][data-edge="top"] {
+	top: 0;
+}
+
+[data-fluix-content][data-edge="bottom"] {
+	top: var(--fluix-height);
+}
+
+[data-fluix-content][data-visible="true"] {
+	pointer-events: auto;
+}
+
+[data-fluix-toast][data-ready="true"]
+	[data-fluix-content][data-visible="true"] {
+	transition: opacity calc(var(--fluix-duration) * 0.6) ease
+		calc(var(--fluix-duration) * 0.3);
+}
+
+[data-fluix-description] {
+	width: 100%;
+	text-align: left;
+	padding: 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	contain: layout style paint;
+	content-visibility: auto;
+}
+
+/* ---- Action button ---- */
+
+[data-fluix-button] {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.75rem;
+	padding: 0 0.625rem;
+	margin-top: 0.75rem;
+	border-radius: 9999px;
+	border: 0;
+	font-size: 0.75rem;
+	font-weight: 500;
+	cursor: pointer;
+	text-decoration: none;
+	color: var(--fluix-btn-color, currentColor);
+	background-color: var(--fluix-btn-bg, transparent);
+	transition: background-color 150ms ease;
+}
+
+[data-fluix-button]:hover {
+	background-color: var(--fluix-btn-bg-hover, transparent);
+}
+
+[data-fluix-button][data-state] {
+	--fluix-btn-color: var(--_c);
+	--fluix-btn-bg: color-mix(in oklch, var(--_c) 15%, transparent);
+	--fluix-btn-bg-hover: color-mix(in oklch, var(--_c) 25%, transparent);
+}
+
+/* ---- Loading spinner ---- */
+
+[data-fluix-icon="spin"] {
+	animation: fluix-spin 1s linear infinite;
+}
+
+/* ---- Performance hints ---- */
+
+@media (prefers-reduced-motion: no-preference) {
+	[data-fluix-toast][data-ready="true"]:hover,
+	[data-fluix-toast][data-ready="true"][data-exiting="true"] {
+		will-change: transform, opacity, height;
+	}
+}
