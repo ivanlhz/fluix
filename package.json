@@ -26,10 +26,10 @@
     "clean": "pnpm -r exec rm -rf dist",
     "typecheck": "pnpm -r run typecheck"
   },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
-  }
+"devDependencies": {
+		"@biomejs/biome": "^1.9.0",
+		"tsup": "^8.3.0",
+		"typescript": "^5.7.0",
+		"vitest": "^3.0.0"
+	}
 }

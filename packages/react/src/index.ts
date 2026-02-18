@@ -13,6 +13,7 @@
  */
 
 export { fluix } from "@fluix/core";
+export { Toaster } from "./toast";
 export type {
 	FluixToastOptions,
 	FluixToastPromiseOptions,
@@ -20,6 +21,4 @@ export type {
 	FluixToastState,
 	FluixToasterConfig,
 } from "@fluix/core";
-
-// TODO: Implement Toaster component
-// export { Toaster } from "./toast";
+export type { ToasterProps } from "./toast";
