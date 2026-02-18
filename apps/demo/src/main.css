@@ -16,7 +16,7 @@ body {
   --demo-bg: #07090d;
   --demo-text: #e5e7eb;
   --demo-muted: #9ca3af;
-  --demo-card-bg: #06090f;
+  --demo-card-bg: rgba(6, 9, 15, 0.6);
   --demo-card-border: rgba(255, 255, 255, 0.06);
   --demo-divider: rgba(255, 255, 255, 0.08);
   --demo-pill-bg: #1f2329;
@@ -29,7 +29,12 @@ body {
   --demo-toggle-focus: rgba(59, 130, 246, 0.45);
   min-height: 100vh;
   padding: 3.5rem 2rem;
-  background: var(--demo-bg);
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99, 102, 241, 0.35), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 75%, rgba(236, 72, 153, 0.3), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 60% 10%, rgba(56, 189, 248, 0.25), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 40% 85%, rgba(16, 185, 129, 0.2), transparent 70%),
+    var(--demo-bg);
   color: var(--demo-text);
 }
 
@@ -37,7 +42,7 @@ body {
   --demo-bg: #f4f6fb;
   --demo-text: #111827;
   --demo-muted: #4b5563;
-  --demo-card-bg: #ffffff;
+  --demo-card-bg: rgba(255, 255, 255, 0.65);
   --demo-card-border: rgba(17, 24, 39, 0.08);
   --demo-divider: rgba(17, 24, 39, 0.1);
   --demo-pill-bg: #e8ebf0;
@@ -48,12 +53,19 @@ body {
   --demo-toggle-track: #d1d5db;
   --demo-toggle-thumb: #ffffff;
   --demo-toggle-focus: rgba(17, 24, 39, 0.25);
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(99, 102, 241, 0.2), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 75% 70%, rgba(244, 114, 182, 0.15), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 55% 10%, rgba(56, 189, 248, 0.12), transparent 70%),
+    var(--demo-bg);
 }
 
 .demo-card {
   margin: 0 auto;
   max-width: 960px;
   background: var(--demo-card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--demo-card-border);
   border-radius: 20px;
   padding: 2rem;

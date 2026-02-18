@@ -277,7 +277,7 @@ function ToastItem({
 			"--_by": `${open ? HEIGHT - BODY_MERGE_OVERLAP : HEIGHT}px`,
 			"--_bh": `${open ? expandedContent : 0}px`,
 			"--_bo": `${open ? 1 : 0}`,
-		} as CSSProperties),
+			} as CSSProperties),
 		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
 	);
 

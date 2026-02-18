@@ -4,6 +4,7 @@
 
 export type FluixToastState = "success" | "loading" | "error" | "warning" | "info" | "action";
 export type FluixTheme = "light" | "dark";
+export type FluixVariant = "solid";
 
 export const FLUIX_POSITIONS = [
 	"top-left",

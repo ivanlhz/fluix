@@ -320,7 +320,7 @@
 }
 
 [data-fluix-content][data-edge="bottom"] {
-	top: var(--fluix-height);
+	top: var(--_by, var(--fluix-height));
 }
 
 [data-fluix-content][data-visible="true"] {
