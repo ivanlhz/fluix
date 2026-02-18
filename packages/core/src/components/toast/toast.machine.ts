@@ -21,8 +21,10 @@ import type {
 
 export const TOAST_DEFAULTS = {
 	duration: 6000,
-	fill: "#FFFFFF",
+	lightFill: "#FFFFFF",
+	darkFill: "#141416",
 	roundness: 16,
+	theme: "light" as const,
 	position: "top-right" as FluixPosition,
 } as const;
 
@@ -33,7 +35,7 @@ export const EXIT_DURATION_MS = TOAST_DEFAULTS.duration * 0.1;
 export const AUTO_EXPAND_DELAY_MS = TOAST_DEFAULTS.duration * 0.025;
 
 /** Auto-collapse delay (time before expanded toast collapses back) */
-export const AUTO_COLLAPSE_DELAY_MS = TOAST_DEFAULTS.duration - 2000;
+export const AUTO_COLLAPSE_DELAY_MS = TOAST_DEFAULTS.duration - 450;
 
 /* ---------------------------------- State ---------------------------------- */
 
@@ -111,6 +113,7 @@ export function createToastMachine(): ToastMachine {
 		fallbackPosition?: FluixPosition,
 	): FluixToastItem {
 		const merged = mergeDefaults(opts);
+		const theme = merged.theme ?? TOAST_DEFAULTS.theme;
 		const duration = merged.duration ?? TOAST_DEFAULTS.duration;
 		const auto = resolveAutopilot(merged, duration);
 
@@ -119,8 +122,10 @@ export function createToastMachine(): ToastMachine {
 			id,
 			instanceId: generateId(),
 			state: opts.state ?? "success",
+			theme,
 			position: merged.position ?? fallbackPosition ?? getConfig().position ?? TOAST_DEFAULTS.position,
-			fill: merged.fill ?? TOAST_DEFAULTS.fill,
+			duration,
+			fill: merged.fill ?? (theme === "dark" ? TOAST_DEFAULTS.darkFill : TOAST_DEFAULTS.lightFill),
 			roundness: merged.roundness ?? TOAST_DEFAULTS.roundness,
 			exiting: false,
 			autoExpandDelayMs: auto.expandDelayMs,
@@ -131,7 +136,7 @@ export function createToastMachine(): ToastMachine {
 	/* ----------------------------- Public API ----------------------------- */
 
 	function create(opts: FluixToastOptions & { state?: FluixToastState }): string {
-		const id = opts.id ?? "fluix-default";
+		const id = opts.id ?? generateId();
 
 		store.update((prev) => {
 			const live = prev.toasts.filter((t) => !t.exiting);

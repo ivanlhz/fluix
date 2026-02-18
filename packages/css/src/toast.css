@@ -73,6 +73,15 @@
 	transform-origin: center;
 	contain: layout style;
 	overflow: visible;
+	--fluix-text: oklch(0.26 0 0);
+	--fluix-text-muted: oklch(0.54 0 0);
+	--fluix-surface-contrast: #ffffff;
+}
+
+[data-fluix-toast][data-theme="dark"] {
+	--fluix-text: oklch(0.93 0 0);
+	--fluix-text-muted: oklch(0.74 0 0);
+	--fluix-surface-contrast: #141416;
 }
 
 [data-fluix-toast][data-state="loading"] {
@@ -124,6 +133,8 @@
 	position: absolute;
 	left: 0;
 	right: 0;
+	top: 0;
+	bottom: 0;
 	pointer-events: none;
 	transform: translateZ(0);
 	contain: layout style;
@@ -131,12 +142,22 @@
 }
 
 [data-fluix-canvas][data-edge="top"] {
-	bottom: 0;
 	transform: scaleY(-1) translateZ(0);
 }
 
-[data-fluix-canvas][data-edge="bottom"] {
-	top: 0;
+/* ---- Body rect (expanded description background) ---- */
+
+[data-fluix-body] {
+	y: var(--_by, 40px);
+	height: var(--_bh, 0px);
+	opacity: var(--_bo, 0);
+}
+
+[data-fluix-toast][data-ready="true"] [data-fluix-body] {
+	transition:
+		height var(--fluix-duration) var(--fluix-spring-easing),
+		y var(--fluix-duration) var(--fluix-spring-easing),
+		opacity calc(var(--fluix-duration) * 0.42) ease-out;
 }
 
 [data-fluix-svg] {
@@ -268,7 +289,7 @@
 
 :is([data-fluix-badge], [data-fluix-title])[data-state] {
 	--fluix-tone: var(--_c);
-	--fluix-tone-bg: color-mix(in oklch, var(--_c) 20%, transparent);
+	--fluix-tone-bg: color-mix(in oklch, var(--_c) 20%, var(--fluix-surface-contrast));
 }
 
 /* ---- Content (expandable description area) ---- */
@@ -278,17 +299,20 @@
 	left: 0;
 	z-index: 10;
 	width: 100%;
+	max-height: var(--_cm, 0px);
+	overflow: hidden;
 	pointer-events: none;
 	opacity: var(--_co, 0);
-}
-
-[data-fluix-content]:not([data-visible="true"]) {
-	content-visibility: hidden;
+	transform: translateY(var(--_cy, -8px));
+	visibility: hidden;
 }
 
 [data-fluix-toast][data-ready="true"] [data-fluix-content] {
-	transition: opacity calc(var(--fluix-duration) * 0.08) ease
-		calc(var(--fluix-duration) * 0.04);
+	transition:
+		max-height calc(var(--fluix-duration) * 0.34) cubic-bezier(0.22, 1, 0.36, 1),
+		opacity calc(var(--fluix-duration) * 0.2) ease-out,
+		transform calc(var(--fluix-duration) * 0.45)
+			cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-fluix-content][data-edge="top"] {
@@ -301,12 +325,23 @@
 
 [data-fluix-content][data-visible="true"] {
 	pointer-events: auto;
+	visibility: visible;
+}
+
+[data-fluix-content][data-visible="false"] {
+	max-height: 0 !important;
+	opacity: 0 !important;
+	transform: translateY(-14px) !important;
+	visibility: hidden !important;
 }
 
 [data-fluix-toast][data-ready="true"]
 	[data-fluix-content][data-visible="true"] {
-	transition: opacity calc(var(--fluix-duration) * 0.6) ease
-		calc(var(--fluix-duration) * 0.3);
+	transition:
+		max-height calc(var(--fluix-duration) * 0.52) cubic-bezier(0.16, 1, 0.3, 1),
+		opacity calc(var(--fluix-duration) * 0.42) ease-out,
+		transform calc(var(--fluix-duration) * 0.62)
+			cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-fluix-description] {
@@ -315,8 +350,8 @@
 	padding: 1rem;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	contain: layout style paint;
-	content-visibility: auto;
+	color: var(--fluix-text-muted);
+	contain: layout style;
 }
 
 /* ---- Action button ---- */
@@ -347,6 +382,11 @@
 	--fluix-btn-color: var(--_c);
 	--fluix-btn-bg: color-mix(in oklch, var(--_c) 15%, transparent);
 	--fluix-btn-bg-hover: color-mix(in oklch, var(--_c) 25%, transparent);
+}
+
+[data-fluix-toast][data-theme="dark"] [data-fluix-button][data-state] {
+	--fluix-btn-bg: color-mix(in oklch, var(--_c) 20%, var(--fluix-surface-contrast));
+	--fluix-btn-bg-hover: color-mix(in oklch, var(--_c) 32%, var(--fluix-surface-contrast));
 }
 
 /* ---- Loading spinner ---- */

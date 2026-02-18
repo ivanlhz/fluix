@@ -13,6 +13,7 @@ export { createDismiss, type DismissOptions } from "./primitives/dismiss";
 // Toast component
 export {
 	fluix,
+	Toaster,
 	getToastMachine,
 	resetToastMachine,
 	createToastMachine,
@@ -27,11 +28,13 @@ export {
 } from "./components/toast";
 
 export type {
+	ToasterApi,
 	ToastMachine,
 	ToastMachineState,
 	ToastAttrs,
 	ToastConnectCallbacks,
 	FluixToastState,
+	FluixTheme,
 	FluixPosition,
 	FluixToastOptions,
 	FluixToastPromiseOptions,

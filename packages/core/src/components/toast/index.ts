@@ -10,8 +10,10 @@ export {
 } from "./toast.machine";
 export { getToastAttrs, getViewportAttrs, type ToastAttrs } from "./toast.attrs";
 export { connectToast, type ToastConnectCallbacks } from "./toast.connect";
+export { Toaster, type ToasterApi } from "./toast.toaster";
 export { FLUIX_POSITIONS } from "./toast.types";
 export type {
+	FluixTheme,
 	FluixToastState,
 	FluixPosition,
 	FluixToastOptions,

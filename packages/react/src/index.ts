@@ -18,6 +18,7 @@ export type {
 	FluixToastOptions,
 	FluixToastPromiseOptions,
 	FluixPosition,
+	FluixTheme,
 	FluixToastState,
 	FluixToasterConfig,
 } from "@fluix/core";

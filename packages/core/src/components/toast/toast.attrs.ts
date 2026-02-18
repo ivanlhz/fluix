@@ -62,6 +62,7 @@ export function getToastAttrs(
 		root: {
 			"data-fluix-toast": "",
 			"data-state": item.state,
+			"data-theme": item.theme,
 			"data-ready": String(context.ready),
 			"data-expanded": String(context.expanded),
 			"data-exiting": String(item.exiting),

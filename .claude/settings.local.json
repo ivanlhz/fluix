@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:sileo.aaryan.design)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm --filter @fluix/react run build:*)",
+      "Bash(pnpm run build:core:*)",
+      "Bash(pnpm run build:css:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

@@ -23,10 +23,11 @@ describe("createToastMachine", () => {
 	it("create adds toast and returns id", () => {
 		const machine = createToastMachine();
 		const id = machine.create({ title: "Hi", state: "success" });
-		expect(id).toBe("fluix-default");
+		expect(typeof id).toBe("string");
+		expect(id.length).toBeGreaterThan(0);
 		const { toasts } = machine.store.getSnapshot();
 		expect(toasts).toHaveLength(1);
-		expect(toasts[0].id).toBe("fluix-default");
+		expect(toasts[0].id).toBe(id);
 		expect(toasts[0].title).toBe("Hi");
 		expect(toasts[0].state).toBe("success");
 		expect(toasts[0].exiting).toBe(false);
@@ -136,8 +137,18 @@ describe("createToastMachine", () => {
 		machine.create({ title: "D" });
 		const item = machine.store.getSnapshot().toasts[0];
 		expect(item.position).toBe(TOAST_DEFAULTS.position);
-		expect(item.fill).toBe(TOAST_DEFAULTS.fill);
+		expect(item.fill).toBe(TOAST_DEFAULTS.lightFill);
+		expect(item.theme).toBe(TOAST_DEFAULTS.theme);
 		expect(item.roundness).toBe(TOAST_DEFAULTS.roundness);
+		machine.destroy();
+	});
+
+	it("dark theme resolves dark fill when fill is omitted", () => {
+		const machine = createToastMachine();
+		machine.create({ title: "Dark", theme: "dark" });
+		const item = machine.store.getSnapshot().toasts[0];
+		expect(item.theme).toBe("dark");
+		expect(item.fill).toBe(TOAST_DEFAULTS.darkFill);
 		machine.destroy();
 	});
 

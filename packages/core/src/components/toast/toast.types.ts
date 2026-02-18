@@ -3,6 +3,7 @@
  */
 
 export type FluixToastState = "success" | "loading" | "error" | "warning" | "info" | "action";
+export type FluixTheme = "light" | "dark";
 
 export const FLUIX_POSITIONS = [
 	"top-left",
@@ -46,6 +47,8 @@ export interface FluixToastOptions {
 	fill?: string;
 	/** Border radius / gooey blur factor. Default: 16 */
 	roundness?: number;
+	/** Visual mode for background/text defaults. Default: "light" */
+	theme?: FluixTheme;
 	/** Auto expand/collapse behavior. `false` disables. */
 	autopilot?: boolean | { expand?: number; collapse?: number };
 	/** Action button configuration. */
@@ -66,7 +69,10 @@ export interface FluixToastItem extends FluixToastOptions {
 	/** Unique per-instance key. Changes when toast content is swapped. */
 	instanceId: string;
 	state: FluixToastState;
+	theme: FluixTheme;
 	position: FluixPosition;
+	/** Resolved auto-dismiss delay in ms. `null` = persistent. */
+	duration: number | null;
 	exiting: boolean;
 	autoExpandDelayMs?: number;
 	autoCollapseDelayMs?: number;
