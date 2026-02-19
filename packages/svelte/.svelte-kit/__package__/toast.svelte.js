@@ -1,7 +1,7 @@
 import { Toaster as CoreToaster } from "@fluix/core";
 export function createFluixToasts() {
     const machine = CoreToaster.getMachine();
-    let snapshot = $state(machine.store.getSnapshot());
+    let snapshot = $state.raw(machine.store.getSnapshot());
     $effect(() => {
         return machine.store.subscribe(() => {
             snapshot = machine.store.getSnapshot();

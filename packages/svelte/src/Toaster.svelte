@@ -25,15 +25,23 @@ $effect(() => {
 	if (config) store.machine.configure(config);
 });
 
-// Sync localState with toast list (untrack localState read to avoid infinite loop)
+// Sync localState with toast list (in-place add/delete to avoid invalidating all entries)
 $effect(() => {
-	const ids = new Set(store.toasts.map((t) => t.id));
-	const prev = untrack(() => localState);
-	const next: ToastLocalState = {};
-	for (const id of ids) {
-		next[id] = prev[id] ?? { ready: false, expanded: false };
+	const toasts = store.toasts;
+	const ids = new Set(toasts.map((t) => t.id));
+	const current = untrack(() => localState);
+	// Add entries for new toasts
+	for (const t of toasts) {
+		if (!(t.id in current)) {
+			localState[t.id] = { ready: false, expanded: false };
+		}
 	}
-	localState = next;
+	// Remove entries for gone toasts
+	for (const id in current) {
+		if (!ids.has(id)) {
+			delete localState[id];
+		}
+	}
 });
 
 // Group toasts by position
@@ -91,14 +99,16 @@ function getViewportOffsetStyle(
 }
 
 function setToastLocal(id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) {
-	localState = {
-		...localState,
-		[id]: {
-			ready: localState[id]?.ready ?? false,
-			expanded: localState[id]?.expanded ?? false,
-			...patch,
-		},
-	};
+	const entry = localState[id];
+	if (entry) {
+		if (patch.ready !== undefined) entry.ready = patch.ready;
+		if (patch.expanded !== undefined) entry.expanded = patch.expanded;
+	} else {
+		localState[id] = {
+			ready: patch.ready ?? false,
+			expanded: patch.expanded ?? false,
+		};
+	}
 }
 </script>
 

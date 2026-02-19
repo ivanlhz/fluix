@@ -14,7 +14,8 @@
       "Bash(pnpm --filter @fluix/core build:*)",
       "Bash(pnpm --filter @fluix/css build:*)",
       "Bash(pnpm --filter @fluix/react build:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter @fluix/svelte run build:*)"
     ]
   }
 }

@@ -13,7 +13,7 @@ export interface FluixToastsResult {
 
 export function createFluixToasts(): FluixToastsResult {
 	const machine = CoreToaster.getMachine();
-	let snapshot = $state(machine.store.getSnapshot());
+	let snapshot = $state.raw(machine.store.getSnapshot());
 
 	$effect(() => {
 		return machine.store.subscribe(() => {
