@@ -1,6 +1,8 @@
 <script lang="ts">
+import { Toaster as CoreToaster } from "@fluix/core";
 import type { FluixPosition, FluixToastItem, FluixToasterConfig } from "@fluix/core";
 import { untrack } from "svelte";
+import ToastItem from "./ToastItem.svelte";
 import { createFluixToasts } from "./toast.svelte.js";
 
 export interface ToasterProps {
@@ -117,7 +119,8 @@ function setToastLocal(id: string, patch: Partial<{ ready: boolean; expanded: bo
 					item={toastItem}
 					machine={store.machine}
 					localState={localState[toastItem.id] ?? { ready: false, expanded: false }}
-					onLocalStateChange={(patch) => setToastLocal(toastItem.id, patch)}
+					onLocalStateChange={(patch: Partial<{ ready: boolean; expanded: boolean }>) =>
+						setToastLocal(toastItem.id, patch)}
 				/>
 			{/key}
 		{/each}
