@@ -8,11 +8,7 @@
  * for the component to look and animate correctly.
  */
 
-import type {
-	FluixPosition,
-	FluixToastItem,
-	FluixToastLayout,
-} from "./toast.types";
+import type { FluixPosition, FluixToastItem, FluixToastLayout } from "./toast.types";
 
 export interface ToastAttrs {
 	viewport: Record<string, string>;

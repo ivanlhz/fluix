@@ -79,8 +79,8 @@ export function createDismiss(
 			}
 		};
 		document.addEventListener("scroll", handler, { capture: true, passive: true });
-		cleanups.push(
-			() => document.removeEventListener("scroll", handler, { capture: true } as EventListenerOptions),
+		cleanups.push(() =>
+			document.removeEventListener("scroll", handler, { capture: true } as EventListenerOptions),
 		);
 	}
 

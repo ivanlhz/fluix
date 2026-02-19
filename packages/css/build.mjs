@@ -13,7 +13,11 @@ for (const file of files) {
 }
 
 // Concatenate all into a single fluix.css bundle
-const order = ["variables.css", "animations.css", ...files.filter((f) => f !== "variables.css" && f !== "animations.css")];
+const order = [
+	"variables.css",
+	"animations.css",
+	...files.filter((f) => f !== "variables.css" && f !== "animations.css"),
+];
 const bundle = order
 	.filter((f) => files.includes(f))
 	.map((f) => `/* === ${f} === */\n${readFileSync(join(srcDir, f), "utf-8")}`)

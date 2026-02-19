@@ -81,7 +81,9 @@ export interface FluixToastItem extends FluixToastOptions {
 }
 
 export type FluixOffsetValue = number | string;
-export type FluixOffsetConfig = Partial<Record<"top" | "right" | "bottom" | "left", FluixOffsetValue>>;
+export type FluixOffsetConfig = Partial<
+	Record<"top" | "right" | "bottom" | "left", FluixOffsetValue>
+>;
 
 export interface FluixToasterConfig {
 	/** Default position for all toasts. Default: "top-right" */

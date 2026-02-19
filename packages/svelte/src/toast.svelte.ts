@@ -1,9 +1,5 @@
 import { Toaster as CoreToaster } from "@fluix/core";
-import type {
-	FluixToastItem,
-	FluixToasterConfig,
-	ToastMachine,
-} from "@fluix/core";
+import type { FluixToastItem, FluixToasterConfig, ToastMachine } from "@fluix/core";
 
 export interface FluixToastsResult {
 	readonly toasts: FluixToastItem[];

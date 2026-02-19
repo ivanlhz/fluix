@@ -6,28 +6,28 @@
  */
 
 import {
-	useSyncExternalStore,
-	useRef,
-	useEffect,
-	useLayoutEffect,
-	useCallback,
-	useMemo,
-	useState,
-	type CSSProperties,
-	type ReactNode,
-	type ReactElement,
-} from "react";
-import {
 	Toaster as CoreToaster,
-	animateSpring,
 	FLUIX_SPRING,
+	type FluixPosition,
+	type FluixToastItem,
+	type FluixToasterConfig,
 	TOAST_DEFAULTS,
 	type ToastMachine,
 	type ToastMachineState,
-	type FluixToastItem,
-	type FluixToasterConfig,
-	type FluixPosition,
+	animateSpring,
 } from "@fluix/core";
+import {
+	type CSSProperties,
+	type ReactElement,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 
 /* ----------------------------- Constants ----------------------------- */
 
@@ -65,20 +65,50 @@ function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
 	switch (state) {
 		case "success":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+				>
 					<polyline points="20 6 9 17 4 12" />
 				</svg>
 			);
 		case "error":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+				>
 					<line x1="18" y1="6" x2="6" y2="18" />
 					<line x1="6" y1="6" x2="18" y2="18" />
 				</svg>
 			);
 		case "warning":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+				>
 					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
 					<line x1="12" y1="9" x2="12" y2="13" />
 					<line x1="12" y1="17" x2="12.01" y2="17" />
@@ -86,7 +116,17 @@ function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
 			);
 		case "info":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+				>
 					<circle cx="12" cy="12" r="10" />
 					<line x1="12" y1="16" x2="12" y2="12" />
 					<line x1="12" y1="8" x2="12.01" y2="8" />
@@ -94,7 +134,18 @@ function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
 			);
 		case "loading":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden data-fluix-icon="spin">
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+					data-fluix-icon="spin"
+				>
 					<line x1="12" y1="2" x2="12" y2="6" />
 					<line x1="12" y1="18" x2="12" y2="22" />
 					<line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
@@ -107,7 +158,17 @@ function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
 			);
 		case "action":
 			return (
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden
+				>
 					<circle cx="12" cy="12" r="10" />
 					<polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
 				</svg>
@@ -123,7 +184,10 @@ function resolveOffsetValue(v: number | string): string {
 	return typeof v === "number" ? `${v}px` : v;
 }
 
-function getViewportOffsetStyle(offset: FluixToasterConfig["offset"], position: FluixPosition): CSSProperties {
+function getViewportOffsetStyle(
+	offset: FluixToasterConfig["offset"],
+	position: FluixPosition,
+): CSSProperties {
 	if (offset == null) return {};
 
 	// Resolve per-side values
@@ -134,7 +198,10 @@ function getViewportOffsetStyle(offset: FluixToasterConfig["offset"], position: 
 
 	if (typeof offset === "number" || typeof offset === "string") {
 		const v = resolveOffsetValue(offset as number | string);
-		top = v; right = v; bottom = v; left = v;
+		top = v;
+		right = v;
+		bottom = v;
+		left = v;
 	} else {
 		if (offset.top != null) top = resolveOffsetValue(offset.top);
 		if (offset.right != null) right = resolveOffsetValue(offset.right);
@@ -221,7 +288,12 @@ function ToastItem({
 	const [headerLayer, setHeaderLayer] = useState<HeaderLayerState>(() => ({
 		current: {
 			key: headerKey,
-			view: { state: item.state, title: item.title ?? item.state, icon: item.icon, styles: item.styles },
+			view: {
+				state: item.state,
+				title: item.title ?? item.state,
+				icon: item.icon,
+				styles: item.styles,
+			},
 		},
 		prev: null,
 	}));
@@ -240,16 +312,15 @@ function ToastItem({
 
 	const resolvedPillWidth = Math.max(pillWidth || HEIGHT, HEIGHT);
 	const pillHeight = HEIGHT + blur * 3;
-	const pillX = position === "right"
-		? WIDTH - resolvedPillWidth
-		: position === "center"
-			? (WIDTH - resolvedPillWidth) / 2
-			: 0;
+	const pillX =
+		position === "right"
+			? WIDTH - resolvedPillWidth
+			: position === "center"
+				? (WIDTH - resolvedPillWidth) / 2
+				: 0;
 
 	const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
-	const rawExpanded = hasDesc
-		? Math.max(minExpanded, HEIGHT + contentHeight)
-		: minExpanded;
+	const rawExpanded = hasDesc ? Math.max(minExpanded, HEIGHT + contentHeight) : minExpanded;
 	const frozenExpandedRef = useRef(rawExpanded);
 	if (open) {
 		frozenExpandedRef.current = rawExpanded;
@@ -277,7 +348,7 @@ function ToastItem({
 			"--_by": `${open ? HEIGHT - BODY_MERGE_OVERLAP : HEIGHT}px`,
 			"--_bh": `${open ? expandedContent : 0}px`,
 			"--_bo": `${open ? 1 : 0}`,
-			}),
+		}),
 		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
 	);
 
@@ -294,7 +365,12 @@ function ToastItem({
 		setHeaderLayer((state) => {
 			if (state.current.key === headerKey) {
 				// Same key, just update view in place
-				const newView = { state: item.state, title: item.title ?? item.state, icon: item.icon, styles: item.styles };
+				const newView = {
+					state: item.state,
+					title: item.title ?? item.state,
+					icon: item.icon,
+					styles: item.styles,
+				};
 				if (state.current.view === newView) return state;
 				return { ...state, current: { key: headerKey, view: newView } };
 			}
@@ -303,7 +379,12 @@ function ToastItem({
 				prev: state.current,
 				current: {
 					key: headerKey,
-					view: { state: item.state, title: item.title ?? item.state, icon: item.icon, styles: item.styles },
+					view: {
+						state: item.state,
+						title: item.title ?? item.state,
+						icon: item.icon,
+						styles: item.styles,
+					},
 				},
 			};
 		});
@@ -320,7 +401,7 @@ function ToastItem({
 		return () => {
 			if (headerExitRef.current) clearTimeout(headerExitRef.current);
 		};
-	}, [headerLayer.prev?.key]);
+	}, [headerLayer.prev]);
 
 	// ----------------------------- Measure pill width (ResizeObserver) -----------------------------
 	useLayoutEffect(() => {
@@ -330,7 +411,7 @@ function ToastItem({
 
 		if (headerPadRef.current === null) {
 			const cs = getComputedStyle(header);
-			headerPadRef.current = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+			headerPadRef.current = Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.paddingRight);
 		}
 		const px = headerPadRef.current;
 
@@ -364,7 +445,7 @@ function ToastItem({
 			pillRoRef.current.observe(el);
 			pillObservedRef.current = el;
 		}
-	}, [headerLayer.current.key]);
+	}, []);
 
 	// ----------------------------- Measure content height (ResizeObserver) -----------------------------
 	useLayoutEffect(() => {
@@ -399,7 +480,7 @@ function ToastItem({
 			onLocalStateChangeRef.current({ ready: true });
 		}, 32);
 		return () => clearTimeout(timer);
-	}, [item.id]);
+	}, []);
 
 	// Reset transient hover/dismiss flags for each new toast instance payload.
 	useEffect(() => {
@@ -410,7 +491,7 @@ function ToastItem({
 			clearTimeout(forcedDismissTimerRef.current);
 			forcedDismissTimerRef.current = null;
 		}
-	}, [item.instanceId]);
+	}, []);
 
 	// ----------------------------- WAAPI: animate pill rect -----------------------------
 	useEffect(() => {
@@ -436,16 +517,22 @@ function ToastItem({
 			return;
 		}
 
-		const anim = animateSpring(el, {
-			x: { from: prev.x, to: next.x, unit: "px" },
-			width: { from: prev.width, to: next.width, unit: "px" },
-			height: { from: prev.height, to: next.height, unit: "px" },
-		}, FLUIX_SPRING);
+		const anim = animateSpring(
+			el,
+			{
+				x: { from: prev.x, to: next.x, unit: "px" },
+				width: { from: prev.width, to: next.width, unit: "px" },
+				height: { from: prev.height, to: next.height, unit: "px" },
+			},
+			FLUIX_SPRING,
+		);
 
 		pillAnimRef.current = anim;
 		prevPillRef.current = next;
 
-		return () => { anim?.cancel(); };
+		return () => {
+			anim?.cancel();
+		};
 	}, [ready, pillX, resolvedPillWidth, open, pillHeight]);
 
 	// ----------------------------- Auto-dismiss timer -----------------------------
@@ -476,7 +563,7 @@ function ToastItem({
 				forcedDismissTimerRef.current = null;
 			}
 		};
-	}, [item.id, item.instanceId, item.duration, machine]);
+	}, [item.id, item.duration, machine]);
 
 	// ----------------------------- Autopilot: auto-expand then auto-collapse -----------------------------
 	useEffect(() => {
@@ -500,7 +587,7 @@ function ToastItem({
 		}
 
 		return () => timers.forEach(clearTimeout);
-	}, [item.id, item.instanceId, item.autoExpandDelayMs, item.autoCollapseDelayMs, ready]);
+	}, [item.autoExpandDelayMs, item.autoCollapseDelayMs, ready]);
 
 	// ----------------------------- Wire DOM events via connectToast -----------------------------
 	useEffect(() => {
@@ -555,11 +642,7 @@ function ToastItem({
 	}, []);
 
 	return (
-		<button
-			ref={rootRef}
-			type="button"
-			{...attrs.root}
-		>
+		<button ref={rootRef} type="button" {...attrs.root}>
 			<div {...attrs.canvas}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -570,7 +653,14 @@ function ToastItem({
 					aria-hidden
 				>
 					<defs>
-						<filter id={filterId} x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+						<filter
+							id={filterId}
+							x="-20%"
+							y="-20%"
+							width="140%"
+							height="140%"
+							colorInterpolationFilters="sRGB"
+						>
 							<feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
 							<feColorMatrix
 								in="blur"
@@ -616,10 +706,18 @@ function ToastItem({
 						data-fluix-header-inner
 						data-layer="current"
 					>
-						<div {...attrs.badge} data-state={headerLayer.current.view.state} className={headerLayer.current.view.styles?.badge}>
+						<div
+							{...attrs.badge}
+							data-state={headerLayer.current.view.state}
+							className={headerLayer.current.view.styles?.badge}
+						>
 							{renderIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
 						</div>
-						<span {...attrs.title} data-state={headerLayer.current.view.state} className={headerLayer.current.view.styles?.title}>
+						<span
+							{...attrs.title}
+							data-state={headerLayer.current.view.state}
+							className={headerLayer.current.view.styles?.title}
+						>
 							{headerLayer.current.view.title}
 						</span>
 					</div>
@@ -630,10 +728,18 @@ function ToastItem({
 							data-layer="prev"
 							data-exiting="true"
 						>
-							<div data-fluix-badge data-state={headerLayer.prev.view.state} className={headerLayer.prev.view.styles?.badge}>
+							<div
+								data-fluix-badge
+								data-state={headerLayer.prev.view.state}
+								className={headerLayer.prev.view.styles?.badge}
+							>
 								{renderIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
 							</div>
-							<span data-fluix-title data-state={headerLayer.prev.view.state} className={headerLayer.prev.view.styles?.title}>
+							<span
+								data-fluix-title
+								data-state={headerLayer.prev.view.state}
+								className={headerLayer.prev.view.styles?.title}
+							>
 								{headerLayer.prev.view.title}
 							</span>
 						</div>
@@ -644,7 +750,9 @@ function ToastItem({
 			{hasDesc && (
 				<div {...attrs.content}>
 					<div ref={contentRef} {...attrs.description} className={item.styles?.description}>
-						{typeof item.description === "string" ? item.description : (item.description as ReactNode)}
+						{typeof item.description === "string"
+							? item.description
+							: (item.description as ReactNode)}
 						{item.button && (
 							<button
 								{...attrs.button}
@@ -685,10 +793,7 @@ function ViewportGroup({
 	children: ReactNode;
 }) {
 	const sectionRef = useRef<HTMLElement>(null);
-	const offsetStyle = useMemo(
-		() => getViewportOffsetStyle(offset, position),
-		[offset, position],
-	);
+	const offsetStyle = useMemo(() => getViewportOffsetStyle(offset, position), [offset, position]);
 
 	useLayoutEffect(() => {
 		const el = sectionRef.current;
@@ -704,10 +809,7 @@ function ViewportGroup({
 	}, [offsetStyle]);
 
 	return (
-		<section
-			ref={sectionRef}
-			{...CoreToaster.getViewportAttrs(position, layout)}
-		>
+		<section ref={sectionRef} {...CoreToaster.getViewportAttrs(position, layout)}>
 			{children}
 		</section>
 	);
@@ -729,14 +831,17 @@ export function Toaster({ config }: ToasterProps = {}) {
 	// Per-toast local state: ready, expanded
 	const [localState, setLocalState] = useState<ToastLocalState>(() => ({}));
 
-	const setToastLocal = useCallback((id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) => {
-		setLocalState((prev) => {
-			const next = { ...prev };
-			if (!next[id]) next[id] = { ready: false, expanded: false };
-			next[id] = { ...next[id]!, ...patch };
-			return next;
-		});
-	}, []);
+	const setToastLocal = useCallback(
+		(id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) => {
+			setLocalState((prev) => {
+				const next = { ...prev };
+				if (!next[id]) next[id] = { ready: false, expanded: false };
+				next[id] = { ...next[id]!, ...patch };
+				return next;
+			});
+		},
+		[],
+	);
 
 	// Initialize local state for new toasts; prune removed
 	useEffect(() => {

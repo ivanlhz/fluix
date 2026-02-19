@@ -80,6 +80,25 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1
 
+  apps/demo-vanilla:
+    dependencies:
+      '@fluix/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@fluix/css':
+        specifier: workspace:*
+        version: link:../../packages/css
+      '@fluix/vanilla':
+        specifier: workspace:*
+        version: link:../../packages/vanilla
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1
+
   apps/demo-vue:
     dependencies:
       '@fluix/core':

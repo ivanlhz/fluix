@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { type FluixPosition, fluix } from "@fluix/vue";
 import { computed, h, ref } from "vue";
-import { Toaster, fluix, type FluixPosition } from "@fluix/vue";
 
 const POSITIONS: FluixPosition[] = [
 	"top-left",
@@ -18,9 +18,7 @@ const theme = ref<"light" | "dark">("dark");
 const position = ref<FluixPosition>("top-right");
 const layout = ref<LayoutMode>("stack");
 
-const toastTheme = computed<"light" | "dark">(() =>
-	theme.value === "light" ? "dark" : "light",
-);
+const toastTheme = computed<"light" | "dark">(() => (theme.value === "light" ? "dark" : "light"));
 
 const toasterConfig = computed(() => ({
 	position: position.value,
@@ -55,14 +53,11 @@ const createBookingPromise = () =>
 const showSuccess = () =>
 	fluix.success({ title: "Saved!", description: "Your changes have been saved." });
 
-const showError = () =>
-	fluix.error({ title: "Error", description: "Something went wrong." });
+const showError = () => fluix.error({ title: "Error", description: "Something went wrong." });
 
-const showWarning = () =>
-	fluix.warning({ title: "Warning", description: "Please check this." });
+const showWarning = () => fluix.warning({ title: "Warning", description: "Please check this." });
 
-const showInfo = () =>
-	fluix.info({ title: "Info", description: "Just so you know." });
+const showInfo = () => fluix.info({ title: "Info", description: "Just so you know." });
 
 const showAction = () =>
 	fluix.action({

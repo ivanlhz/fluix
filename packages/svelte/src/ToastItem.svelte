@@ -1,12 +1,10 @@
 <script lang="ts">
 import {
 	Toaster as CoreToaster,
-	TOAST_DEFAULTS,
 	type FluixToastItem,
-	type FluixToastState,
+	TOAST_DEFAULTS,
 	type ToastMachine,
 } from "@fluix/core";
-import type { Snippet } from "svelte";
 
 const WIDTH = 350;
 const HEIGHT = 40;
@@ -23,13 +21,13 @@ interface Props {
 	onLocalStateChange: (patch: Partial<{ ready: boolean; expanded: boolean }>) => void;
 }
 
-let { item, machine, localState, onLocalStateChange }: Props = $props();
+const { item, machine, localState, onLocalStateChange }: Props = $props();
 
 // --- Element refs ---
-let rootEl: HTMLButtonElement | undefined = $state();
-let headerEl: HTMLElement | undefined = $state();
-let headerInnerEl: HTMLElement | undefined = $state();
-let contentEl: HTMLElement | undefined = $state();
+const rootEl: HTMLButtonElement | undefined = $state();
+const headerEl: HTMLElement | undefined = $state();
+const headerInnerEl: HTMLElement | undefined = $state();
+const contentEl: HTMLElement | undefined = $state();
 
 // --- Reactive measurements ---
 let pillWidth = $state(HEIGHT);
@@ -141,7 +139,7 @@ $effect(() => {
 	const measure = () => {
 		const cs = getComputedStyle(headerElement);
 		const horizontalPadding =
-			parseFloat(cs.paddingLeft || "0") + parseFloat(cs.paddingRight || "0");
+			Number.parseFloat(cs.paddingLeft || "0") + Number.parseFloat(cs.paddingRight || "0");
 		const intrinsicWidth = headerInner.getBoundingClientRect().width;
 		pillWidth = intrinsicWidth + horizontalPadding + PILL_CONTENT_PADDING;
 	};

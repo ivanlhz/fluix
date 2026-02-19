@@ -8,11 +8,11 @@
  * and render based on snapshots.
  */
 
-import { createStore, type Store } from "../../primitives/store";
+import { type Store, createStore } from "../../primitives/store";
 import type {
-	FluixToastLayout,
 	FluixPosition,
 	FluixToastItem,
+	FluixToastLayout,
 	FluixToastOptions,
 	FluixToastState,
 	FluixToasterConfig,
@@ -125,7 +125,8 @@ export function createToastMachine(): ToastMachine {
 			instanceId: generateId(),
 			state: opts.state ?? "success",
 			theme,
-			position: merged.position ?? fallbackPosition ?? getConfig().position ?? TOAST_DEFAULTS.position,
+			position:
+				merged.position ?? fallbackPosition ?? getConfig().position ?? TOAST_DEFAULTS.position,
 			duration,
 			fill: merged.fill ?? (theme === "dark" ? TOAST_DEFAULTS.darkFill : TOAST_DEFAULTS.lightFill),
 			roundness: merged.roundness ?? TOAST_DEFAULTS.roundness,

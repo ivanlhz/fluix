@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Toaster, fluix, type FluixPosition } from "@fluix/svelte";
+import { type FluixPosition, fluix } from "@fluix/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [
@@ -15,8 +15,8 @@ const LAYOUTS = ["stack", "notch"] as const;
 type LayoutMode = (typeof LAYOUTS)[number];
 
 let theme = $state<"light" | "dark">("dark");
-let position = $state<FluixPosition>("top-right");
-let layout = $state<LayoutMode>("stack");
+const position = $state<FluixPosition>("top-right");
+const layout = $state<LayoutMode>("stack");
 
 const toastTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "light");
 const toasterConfig = $derived({
@@ -83,8 +83,7 @@ const showPromise = () =>
 		},
 		error: () => ({
 			title: "Booking failed",
-			description:
-				"We could not complete your reservation. Try again in a few minutes.",
+			description: "We could not complete your reservation. Try again in a few minutes.",
 		}),
 	});
 </script>

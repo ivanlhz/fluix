@@ -18,5 +18,4 @@ export type {
 	FluixToasterConfig,
 } from "@fluix/core";
 
-// TODO: Implement createToaster() function
-// export { createToaster } from "./toast";
+export { createToaster } from "./toast";

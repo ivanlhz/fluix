@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	EXIT_DURATION_MS,
-	TOAST_DEFAULTS,
-	createToastMachine,
-} from "./toast.machine";
+import { EXIT_DURATION_MS, TOAST_DEFAULTS, createToastMachine } from "./toast.machine";
 
 describe("createToastMachine", () => {
 	beforeEach(() => {

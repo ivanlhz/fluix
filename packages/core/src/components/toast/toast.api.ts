@@ -9,7 +9,7 @@
  *   fluix.success({ title: "Saved!" });
  */
 
-import { createToastMachine, type ToastMachine } from "./toast.machine";
+import { type ToastMachine, createToastMachine } from "./toast.machine";
 import type {
 	FluixPosition,
 	FluixToastOptions,
@@ -90,8 +90,7 @@ export const fluix = {
 				const actionOpts = typeof opts.action === "function" ? opts.action(data) : opts.action;
 				m.update(id, { ...actionOpts, state: "action", id });
 			} else {
-				const successOpts =
-					typeof opts.success === "function" ? opts.success(data) : opts.success;
+				const successOpts = typeof opts.success === "function" ? opts.success(data) : opts.success;
 				m.update(id, { ...successOpts, state: "success", id });
 			}
 		}).catch((err) => {

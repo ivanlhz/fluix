@@ -1,0 +1,181 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: Inter, system-ui, -apple-system, sans-serif;
+	min-height: 100vh;
+}
+
+#app {
+	min-height: 100vh;
+}
+
+.demo-shell {
+	--demo-bg: #07090d;
+	--demo-text: #e5e7eb;
+	--demo-muted: #9ca3af;
+	--demo-card-bg: #06090f;
+	--demo-card-border: rgba(255, 255, 255, 0.06);
+	--demo-divider: rgba(255, 255, 255, 0.08);
+	--demo-pill-bg: #1f2329;
+	--demo-pill-color: #9ca3af;
+	--demo-pill-hover: #d1d5db;
+	--demo-pill-active-bg: #f3f4f6;
+	--demo-pill-active-color: #111827;
+	min-height: 100vh;
+	padding: 3.5rem 2rem;
+	background: var(--demo-bg);
+	color: var(--demo-text);
+}
+
+.demo-shell.theme-light {
+	--demo-bg: #f4f6fb;
+	--demo-text: #111827;
+	--demo-muted: #4b5563;
+	--demo-card-bg: #ffffff;
+	--demo-card-border: rgba(17, 24, 39, 0.08);
+	--demo-divider: rgba(17, 24, 39, 0.1);
+	--demo-pill-bg: #e8ebf0;
+	--demo-pill-color: #374151;
+	--demo-pill-hover: #111827;
+	--demo-pill-active-bg: #111827;
+	--demo-pill-active-color: #f9fafb;
+}
+
+.demo-card {
+	margin: 0 auto;
+	max-width: 960px;
+	background: var(--demo-card-bg);
+	border: 1px solid var(--demo-card-border);
+	border-radius: 20px;
+	padding: 2rem;
+}
+
+.demo-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.demo-title {
+	margin: 0;
+	font-size: 1.4rem;
+	font-weight: 600;
+}
+
+.demo-subtitle {
+	margin: 0.5rem 0 1.5rem;
+	color: var(--demo-muted);
+}
+
+.demo-divider {
+	border: 0;
+	border-top: 1px dashed var(--demo-divider);
+	margin: 1.5rem 0;
+}
+
+.demo-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.demo-row + .demo-row {
+	margin-top: 1rem;
+}
+
+.demo-pill {
+	border: 0;
+	border-radius: 14px;
+	padding: 0.7rem 1.2rem;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--demo-pill-color);
+	background: var(--demo-pill-bg);
+	cursor: pointer;
+	transition: all 140ms ease;
+}
+
+.demo-pill:hover {
+	transform: translateY(-1px);
+	color: var(--demo-pill-hover);
+}
+
+.demo-pill.is-active {
+	background: var(--demo-pill-active-bg);
+	color: var(--demo-pill-active-color);
+}
+
+.flight-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+}
+
+.flight-card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.flight-card-airline {
+	font-size: 0.84rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	font-weight: 700;
+	color: var(--fluix-text);
+}
+
+.flight-card-pnr {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--fluix-text-muted);
+}
+
+.flight-card-route {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.65rem;
+	padding-top: 0.1rem;
+}
+
+.flight-card-code {
+	font-size: 1.9rem;
+	line-height: 1;
+	font-weight: 600;
+	color: var(--fluix-text);
+	letter-spacing: 0.02em;
+}
+
+.flight-card-arrow {
+	height: 28px;
+	width: 28px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in oklch, var(--fluix-state-success) 24%, transparent);
+	color: var(--fluix-state-success);
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.flight-card-meta {
+	font-size: 0.8rem;
+	color: var(--fluix-text-muted);
+}
+
+.flight-card-button {
+	width: 100%;
+}
+
+@media (max-width: 760px) {
+	.demo-header {
+		flex-direction: column;
+	}
+}

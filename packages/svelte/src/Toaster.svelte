@@ -1,24 +1,18 @@
 <script lang="ts">
-import {
-	Toaster as CoreToaster,
-	type FluixPosition,
-	type FluixToastItem,
-	type FluixToasterConfig,
-} from "@fluix/core";
+import type { FluixPosition, FluixToastItem, FluixToasterConfig } from "@fluix/core";
 import { untrack } from "svelte";
 import { createFluixToasts } from "./toast.svelte.js";
-import ToastItem from "./ToastItem.svelte";
 
 export interface ToasterProps {
 	config?: FluixToasterConfig;
 }
 
-let { config }: ToasterProps = $props();
+const { config }: ToasterProps = $props();
 
 const store = createFluixToasts();
 
 type ToastLocalState = Record<string, { ready: boolean; expanded: boolean }>;
-let localState: ToastLocalState = $state({});
+const localState: ToastLocalState = $state({});
 
 // Apply config when provided
 $effect(() => {

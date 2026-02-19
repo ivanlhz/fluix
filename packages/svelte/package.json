@@ -1,38 +1,38 @@
 {
-  "name": "@fluix/svelte",
-  "version": "0.0.1",
-  "description": "Svelte 5 adapter for Fluix UI components.",
-  "license": "MIT",
-  "type": "module",
-  "svelte": "./dist/index.js",
-  "exports": {
-    ".": {
-      "svelte": "./dist/index.js",
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    }
-  },
-  "types": "./dist/index.d.ts",
-  "files": ["dist"],
-  "sideEffects": false,
-  "scripts": {
-    "build": "svelte-package -i src",
-    "dev": "svelte-package -w -i src",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
-  },
-  "peerDependencies": {
-    "@fluix/core": "workspace:*",
-    "@fluix/css": "workspace:*",
-    "svelte": ">=5"
-  },
-  "devDependencies": {
-    "@fluix/core": "workspace:*",
-    "@sveltejs/package": "^2.0.0",
-    "@sveltejs/vite-plugin-svelte": "^5.0.0",
-    "svelte": "^5.0.0",
-    "svelte-check": "^4.0.0",
-    "typescript": "^5.7.0"
-  }
+	"name": "@fluix/svelte",
+	"version": "0.0.1",
+	"description": "Svelte 5 adapter for Fluix UI components.",
+	"license": "MIT",
+	"type": "module",
+	"svelte": "./dist/index.js",
+	"exports": {
+		".": {
+			"svelte": "./dist/index.js",
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			}
+		}
+	},
+	"types": "./dist/index.d.ts",
+	"files": ["dist"],
+	"sideEffects": false,
+	"scripts": {
+		"build": "svelte-package -i src",
+		"dev": "svelte-package -w -i src",
+		"typecheck": "svelte-check --tsconfig ./tsconfig.json"
+	},
+	"peerDependencies": {
+		"@fluix/core": "workspace:*",
+		"@fluix/css": "workspace:*",
+		"svelte": ">=5"
+	},
+	"devDependencies": {
+		"@fluix/core": "workspace:*",
+		"@sveltejs/package": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"typescript": "^5.7.0"
+	}
 }

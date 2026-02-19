@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	FLUIX_SPRING,
-	getDefaultSpringCSS,
-	springKeyframes,
-	springToCSS,
-} from "./spring";
+import { FLUIX_SPRING, getDefaultSpringCSS, springKeyframes, springToCSS } from "./spring";
 
 describe("springToCSS", () => {
 	it("returns easing string and durationMs", () => {

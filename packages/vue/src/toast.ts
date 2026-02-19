@@ -1,5 +1,16 @@
 import {
+	Toaster as CoreToaster,
+	type FluixPosition,
+	type FluixToastItem,
+	type FluixToasterConfig,
+	TOAST_DEFAULTS,
+	type ToastMachine,
+} from "@fluix/core";
+import {
+	type CSSProperties,
 	Fragment,
+	type PropType,
+	type VNode,
 	computed,
 	defineComponent,
 	h,
@@ -11,18 +22,7 @@ import {
 	shallowRef,
 	watch,
 	watchEffect,
-	type CSSProperties,
-	type PropType,
-	type VNode,
 } from "vue";
-import {
-	Toaster as CoreToaster,
-	TOAST_DEFAULTS,
-	type FluixPosition,
-	type FluixToastItem,
-	type FluixToasterConfig,
-	type ToastMachine,
-} from "@fluix/core";
 
 const WIDTH = 350;
 const HEIGHT = 40;
@@ -264,17 +264,13 @@ const ToastItem = defineComponent({
 		);
 		const edge = computed(() => (props.item.position.startsWith("top") ? "bottom" : "top"));
 		const pillAlign = computed(() => getPillAlign(props.item.position));
-		const filterId = computed(
-			() => `fluix-gooey-${props.item.id.replace(/[^a-z0-9-]/gi, "-")}`,
-		);
+		const filterId = computed(() => `fluix-gooey-${props.item.id.replace(/[^a-z0-9-]/gi, "-")}`);
 		const roundness = computed(() => props.item.roundness ?? TOAST_DEFAULTS.roundness);
 		const blur = computed(() => Math.min(10, Math.max(6, roundness.value * 0.45)));
 		const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
 		const frozenExpanded = ref(minExpanded);
 		const rawExpanded = computed(() =>
-			hasDescription.value
-				? Math.max(minExpanded, HEIGHT + contentHeight.value)
-				: minExpanded,
+			hasDescription.value ? Math.max(minExpanded, HEIGHT + contentHeight.value) : minExpanded,
 		);
 
 		watch(
@@ -335,10 +331,13 @@ const ToastItem = defineComponent({
 			emit("localStateChange", { expanded: false });
 			// Stage 2: trigger exiting state after a short delay.
 			clearDismissTimer();
-			dismissTimer.value = setTimeout(() => {
-				props.machine.dismiss(props.item.id);
-				dismissTimer.value = null;
-			}, hasDescription.value ? DISMISS_STAGE_DELAY_MS : 0);
+			dismissTimer.value = setTimeout(
+				() => {
+					props.machine.dismiss(props.item.id);
+					dismissTimer.value = null;
+				},
+				hasDescription.value ? DISMISS_STAGE_DELAY_MS : 0,
+			);
 		};
 
 		watchEffect((onCleanup) => {
@@ -350,7 +349,7 @@ const ToastItem = defineComponent({
 			const measure = () => {
 				const cs = getComputedStyle(headerElement);
 				const horizontalPadding =
-					parseFloat(cs.paddingLeft || "0") + parseFloat(cs.paddingRight || "0");
+					Number.parseFloat(cs.paddingLeft || "0") + Number.parseFloat(cs.paddingRight || "0");
 				const intrinsicWidth = headerInner.getBoundingClientRect().width;
 				pillWidth.value = intrinsicWidth + horizontalPadding + PILL_CONTENT_PADDING;
 			};
@@ -401,12 +400,13 @@ const ToastItem = defineComponent({
 		);
 
 		watch(
-			() => [
-				props.item.instanceId,
-				props.item.description,
-				props.item.button?.title,
-				props.localState.expanded,
-			] as const,
+			() =>
+				[
+					props.item.instanceId,
+					props.item.description,
+					props.item.button?.title,
+					props.localState.expanded,
+				] as const,
 			() => {
 				void nextTick(() => {
 					requestAnimationFrame(() => {
@@ -588,8 +588,7 @@ const ToastItem = defineComponent({
 										h("feColorMatrix", {
 											in: "blur",
 											type: "matrix",
-											values:
-												"1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10",
+											values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10",
 											result: "goo",
 										}),
 										h("feComposite", {
@@ -637,34 +636,34 @@ const ToastItem = defineComponent({
 						},
 					},
 					[
-					h("div", { "data-fluix-header-stack": "" }, [
-						h(
-							"div",
-							{
-								ref: headerInnerRef,
-								"data-fluix-header-inner": "",
-								"data-layer": "current",
-							},
-							[
+						h("div", { "data-fluix-header-stack": "" }, [
 							h(
 								"div",
 								{
-									...toastAttrs.badge,
-									class: item.styles?.badge,
+									ref: headerInnerRef,
+									"data-fluix-header-inner": "",
+									"data-layer": "current",
 								},
-								[renderIcon(item.icon, item.state)],
+								[
+									h(
+										"div",
+										{
+											...toastAttrs.badge,
+											class: item.styles?.badge,
+										},
+										[renderIcon(item.icon, item.state)],
+									),
+									h(
+										"span",
+										{
+											...toastAttrs.title,
+											class: item.styles?.title,
+										},
+										item.title ?? item.state,
+									),
+								],
 							),
-							h(
-								"span",
-								{
-									...toastAttrs.title,
-									class: item.styles?.title,
-								},
-								item.title ?? item.state,
-							),
-							],
-						),
-					]),
+						]),
 					],
 				),
 			];
@@ -765,17 +764,12 @@ export const Toaster = defineComponent({
 			return grouped;
 		});
 
-		const resolvedOffset = computed(
-			() => snapshot.value.config?.offset ?? props.config?.offset,
-		);
+		const resolvedOffset = computed(() => snapshot.value.config?.offset ?? props.config?.offset);
 		const resolvedLayout = computed(
 			() => snapshot.value.config?.layout ?? props.config?.layout ?? "stack",
 		);
 
-		const setToastLocal = (
-			id: string,
-			patch: Partial<{ ready: boolean; expanded: boolean }>,
-		) => {
+		const setToastLocal = (id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) => {
 			localState.value = {
 				...localState.value,
 				[id]: {
@@ -807,9 +801,8 @@ export const Toaster = defineComponent({
 									ready: false,
 									expanded: false,
 								},
-								onLocalStateChange: (
-									patch: Partial<{ ready: boolean; expanded: boolean }>,
-								) => setToastLocal(item.id, patch),
+								onLocalStateChange: (patch: Partial<{ ready: boolean; expanded: boolean }>) =>
+									setToastLocal(item.id, patch),
 							}),
 						),
 					),
