@@ -2,9 +2,11 @@
 import {
 	Toaster as CoreToaster,
 	type FluixToastItem,
+	type FluixToastState,
 	TOAST_DEFAULTS,
 	type ToastMachine,
 } from "@fluix/core";
+import type { Snippet } from "svelte";
 
 const WIDTH = 350;
 const HEIGHT = 40;
@@ -24,10 +26,10 @@ interface Props {
 const { item, machine, localState, onLocalStateChange }: Props = $props();
 
 // --- Element refs ---
-const rootEl: HTMLButtonElement | undefined = $state();
-const headerEl: HTMLElement | undefined = $state();
-const headerInnerEl: HTMLElement | undefined = $state();
-const contentEl: HTMLElement | undefined = $state();
+let rootEl: HTMLDivElement | null = $state(null);
+let headerEl: HTMLDivElement | null = $state(null);
+let headerInnerEl: HTMLDivElement | null = $state(null);
+let contentEl: HTMLDivElement | null = $state(null);
 
 // --- Reactive measurements ---
 let pillWidth = $state(HEIGHT);
@@ -336,9 +338,10 @@ $effect(() => {
 	{/if}
 {/snippet}
 
-<button
+<div
 	bind:this={rootEl}
-	type="button"
+	role="button"
+	tabindex="0"
 	{...attrs.root}
 >
 	<div {...attrs.canvas}>
@@ -439,4 +442,4 @@ $effect(() => {
 			</div>
 		</div>
 	{/if}
-</button>
+</div>
