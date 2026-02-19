@@ -16,6 +16,7 @@
   "scripts": {
     "build": "pnpm run build:core && pnpm run build:css && pnpm --filter \"./packages/*\" run build",
     "demo": "pnpm run build && pnpm --filter demo run dev",
+    "demo:svelte": "pnpm run build && pnpm --filter demo-svelte run dev",
     "build:core": "pnpm --filter @fluix/core run build",
     "build:css": "pnpm --filter @fluix/css run build",
     "dev": "pnpm --parallel --filter \"./packages/*\" run dev",
