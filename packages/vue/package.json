@@ -1,6 +1,6 @@
 {
 	"name": "@fluix-ui/vue",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Vue 3 adapter for Fluix UI components.",
 	"license": "MIT",
 	"type": "module",
