@@ -41,7 +41,18 @@
 			"linter": {
 				"rules": {
 					"correctness": {
+						"noUnusedImports": "off",
 						"noUnusedVariables": "off"
+					}
+				}
+			}
+		},
+		{
+			"include": ["**/*.svelte"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useConst": "off"
 					}
 				}
 			}
