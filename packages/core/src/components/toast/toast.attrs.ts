@@ -8,7 +8,11 @@
  * for the component to look and animate correctly.
  */
 
-import type { FluixPosition, FluixToastItem } from "./toast.types";
+import type {
+	FluixPosition,
+	FluixToastItem,
+	FluixToastLayout,
+} from "./toast.types";
 
 export interface ToastAttrs {
 	viewport: Record<string, string>;
@@ -36,10 +40,14 @@ function getExpandDirection(position: FluixPosition): ExpandDirection {
 }
 
 /** Generate viewport container attributes for a position group. */
-export function getViewportAttrs(position: FluixPosition): Record<string, string> {
+export function getViewportAttrs(
+	position: FluixPosition,
+	layout: FluixToastLayout = "stack",
+): Record<string, string> {
 	return {
 		"data-fluix-viewport": "",
 		"data-position": position,
+		"data-layout": layout,
 		"aria-live": "polite",
 		role: "region",
 	};

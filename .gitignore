@@ -5,3 +5,19 @@ dist
 .DS_Store
 coverage
 *.log
+
+# Local AI skills (do not commit)
+.cursor/skills/
+.cursor/skills-cursor/
+.codex/skills/
+.claude/skills/
+**/.cursor/skills/
+**/.cursor/skills-cursor/
+**/.codex/skills/
+**/.claude/skills/
+
+# Local agent/editor metadata in subprojects
+**/.cursor/
+**/.claude/
+**/.agents/
+**/.trae/

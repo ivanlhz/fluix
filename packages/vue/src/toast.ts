@@ -4,6 +4,7 @@ import {
 	defineComponent,
 	h,
 	isVNode,
+	nextTick,
 	onMounted,
 	onUnmounted,
 	ref,
@@ -269,10 +270,29 @@ const ToastItem = defineComponent({
 		const roundness = computed(() => props.item.roundness ?? TOAST_DEFAULTS.roundness);
 		const blur = computed(() => Math.min(10, Math.max(6, roundness.value * 0.45)));
 		const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
-		const expandedBodyHeight = computed(() =>
-			open.value ? Math.max(minExpanded - HEIGHT, contentHeight.value) : 0,
+		const frozenExpanded = ref(minExpanded);
+		const rawExpanded = computed(() =>
+			hasDescription.value
+				? Math.max(minExpanded, HEIGHT + contentHeight.value)
+				: minExpanded,
 		);
-		const expandedHeight = computed(() => HEIGHT + expandedBodyHeight.value);
+
+		watch(
+			() => open.value,
+			(isOpen) => {
+				if (isOpen) frozenExpanded.value = rawExpanded.value;
+			},
+			{ immediate: true },
+		);
+		watch(rawExpanded, (val) => {
+			if (open.value) frozenExpanded.value = val;
+		});
+
+		const expanded = computed(() => (open.value ? rawExpanded.value : frozenExpanded.value));
+		const expandedContent = computed(() => Math.max(0, expanded.value - HEIGHT));
+		const expandedHeight = computed(() =>
+			hasDescription.value ? Math.max(expanded.value, minExpanded) : HEIGHT,
+		);
 		const resolvedPillWidth = computed(() => Math.max(HEIGHT, pillWidth.value));
 		const pillX = computed(() => {
 			if (pillAlign.value === "right") return WIDTH - resolvedPillWidth.value;
@@ -281,15 +301,15 @@ const ToastItem = defineComponent({
 		});
 
 		const rootStyle = computed<CSSProperties>(() => ({
-			"--_h": `${expandedHeight.value}px`,
+			"--_h": `${open.value ? expanded.value : HEIGHT}px`,
 			"--_pw": `${resolvedPillWidth.value}px`,
 			"--_px": `${pillX.value}px`,
 			"--_ht": `translateY(${open.value ? (edge.value === "bottom" ? 3 : -3) : 0}px) scale(${open.value ? 0.9 : 1})`,
 			"--_co": `${open.value ? 1 : 0}`,
 			"--_cy": `${open.value ? 0 : -14}px`,
-			"--_cm": `${open.value ? expandedBodyHeight.value : 0}px`,
+			"--_cm": `${open.value ? expandedContent.value : 0}px`,
 			"--_by": `${open.value ? HEIGHT - BODY_MERGE_OVERLAP : HEIGHT}px`,
-			"--_bh": `${open.value ? expandedBodyHeight.value : 0}px`,
+			"--_bh": `${open.value ? expandedContent.value : 0}px`,
 			"--_bo": `${open.value ? 1 : 0}`,
 		}));
 
@@ -298,6 +318,12 @@ const ToastItem = defineComponent({
 				clearTimeout(dismissTimer.value);
 				dismissTimer.value = null;
 			}
+		};
+
+		const measureContentHeight = () => {
+			const element = contentRef.value;
+			if (!element) return;
+			contentHeight.value = element.scrollHeight;
 		};
 
 		const requestDismiss = () => {
@@ -348,23 +374,45 @@ const ToastItem = defineComponent({
 			return () => clearTimeout(readyTimer);
 		});
 
-		watch(
-			() => hasDescription.value,
-			(enabled, _prev, onCleanup) => {
-				if (!enabled || !contentRef.value) {
+		watchEffect(
+			(onCleanup) => {
+				if (!hasDescription.value) {
 					contentHeight.value = 0;
 					return;
 				}
 				const element = contentRef.value;
-				const measure = () => {
-					contentHeight.value = element.scrollHeight;
-				};
-				measure();
+				if (!element) return;
 
-				const observer = new ResizeObserver(measure);
+				measureContentHeight();
+
+				let rafId = 0;
+				const observer = new ResizeObserver(() => {
+					cancelAnimationFrame(rafId);
+					rafId = requestAnimationFrame(measureContentHeight);
+				});
 				observer.observe(element);
 
-				onCleanup(() => observer.disconnect());
+				onCleanup(() => {
+					cancelAnimationFrame(rafId);
+					observer.disconnect();
+				});
+			},
+			{ flush: "post" },
+		);
+
+		watch(
+			() => [
+				props.item.instanceId,
+				props.item.description,
+				props.item.button?.title,
+				props.localState.expanded,
+			] as const,
+			() => {
+				void nextTick(() => {
+					requestAnimationFrame(() => {
+						measureContentHeight();
+					});
+				});
 			},
 			{ immediate: true },
 		);
@@ -720,6 +768,9 @@ export const Toaster = defineComponent({
 		const resolvedOffset = computed(
 			() => snapshot.value.config?.offset ?? props.config?.offset,
 		);
+		const resolvedLayout = computed(
+			() => snapshot.value.config?.layout ?? props.config?.layout ?? "stack",
+		);
 
 		const setToastLocal = (
 			id: string,
@@ -744,7 +795,7 @@ export const Toaster = defineComponent({
 						"section",
 						{
 							key: position,
-							...CoreToaster.getViewportAttrs(position),
+							...CoreToaster.getViewportAttrs(position, resolvedLayout.value),
 							style: getViewportOffsetStyle(resolvedOffset.value, position),
 						},
 						toasts.map((item) =>

@@ -52,6 +52,58 @@ describe("createToastMachine", () => {
 		machine.destroy();
 	});
 
+	it("stack layout keeps multiple toasts at the same position", () => {
+		const machine = createToastMachine();
+		machine.configure({ layout: "stack" });
+		machine.create({ id: "a", title: "A", position: "top-right" });
+		machine.create({ id: "b", title: "B", position: "top-right" });
+		const { toasts } = machine.store.getSnapshot();
+		expect(toasts).toHaveLength(2);
+		expect(toasts.map((t) => t.id)).toEqual(["a", "b"]);
+		machine.destroy();
+	});
+
+	it("notch layout keeps only the newest toast per position", () => {
+		const machine = createToastMachine();
+		machine.configure({ layout: "notch" });
+		const firstId = machine.create({ id: "a", title: "A", position: "top-right" });
+		const secondId = machine.create({ id: "b", title: "B", position: "top-right" });
+		const { toasts } = machine.store.getSnapshot();
+		expect(toasts).toHaveLength(1);
+		expect(firstId).toBe("a");
+		expect(secondId).toBe("a");
+		expect(toasts[0].id).toBe("a");
+		expect(toasts[0].title).toBe("B");
+		machine.destroy();
+	});
+
+	it("notch layout replaces only within the same position", () => {
+		const machine = createToastMachine();
+		machine.configure({ layout: "notch" });
+		const firstId = machine.create({ id: "a", title: "A", position: "top-right" });
+		const secondId = machine.create({ id: "b", title: "B", position: "bottom-right" });
+		const { toasts } = machine.store.getSnapshot();
+		expect(toasts).toHaveLength(2);
+		expect(firstId).toBe("a");
+		expect(secondId).toBe("b");
+		expect(toasts.map((t) => t.id)).toEqual(["a", "b"]);
+		machine.destroy();
+	});
+
+	it("notch layout keeps the same instanceId while replacing content", () => {
+		const machine = createToastMachine();
+		machine.configure({ layout: "notch" });
+		machine.create({ id: "a", title: "A", description: "first", position: "top-right" });
+		const firstItem = machine.store.getSnapshot().toasts[0];
+		machine.create({ id: "b", title: "B", description: "second", position: "top-right" });
+		const replacedItem = machine.store.getSnapshot().toasts[0];
+		expect(replacedItem.id).toBe(firstItem.id);
+		expect(replacedItem.instanceId).toBe(firstItem.instanceId);
+		expect(replacedItem.title).toBe("B");
+		expect(replacedItem.description).toBe("second");
+		machine.destroy();
+	});
+
 	it("update modifies existing toast", () => {
 		const machine = createToastMachine();
 		machine.create({ id: "a", title: "Before" });
@@ -117,8 +169,10 @@ describe("createToastMachine", () => {
 	it("configure updates config", () => {
 		const machine = createToastMachine();
 		expect(machine.store.getSnapshot().config.position).toBe(TOAST_DEFAULTS.position);
-		machine.configure({ position: "bottom-center" });
+		expect(machine.store.getSnapshot().config.layout).toBe(TOAST_DEFAULTS.layout);
+		machine.configure({ position: "bottom-center", layout: "notch" });
 		expect(machine.store.getSnapshot().config.position).toBe("bottom-center");
+		expect(machine.store.getSnapshot().config.layout).toBe("notch");
 		machine.destroy();
 	});
 

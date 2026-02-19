@@ -15,6 +15,7 @@ export { FLUIX_POSITIONS } from "./toast.types";
 export type {
 	FluixTheme,
 	FluixToastState,
+	FluixToastLayout,
 	FluixPosition,
 	FluixToastOptions,
 	FluixToastPromiseOptions,

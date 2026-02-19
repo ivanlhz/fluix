@@ -10,20 +10,43 @@ const POSITIONS: FluixPosition[] = [
   "bottom-right",
 ];
 
+const LAYOUTS = ["stack", "notch"] as const;
+type LayoutMode = (typeof LAYOUTS)[number];
+
 export default function App() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [position, setPosition] = useState<FluixPosition>("top-right");
+  const [layout, setLayout] = useState<LayoutMode>("stack");
   const toastTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
   const toasterConfig = useMemo(
     () => ({
       position,
+      layout,
       offset: 24,
       defaults: {
         theme: toastTheme,
       },
     }),
-    [position, toastTheme],
+    [position, layout, toastTheme],
   );
+  const createBookingPromise = () =>
+    new Promise<{
+      airline: string;
+      from: string;
+      to: string;
+      pnr: string;
+      bookingId: string;
+    }>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          airline: "United",
+          from: "DEL",
+          to: "SFO",
+          pnr: "EC2QW4",
+          bookingId: "UA-920114",
+        });
+      }, 1800);
+    });
 
   return (
     <main className={`demo-shell theme-${theme}`}>
@@ -32,7 +55,7 @@ export default function App() {
           <div>
             <h1 className="demo-title">Fluix Playground</h1>
             <p className="demo-subtitle">
-              Probá posiciones, tipos de toast y tema visual desde un solo lugar.
+              Proba posiciones, tipos de toast, layout stack/notch y tema visual.
             </p>
           </div>
           <label className="theme-toggle" aria-label="Cambiar tema oscuro y claro">
@@ -46,6 +69,19 @@ export default function App() {
             </span>
             <span className="theme-toggle-label">{theme === "dark" ? "Dark" : "Light"}</span>
           </label>
+        </div>
+
+        <div className="demo-row">
+          {LAYOUTS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setLayout(item)}
+              className={`demo-pill ${layout === item ? "is-active" : ""}`}
+            >
+              Layout: {item}
+            </button>
+          ))}
         </div>
 
         <div className="demo-row">
@@ -122,11 +158,43 @@ export default function App() {
             type="button"
             onClick={() =>
               fluix.promise(
-                new Promise((resolve) => setTimeout(() => resolve("Upload complete"), 1800)),
+                createBookingPromise(),
                 {
-                  loading: { title: "Uploading..." },
-                  success: (data) => ({ title: String(data), description: "Everything was processed." }),
-                  error: (err) => ({ title: "Failed", description: String(err) }),
+                  loading: { title: "Confirming booking...", icon: "✈" },
+                  success: (data) => ({
+                    title: "Booking Confirmed",
+                    state: "success",
+                    roundness: 20,
+                    description: (
+                      <div className="flight-card">
+                        <div className="flight-card-top">
+                          <span className="flight-card-airline">{data.airline}</span>
+                          <span className="flight-card-pnr">PNR {data.pnr}</span>
+                        </div>
+                        <div className="flight-card-route">
+                          <span className="flight-card-code">{data.from}</span>
+                          <span className="flight-card-arrow">↗</span>
+                          <span className="flight-card-code">{data.to}</span>
+                        </div>
+                        <div className="flight-card-meta">Booking ID {data.bookingId}</div>
+                      </div>
+                    ),
+                    button: {
+                      title: "View Details",
+                      onClick: () =>
+                        fluix.info({
+                          title: "Trip details opened",
+                          description: `Reservation ${data.bookingId} ready.`,
+                        }),
+                    },
+                    styles: {
+                      button: "flight-card-button",
+                    },
+                  }),
+                  error: () => ({
+                    title: "Booking failed",
+                    description: "We could not complete your reservation. Try again in a few minutes.",
+                  }),
                 },
               )
             }

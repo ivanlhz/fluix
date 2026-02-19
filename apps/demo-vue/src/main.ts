@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import App from "./App";
+import App from "./App.vue";
 import "@fluix/css";
 import "./main.css";
 

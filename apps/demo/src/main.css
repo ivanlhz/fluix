@@ -64,8 +64,8 @@ body {
   margin: 0 auto;
   max-width: 960px;
   background: var(--demo-card-bg);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--demo-card-border);
   border-radius: 20px;
   padding: 2rem;
@@ -173,6 +173,71 @@ body {
 
 .theme-toggle-label {
   min-width: 3.2rem;
+}
+
+.flight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.flight-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.flight-card-airline {
+  font-size: 0.84rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--fluix-text);
+}
+
+.flight-card-pnr {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fluix-text-muted);
+}
+
+.flight-card-route {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding-top: 0.1rem;
+}
+
+.flight-card-code {
+  font-size: 1.9rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--fluix-text);
+  letter-spacing: 0.02em;
+}
+
+.flight-card-arrow {
+  height: 28px;
+  width: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklch, var(--fluix-state-success) 24%, transparent);
+  color: var(--fluix-state-success);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.flight-card-meta {
+  font-size: 0.8rem;
+  color: var(--fluix-text-muted);
+}
+
+.flight-card-button {
+  width: 100%;
 }
 
 @media (max-width: 760px) {

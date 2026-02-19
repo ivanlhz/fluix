@@ -35,6 +35,7 @@ export type {
 	ToastConnectCallbacks,
 	FluixToastState,
 	FluixTheme,
+	FluixToastLayout,
 	FluixPosition,
 	FluixToastOptions,
 	FluixToastPromiseOptions,

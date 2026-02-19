@@ -5,6 +5,7 @@
 export type FluixToastState = "success" | "loading" | "error" | "warning" | "info" | "action";
 export type FluixTheme = "light" | "dark";
 export type FluixVariant = "solid";
+export type FluixToastLayout = "stack" | "notch";
 
 export const FLUIX_POSITIONS = [
 	"top-left",
@@ -85,6 +86,8 @@ export type FluixOffsetConfig = Partial<Record<"top" | "right" | "bottom" | "lef
 export interface FluixToasterConfig {
 	/** Default position for all toasts. Default: "top-right" */
 	position?: FluixPosition;
+	/** Toast viewport layout mode. "stack" keeps vertical list, "notch" compacts in one island. */
+	layout?: FluixToastLayout;
 	/** Viewport offset. Number (px), string ("1rem"), or per-side object. */
 	offset?: FluixOffsetValue | FluixOffsetConfig;
 	/** Default options merged into every toast. */

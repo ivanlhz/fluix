@@ -23,6 +23,7 @@ describe("getViewportAttrs", () => {
 		const attrs = getViewportAttrs("top-right");
 		expect(attrs["data-fluix-viewport"]).toBe("");
 		expect(attrs["data-position"]).toBe("top-right");
+		expect(attrs["data-layout"]).toBe("stack");
 		expect(attrs["aria-live"]).toBe("polite");
 		expect(attrs.role).toBe("region");
 	});
@@ -30,6 +31,10 @@ describe("getViewportAttrs", () => {
 	it("accepts any FluixPosition", () => {
 		expect(getViewportAttrs("bottom-left")["data-position"]).toBe("bottom-left");
 		expect(getViewportAttrs("top-center")["data-position"]).toBe("top-center");
+	});
+
+	it("supports explicit notch layout", () => {
+		expect(getViewportAttrs("top-center", "notch")["data-layout"]).toBe("notch");
 	});
 });
 

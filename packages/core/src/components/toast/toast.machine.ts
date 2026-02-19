@@ -10,6 +10,7 @@
 
 import { createStore, type Store } from "../../primitives/store";
 import type {
+	FluixToastLayout,
 	FluixPosition,
 	FluixToastItem,
 	FluixToastOptions,
@@ -26,6 +27,7 @@ export const TOAST_DEFAULTS = {
 	roundness: 16,
 	theme: "light" as const,
 	position: "top-right" as FluixPosition,
+	layout: "stack" as FluixToastLayout,
 } as const;
 
 /** Exit animation duration — toast is in "exiting" state for this long before removal */
@@ -73,7 +75,7 @@ export interface ToastMachine {
 export function createToastMachine(): ToastMachine {
 	const store = createStore<ToastMachineState>({
 		toasts: [],
-		config: { position: TOAST_DEFAULTS.position },
+		config: { position: TOAST_DEFAULTS.position, layout: TOAST_DEFAULTS.layout },
 	});
 
 	const exitTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -136,26 +138,50 @@ export function createToastMachine(): ToastMachine {
 	/* ----------------------------- Public API ----------------------------- */
 
 	function create(opts: FluixToastOptions & { state?: FluixToastState }): string {
-		const id = opts.id ?? generateId();
+		const requestedId = opts.id ?? generateId();
+		let resolvedId = requestedId;
 
 		store.update((prev) => {
 			const live = prev.toasts.filter((t) => !t.exiting);
-			const existing = live.find((t) => t.id === id);
-			const item = buildItem(opts, id, existing?.position);
+			const existing = live.find((t) => t.id === requestedId);
+			const item = buildItem(opts, requestedId, existing?.position);
+			const layout = prev.config.layout ?? TOAST_DEFAULTS.layout;
 
 			if (existing) {
 				return {
 					...prev,
-					toasts: prev.toasts.map((t) => (t.id === id ? item : t)),
+					toasts: prev.toasts.map((t) => (t.id === requestedId ? item : t)),
+				};
+			}
+
+			if (layout === "notch") {
+				const currentAtPosition = live.find((t) => t.position === item.position);
+				if (currentAtPosition) {
+					// Dynamic island behavior: keep a single mounted toast per position
+					// and replace its content in-place.
+					resolvedId = currentAtPosition.id;
+					const replaced = {
+						...item,
+						id: currentAtPosition.id,
+						instanceId: currentAtPosition.instanceId,
+					};
+					return {
+						...prev,
+						toasts: prev.toasts.map((t) => (t.id === currentAtPosition.id ? replaced : t)),
+					};
+				}
+				return {
+					...prev,
+					toasts: [...prev.toasts.filter((t) => t.id !== requestedId), item],
 				};
 			}
 			return {
 				...prev,
-				toasts: [...prev.toasts.filter((t) => t.id !== id), item],
+				toasts: [...prev.toasts.filter((t) => t.id !== requestedId), item],
 			};
 		});
 
-		return id;
+		return resolvedId;
 	}
 
 	function update(id: string, opts: FluixToastOptions & { state?: FluixToastState }): void {

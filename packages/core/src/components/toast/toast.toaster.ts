@@ -10,7 +10,11 @@ import { getToastAttrs, getViewportAttrs } from "./toast.attrs";
 import { connectToast } from "./toast.connect";
 import type { ToastMachine } from "./toast.machine";
 import type { ToastAttrs } from "./toast.attrs";
-import type { FluixToastItem, FluixPosition } from "./toast.types";
+import type {
+	FluixToastItem,
+	FluixPosition,
+	FluixToastLayout,
+} from "./toast.types";
 import type { ToastConnectCallbacks } from "./toast.connect";
 
 export interface ToasterApi {
@@ -21,7 +25,10 @@ export interface ToasterApi {
 	/** Get data-attributes for a single toast. */
 	getAttrs(item: FluixToastItem, context: { ready: boolean; expanded: boolean }): ToastAttrs;
 	/** Get data-attributes for a viewport container by position. */
-	getViewportAttrs(position: FluixPosition): Record<string, string>;
+	getViewportAttrs(
+		position: FluixPosition,
+		layout?: FluixToastLayout,
+	): Record<string, string>;
 	/** Wire DOM events (hover, swipe, expand/collapse) for a toast element. */
 	connect(
 		element: HTMLElement,

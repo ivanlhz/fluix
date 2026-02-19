@@ -10,7 +10,11 @@
       "Bash(pnpm --filter @fluix/react run build:*)",
       "Bash(pnpm run build:core:*)",
       "Bash(pnpm run build:css:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pnpm --filter @fluix/core build:*)",
+      "Bash(pnpm --filter @fluix/css build:*)",
+      "Bash(pnpm --filter @fluix/react build:*)",
+      "Bash(pnpm build:*)"
     ]
   }
 }

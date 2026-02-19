@@ -265,7 +265,7 @@ function ToastItem({
 	);
 
 	// Root style with CSS custom properties for CSS selectors
-	const rootStyle = useMemo<CSSProperties>(
+	const rootVars = useMemo<Record<string, string>>(
 		() => ({
 			"--_h": `${open ? expanded : HEIGHT}px`,
 			"--_pw": `${resolvedPillWidth}px`,
@@ -277,9 +277,17 @@ function ToastItem({
 			"--_by": `${open ? HEIGHT - BODY_MERGE_OVERLAP : HEIGHT}px`,
 			"--_bh": `${open ? expandedContent : 0}px`,
 			"--_bo": `${open ? 1 : 0}`,
-			} as CSSProperties),
+			}),
 		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
 	);
+
+	useLayoutEffect(() => {
+		const el = rootRef.current;
+		if (!el) return;
+		for (const [key, value] of Object.entries(rootVars)) {
+			el.style.setProperty(key, value);
+		}
+	}, [rootVars]);
 
 	// ----------------------------- Header crossfade -----------------------------
 	useLayoutEffect(() => {
@@ -551,7 +559,6 @@ function ToastItem({
 			ref={rootRef}
 			type="button"
 			{...attrs.root}
-			style={rootStyle}
 		>
 			<div {...attrs.canvas}>
 				<svg
@@ -560,7 +567,6 @@ function ToastItem({
 					width={WIDTH}
 					height={svgHeight}
 					viewBox={viewBox}
-					style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}
 					aria-hidden
 				>
 					<defs>
@@ -667,6 +673,46 @@ function getServerSnapshot(): ToastMachineState {
 	return EMPTY_STATE;
 }
 
+function ViewportGroup({
+	position,
+	layout,
+	offset,
+	children,
+}: {
+	position: FluixPosition;
+	layout: "stack" | "notch";
+	offset: FluixToasterConfig["offset"];
+	children: ReactNode;
+}) {
+	const sectionRef = useRef<HTMLElement>(null);
+	const offsetStyle = useMemo(
+		() => getViewportOffsetStyle(offset, position),
+		[offset, position],
+	);
+
+	useLayoutEffect(() => {
+		const el = sectionRef.current;
+		if (!el) return;
+		// Clear previous offset props before applying the next resolved style.
+		el.style.top = "";
+		el.style.right = "";
+		el.style.bottom = "";
+		el.style.left = "";
+		el.style.paddingLeft = "";
+		el.style.paddingRight = "";
+		Object.assign(el.style, offsetStyle);
+	}, [offsetStyle]);
+
+	return (
+		<section
+			ref={sectionRef}
+			{...CoreToaster.getViewportAttrs(position, layout)}
+		>
+			{children}
+		</section>
+	);
+}
+
 export function Toaster({ config }: ToasterProps = {}) {
 	const machine = useMemo(() => CoreToaster.getMachine(), []);
 	const snapshot = useSyncExternalStore(
@@ -716,14 +762,16 @@ export function Toaster({ config }: ToasterProps = {}) {
 	}, [snapshot.toasts]);
 
 	const resolvedOffset = snapshot.config?.offset ?? config?.offset;
+	const resolvedLayout = snapshot.config?.layout ?? config?.layout ?? "stack";
 
 	return (
 		<>
 			{Array.from(byPosition.entries()).map(([position, toasts]) => (
-				<section
+				<ViewportGroup
 					key={position}
-					{...CoreToaster.getViewportAttrs(position)}
-					style={getViewportOffsetStyle(resolvedOffset, position)}
+					position={position}
+					layout={resolvedLayout}
+					offset={resolvedOffset}
 				>
 					{toasts.map((item) => (
 						<ToastItem
@@ -734,7 +782,7 @@ export function Toaster({ config }: ToasterProps = {}) {
 							onLocalStateChange={(patch) => setToastLocal(item.id, patch)}
 						/>
 					))}
-				</section>
+				</ViewportGroup>
 			))}
 		</>
 	);
