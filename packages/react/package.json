@@ -1,6 +1,6 @@
 {
 	"name": "@fluix-ui/react",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "React adapter for Fluix UI components.",
 	"license": "MIT",
 	"type": "module",

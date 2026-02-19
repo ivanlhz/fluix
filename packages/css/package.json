@@ -1,6 +1,6 @@
 {
 	"name": "@fluix-ui/css",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Shared styles for Fluix UI components. Data-attribute selectors, animations, and theming.",
 	"license": "MIT",
 	"type": "module",

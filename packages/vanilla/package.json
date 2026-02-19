@@ -1,6 +1,6 @@
 {
 	"name": "@fluix-ui/vanilla",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Vanilla JS adapter for Fluix UI components. Zero framework dependencies.",
 	"license": "MIT",
 	"type": "module",

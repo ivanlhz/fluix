@@ -1,6 +1,6 @@
 {
 	"name": "@fluix-ui/svelte",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Svelte 5 adapter for Fluix UI components.",
 	"license": "MIT",
 	"type": "module",
