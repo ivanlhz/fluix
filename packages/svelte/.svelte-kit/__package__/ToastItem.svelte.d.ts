@@ -1,4 +1,4 @@
-import { type FluixToastItem, type ToastMachine } from "@fluix/core";
+import { type FluixToastItem, type ToastMachine } from "@fluix-ui/core";
 interface Props {
     item: FluixToastItem;
     machine: ToastMachine;

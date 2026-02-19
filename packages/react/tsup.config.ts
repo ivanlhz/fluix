@@ -7,5 +7,5 @@ export default defineConfig({
 	clean: true,
 	sourcemap: true,
 	treeshake: true,
-	external: ["react", "react-dom", "@fluix/core", "@fluix/css"],
+	external: ["react", "react-dom", "@fluix-ui/core", "@fluix-ui/css"],
 });

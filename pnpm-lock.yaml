@@ -23,13 +23,13 @@ importers:
 
   apps/demo:
     dependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@fluix/react':
+      '@fluix-ui/react':
         specifier: workspace:*
         version: link:../../packages/react
       react:
@@ -57,13 +57,13 @@ importers:
 
   apps/demo-svelte:
     dependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@fluix/svelte':
+      '@fluix-ui/svelte':
         specifier: workspace:*
         version: link:../../packages/svelte
       svelte:
@@ -82,13 +82,13 @@ importers:
 
   apps/demo-vanilla:
     dependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@fluix/vanilla':
+      '@fluix-ui/vanilla':
         specifier: workspace:*
         version: link:../../packages/vanilla
     devDependencies:
@@ -101,13 +101,13 @@ importers:
 
   apps/demo-vue:
     dependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@fluix/vue':
+      '@fluix-ui/vue':
         specifier: workspace:*
         version: link:../../packages/vue
       vue:
@@ -137,11 +137,11 @@ importers:
 
   packages/react:
     dependencies:
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../css
     devDependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../core
       '@types/react':
@@ -165,11 +165,11 @@ importers:
 
   packages/solid:
     dependencies:
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../css
     devDependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../core
       solid-js:
@@ -184,11 +184,11 @@ importers:
 
   packages/svelte:
     dependencies:
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../css
     devDependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../core
       '@sveltejs/package':
@@ -209,11 +209,11 @@ importers:
 
   packages/vanilla:
     dependencies:
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../css
     devDependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../core
       tsup:
@@ -225,11 +225,11 @@ importers:
 
   packages/vue:
     dependencies:
-      '@fluix/css':
+      '@fluix-ui/css':
         specifier: workspace:*
         version: link:../css
     devDependencies:
-      '@fluix/core':
+      '@fluix-ui/core':
         specifier: workspace:*
         version: link:../core
       tsup:

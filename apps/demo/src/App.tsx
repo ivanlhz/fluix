@@ -1,4 +1,4 @@
-import { type FluixPosition, Toaster, fluix } from "@fluix/react";
+import { type FluixPosition, Toaster, fluix } from "@fluix-ui/react";
 import { useMemo, useState } from "react";
 
 const POSITIONS: FluixPosition[] = [

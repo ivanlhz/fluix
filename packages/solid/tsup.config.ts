@@ -7,5 +7,5 @@ export default defineConfig({
 	clean: true,
 	sourcemap: true,
 	treeshake: true,
-	external: ["solid-js", "@fluix/core", "@fluix/css"],
+	external: ["solid-js", "@fluix-ui/core", "@fluix-ui/css"],
 });

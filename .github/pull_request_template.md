@@ -10,13 +10,13 @@ What user/developer problem does this solve?
 
 ## Scope
 
-- [ ] `@fluix/core`
-- [ ] `@fluix/css`
-- [ ] `@fluix/react`
-- [ ] `@fluix/vue`
-- [ ] `@fluix/svelte`
-- [ ] `@fluix/solid`
-- [ ] `@fluix/vanilla`
+- [ ] `@fluix-ui/core`
+- [ ] `@fluix-ui/css`
+- [ ] `@fluix-ui/react`
+- [ ] `@fluix-ui/vue`
+- [ ] `@fluix-ui/svelte`
+- [ ] `@fluix-ui/solid`
+- [ ] `@fluix-ui/vanilla`
 - [ ] docs
 
 ## How to test
@@ -41,6 +41,6 @@ Attach before/after evidence.
 
 ## Checklist
 
-- [ ] I kept component logic in `@fluix/core` (adapter remains thin)
+- [ ] I kept component logic in `@fluix-ui/core` (adapter remains thin)
 - [ ] I added or updated tests for behavior changes
 - [ ] I updated docs if API/usage changed

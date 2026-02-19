@@ -1,5 +1,5 @@
 {
-	"name": "@fluix/svelte",
+	"name": "@fluix-ui/svelte",
 	"version": "0.0.1",
 	"description": "Svelte 5 adapter for Fluix UI components.",
 	"license": "MIT",
@@ -23,12 +23,12 @@
 		"typecheck": "svelte-check --tsconfig ./tsconfig.json"
 	},
 	"peerDependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*",
 		"svelte": ">=5"
 	},
 	"devDependencies": {
-		"@fluix/core": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
 		"@sveltejs/package": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"svelte": "^5.0.0",

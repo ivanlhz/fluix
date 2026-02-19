@@ -9,9 +9,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*",
-		"@fluix/svelte": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*",
+		"@fluix-ui/svelte": "workspace:*",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {

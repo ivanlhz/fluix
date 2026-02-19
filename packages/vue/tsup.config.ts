@@ -7,5 +7,5 @@ export default defineConfig({
 	clean: true,
 	sourcemap: true,
 	treeshake: true,
-	external: ["vue", "@fluix/core", "@fluix/css"],
+	external: ["vue", "@fluix-ui/core", "@fluix-ui/css"],
 });

@@ -1,5 +1,5 @@
 {
-	"name": "@fluix/vanilla",
+	"name": "@fluix-ui/vanilla",
 	"version": "0.0.1",
 	"description": "Vanilla JS adapter for Fluix UI components. Zero framework dependencies.",
 	"license": "MIT",
@@ -27,11 +27,11 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"peerDependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*"
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*"
 	},
 	"devDependencies": {
-		"@fluix/core": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
 		"tsup": "^8.3.0",
 		"typescript": "^5.7.0"
 	}

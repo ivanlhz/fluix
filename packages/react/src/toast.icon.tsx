@@ -1,4 +1,4 @@
-import type { FluixToastItem } from "@fluix/core";
+import type { FluixToastItem } from "@fluix-ui/core";
 import type { ReactElement, ReactNode } from "react";
 
 function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {

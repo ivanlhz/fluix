@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type FluixPosition, fluix } from "@fluix/svelte";
+import { type FluixPosition, fluix } from "@fluix-ui/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [

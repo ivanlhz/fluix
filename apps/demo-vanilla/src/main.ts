@@ -1,5 +1,5 @@
-import { type FluixPosition, createToaster, fluix } from "@fluix/vanilla";
-import "@fluix/css";
+import { type FluixPosition, createToaster, fluix } from "@fluix-ui/vanilla";
+import "@fluix-ui/css";
 import "./main.css";
 
 console.log(

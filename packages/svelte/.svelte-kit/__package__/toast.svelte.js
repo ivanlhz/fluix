@@ -1,4 +1,4 @@
-import { Toaster as CoreToaster } from "@fluix/core";
+import { Toaster as CoreToaster } from "@fluix-ui/core";
 export function createFluixToasts() {
     const machine = CoreToaster.getMachine();
     let snapshot = $state.raw(machine.store.getSnapshot());

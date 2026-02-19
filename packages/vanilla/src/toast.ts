@@ -15,7 +15,7 @@ import {
 	TOAST_DEFAULTS,
 	type ToastMachine,
 	animateSpring,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 
 /* ----------------------------- Constants ----------------------------- */
 

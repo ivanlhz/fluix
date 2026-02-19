@@ -3,7 +3,7 @@
    Spring easing curve + shared keyframes.
 
    The spring easing is pre-computed from { stiffness: 170, damping: 18, mass: 1 }.
-   It matches the physics of the JS spring solver in @fluix/core.
+   It matches the physics of the JS spring solver in @fluix-ui/core.
    ========================================================================== */
 
 :root {

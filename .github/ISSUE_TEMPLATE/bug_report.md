@@ -8,13 +8,13 @@ assignees: []
 
 ## Package
 
-- [ ] `@fluix/core`
-- [ ] `@fluix/css`
-- [ ] `@fluix/react`
-- [ ] `@fluix/vue`
-- [ ] `@fluix/svelte`
-- [ ] `@fluix/solid`
-- [ ] `@fluix/vanilla`
+- [ ] `@fluix-ui/core`
+- [ ] `@fluix-ui/css`
+- [ ] `@fluix-ui/react`
+- [ ] `@fluix-ui/vue`
+- [ ] `@fluix-ui/svelte`
+- [ ] `@fluix-ui/solid`
+- [ ] `@fluix-ui/vanilla`
 
 ## Environment
 

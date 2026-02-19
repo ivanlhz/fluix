@@ -1,5 +1,5 @@
 /**
- * @fluix/solid — Solid.js adapter for Fluix UI components.
+ * @fluix-ui/solid — Solid.js adapter for Fluix UI components.
  *
  * Pattern:
  * - createSignal bridge from core store (fine-grained reactivity)
@@ -7,13 +7,13 @@
  * - onMount/onCleanup for lifecycle management
  */
 
-export { fluix } from "@fluix/core";
+export { fluix } from "@fluix-ui/core";
 export type {
 	FluixToastOptions,
 	FluixToastPromiseOptions,
 	FluixPosition,
 	FluixToastState,
 	FluixToasterConfig,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 
 // TODO: Implement Toaster component + createFluixToasts signal

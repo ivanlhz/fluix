@@ -8,13 +8,13 @@ Fluix delivers opinionated UI components that work identically across React, Vue
 
 | Package | Description | Status |
 |---|---|---|
-| `@fluix/core` | State machines, primitives, imperative APIs | ✅ Available |
-| `@fluix/css` | Shared styles (data-attribute selectors) | ✅ Available |
-| `@fluix/react` | React 18+ adapter | ✅ Available |
-| `@fluix/vue` | Vue 3+ adapter | ✅ Available |
-| `@fluix/svelte` | Svelte 5+ adapter | ✅ Available |
-| `@fluix/solid` | Solid.js adapter | ✅ Available |
-| `@fluix/vanilla` | Zero-framework adapter | ✅ Available |
+| `@fluix-ui/core` | State machines, primitives, imperative APIs | ✅ Available |
+| `@fluix-ui/css` | Shared styles (data-attribute selectors) | ✅ Available |
+| `@fluix-ui/react` | React 18+ adapter | ✅ Available |
+| `@fluix-ui/vue` | Vue 3+ adapter | ✅ Available |
+| `@fluix-ui/svelte` | Svelte 5+ adapter | ✅ Available |
+| `@fluix-ui/solid` | Solid.js adapter | ✅ Available |
+| `@fluix-ui/vanilla` | Zero-framework adapter | ✅ Available |
 
 ## Components
 
@@ -32,19 +32,19 @@ Fluix delivers opinionated UI components that work identically across React, Vue
 
 ```bash
 # React
-npm install @fluix/react @fluix/css
+npm install @fluix-ui/react @fluix-ui/css
 
 # Vue
-npm install @fluix/vue @fluix/css
+npm install @fluix-ui/vue @fluix-ui/css
 
 # Vanilla JS
-npm install @fluix/vanilla @fluix/css
+npm install @fluix-ui/vanilla @fluix-ui/css
 ```
 
 ```tsx
 // React example
-import { Toaster, fluix } from "@fluix/react";
-import "@fluix/css";
+import { Toaster, fluix } from "@fluix-ui/react";
+import "@fluix-ui/css";
 
 function App() {
   return (
@@ -83,13 +83,13 @@ pnpm -r --filter "./packages/*" publish --access public
 ## Architecture
 
 ```
-@fluix/core    → Pure TypeScript logic (state machines, spring physics)
-@fluix/css     → Framework-agnostic styles (data-attribute selectors)
-@fluix/react   → Thin React adapter (~60 lines per component)
-@fluix/vue     → Thin Vue adapter
-@fluix/svelte  → Thin Svelte adapter
-@fluix/solid   → Thin Solid adapter
-@fluix/vanilla → Thin Vanilla JS adapter
+@fluix-ui/core    → Pure TypeScript logic (state machines, spring physics)
+@fluix-ui/css     → Framework-agnostic styles (data-attribute selectors)
+@fluix-ui/react   → Thin React adapter (~60 lines per component)
+@fluix-ui/vue     → Thin Vue adapter
+@fluix-ui/svelte  → Thin Svelte adapter
+@fluix-ui/solid   → Thin Solid adapter
+@fluix-ui/vanilla → Thin Vanilla JS adapter
 ```
 
 See [AGENTS.md](./AGENTS.md) for the full architectural guide.

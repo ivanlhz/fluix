@@ -5,7 +5,7 @@ import {
 	type FluixToasterConfig,
 	TOAST_DEFAULTS,
 	type ToastMachine,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 import {
 	type CSSProperties,
 	Fragment,

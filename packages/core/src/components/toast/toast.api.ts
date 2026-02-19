@@ -5,7 +5,7 @@
  * It wraps a singleton toast machine.
  *
  * Usage:
- *   import { fluix } from "@fluix/core";
+ *   import { fluix } from "@fluix-ui/core";
  *   fluix.success({ title: "Saved!" });
  */
 

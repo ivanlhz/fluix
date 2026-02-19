@@ -15,7 +15,7 @@ import {
 	type ToastMachine,
 	type ToastMachineState,
 	animateSpring,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 import {
 	type ReactNode,
 	useCallback,

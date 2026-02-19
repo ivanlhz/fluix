@@ -9,9 +9,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*",
-		"@fluix/vanilla": "workspace:*"
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*",
+		"@fluix-ui/vanilla": "workspace:*"
 	},
 	"devDependencies": {
 		"typescript": "^5.7.0",

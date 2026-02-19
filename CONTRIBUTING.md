@@ -3,8 +3,8 @@
 Thanks for your interest in contributing.
 
 Fluix is a cross-framework UI library. We prioritize:
-- Logic in `@fluix/core`
-- Thin adapters (`@fluix/react`, `@fluix/vue`, `@fluix/svelte`, `@fluix/solid`, `@fluix/vanilla`)
+- Logic in `@fluix-ui/core`
+- Thin adapters (`@fluix-ui/react`, `@fluix-ui/vue`, `@fluix-ui/svelte`, `@fluix-ui/solid`, `@fluix-ui/vanilla`)
 - Data-attribute DOM contract
 
 ## Quick Start

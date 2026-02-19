@@ -1,5 +1,5 @@
 /**
- * @fluix/vanilla — Vanilla JS adapter for Fluix UI components.
+ * @fluix-ui/vanilla — Vanilla JS adapter for Fluix UI components.
  *
  * Pattern:
  * - Subscribe to core store, diff previous/next toasts
@@ -9,13 +9,13 @@
  * - IIFE build exposes global `Fluix` object for CDN usage
  */
 
-export { fluix } from "@fluix/core";
+export { fluix } from "@fluix-ui/core";
 export type {
 	FluixToastOptions,
 	FluixToastPromiseOptions,
 	FluixPosition,
 	FluixToastState,
 	FluixToasterConfig,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 
 export { createToaster } from "./toast";

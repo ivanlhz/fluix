@@ -1,13 +1,13 @@
 /**
- * @fluix/vue — Vue 3 adapter for Fluix UI components.
+ * @fluix-ui/vue — Vue 3 adapter for Fluix UI components.
  *
  * Exports:
  * - Toaster: component that renders all active toasts
  * - useFluixToasts: composable wrapper for core toast store
- * - fluix: re-exported imperative API from @fluix/core
+ * - fluix: re-exported imperative API from @fluix-ui/core
  */
 
-export { fluix } from "@fluix/core";
+export { fluix } from "@fluix-ui/core";
 export { Toaster, useFluixToasts } from "./toast";
 export type {
 	FluixToastOptions,
@@ -16,5 +16,5 @@ export type {
 	FluixTheme,
 	FluixToastState,
 	FluixToasterConfig,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 export type { ToasterProps } from "./toast";

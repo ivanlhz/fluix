@@ -8,5 +8,5 @@ export default defineConfig({
 	sourcemap: true,
 	treeshake: true,
 	globalName: "Fluix",
-	external: ["@fluix/core", "@fluix/css"],
+	external: ["@fluix-ui/core", "@fluix-ui/css"],
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type FluixPosition, fluix } from "@fluix/vue";
+import { type FluixPosition, fluix } from "@fluix-ui/vue";
 import { computed, h, ref } from "vue";
 
 const POSITIONS: FluixPosition[] = [

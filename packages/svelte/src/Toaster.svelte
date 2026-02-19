@@ -1,6 +1,6 @@
 <script lang="ts">
-import { Toaster as CoreToaster } from "@fluix/core";
-import type { FluixPosition, FluixToastItem, FluixToasterConfig } from "@fluix/core";
+import { Toaster as CoreToaster } from "@fluix-ui/core";
+import type { FluixPosition, FluixToastItem, FluixToasterConfig } from "@fluix-ui/core";
 import { untrack } from "svelte";
 import ToastItem from "./ToastItem.svelte";
 import { createFluixToasts } from "./toast.svelte.js";

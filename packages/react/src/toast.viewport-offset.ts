@@ -1,4 +1,4 @@
-import type { FluixPosition, FluixToasterConfig } from "@fluix/core";
+import type { FluixPosition, FluixToasterConfig } from "@fluix-ui/core";
 import type { CSSProperties } from "react";
 
 function resolveOffsetValue(value: number | string): string {

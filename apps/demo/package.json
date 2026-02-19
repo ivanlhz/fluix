@@ -9,9 +9,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*",
-		"@fluix/react": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*",
+		"@fluix-ui/react": "workspace:*",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0"
 	},

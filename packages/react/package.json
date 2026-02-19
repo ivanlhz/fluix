@@ -1,5 +1,5 @@
 {
-	"name": "@fluix/react",
+	"name": "@fluix-ui/react",
 	"version": "0.0.1",
 	"description": "React adapter for Fluix UI components.",
 	"license": "MIT",
@@ -27,13 +27,13 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"peerDependencies": {
-		"@fluix/core": "workspace:*",
-		"@fluix/css": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
+		"@fluix-ui/css": "workspace:*",
 		"react": ">=18",
 		"react-dom": ">=18"
 	},
 	"devDependencies": {
-		"@fluix/core": "workspace:*",
+		"@fluix-ui/core": "workspace:*",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
 		"react": "^19.0.0",

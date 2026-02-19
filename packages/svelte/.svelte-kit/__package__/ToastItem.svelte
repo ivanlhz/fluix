@@ -5,7 +5,7 @@ import {
 	type FluixToastState,
 	TOAST_DEFAULTS,
 	type ToastMachine,
-} from "@fluix/core";
+} from "@fluix-ui/core";
 import type { Snippet } from "svelte";
 
 const WIDTH = 350;

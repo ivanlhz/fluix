@@ -1,4 +1,4 @@
-import type { FluixToasterConfig } from "@fluix/core";
+import type { FluixToasterConfig } from "@fluix-ui/core";
 export interface ToasterProps {
     config?: FluixToasterConfig;
 }
