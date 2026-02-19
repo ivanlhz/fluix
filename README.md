@@ -4,6 +4,9 @@
 
 Fluix delivers opinionated UI components that work identically across React, Vue, Svelte, Solid, and Vanilla JS. Powered by spring physics, SVG gooey morphing, and zero animation dependencies.
 
+Official documentation: https://fluix.ivanlopezdev.es
+Source code: https://github.com/ivanlhz/fluix
+
 ## Packages
 
 | Package | Description | Status |

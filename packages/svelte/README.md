@@ -17,4 +17,5 @@ import "@fluix-ui/css";
 
 ## Docs
 
-- Monorepo docs: https://github.com/fluix-ui/fluix
+- Official docs: https://fluix.ivanlopezdev.es
+- Source code: https://github.com/ivanlhz/fluix

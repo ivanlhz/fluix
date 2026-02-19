@@ -5,8 +5,9 @@
 	"description": "Physics-based, cross-framework UI components. Beautiful by default.",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/fluix-ui/fluix.git"
+		"url": "https://github.com/ivanlhz/fluix.git"
 	},
+	"homepage": "https://fluix.ivanlopezdev.es",
 	"license": "MIT",
 	"engines": {
 		"node": ">=18",
