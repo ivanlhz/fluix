@@ -17,8 +17,6 @@ import {
 	animateSpring,
 } from "@fluix/core";
 import {
-	type CSSProperties,
-	type ReactElement,
 	type ReactNode,
 	useCallback,
 	useEffect,
@@ -28,6 +26,9 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
+import { renderToastIcon } from "./toast.icon";
+import { getToastRootVars } from "./toast.root-vars";
+import { getViewportOffsetStyle } from "./toast.viewport-offset";
 
 /* ----------------------------- Constants ----------------------------- */
 
@@ -59,188 +60,12 @@ interface HeaderLayerState {
 	prev: { key: string; view: HeaderLayerView } | null;
 }
 
-/* ----------------------------- Default icons (minimal SVG per state) ----------------------------- */
-
-function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
-	switch (state) {
-		case "success":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-				>
-					<polyline points="20 6 9 17 4 12" />
-				</svg>
-			);
-		case "error":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-				>
-					<line x1="18" y1="6" x2="6" y2="18" />
-					<line x1="6" y1="6" x2="18" y2="18" />
-				</svg>
-			);
-		case "warning":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-				>
-					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-					<line x1="12" y1="9" x2="12" y2="13" />
-					<line x1="12" y1="17" x2="12.01" y2="17" />
-				</svg>
-			);
-		case "info":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-				>
-					<circle cx="12" cy="12" r="10" />
-					<line x1="12" y1="16" x2="12" y2="12" />
-					<line x1="12" y1="8" x2="12.01" y2="8" />
-				</svg>
-			);
-		case "loading":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-					data-fluix-icon="spin"
-				>
-					<line x1="12" y1="2" x2="12" y2="6" />
-					<line x1="12" y1="18" x2="12" y2="22" />
-					<line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
-					<line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
-					<line x1="2" y1="12" x2="6" y2="12" />
-					<line x1="18" y1="12" x2="22" y2="12" />
-					<line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
-					<line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
-				</svg>
-			);
-		case "action":
-			return (
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden
-				>
-					<circle cx="12" cy="12" r="10" />
-					<polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
-				</svg>
-			);
-		default:
-			return null;
-	}
-}
-
-/* ----------------------------- Viewport offset style ----------------------------- */
-
-function resolveOffsetValue(v: number | string): string {
-	return typeof v === "number" ? `${v}px` : v;
-}
-
-function getViewportOffsetStyle(
-	offset: FluixToasterConfig["offset"],
-	position: FluixPosition,
-): CSSProperties {
-	if (offset == null) return {};
-
-	// Resolve per-side values
-	let top: string | undefined;
-	let right: string | undefined;
-	let bottom: string | undefined;
-	let left: string | undefined;
-
-	if (typeof offset === "number" || typeof offset === "string") {
-		const v = resolveOffsetValue(offset as number | string);
-		top = v;
-		right = v;
-		bottom = v;
-		left = v;
-	} else {
-		if (offset.top != null) top = resolveOffsetValue(offset.top);
-		if (offset.right != null) right = resolveOffsetValue(offset.right);
-		if (offset.bottom != null) bottom = resolveOffsetValue(offset.bottom);
-		if (offset.left != null) left = resolveOffsetValue(offset.left);
-	}
-
-	// Only apply offset to the sides relevant to this position
-	const s: CSSProperties = {};
-	if (position.startsWith("top") && top) s.top = top;
-	if (position.startsWith("bottom") && bottom) s.bottom = bottom;
-	if (position.endsWith("right") && right) s.right = right;
-	if (position.endsWith("left") && left) s.left = left;
-	if (position.endsWith("center")) {
-		// For center positions, apply both left/right as padding
-		if (left) s.paddingLeft = left;
-		if (right) s.paddingRight = right;
-	}
-	return s;
-}
-
 /* ----------------------------- Pill align from position ----------------------------- */
 
 function getPillAlign(position: FluixPosition): "left" | "center" | "right" {
 	if (position.includes("right")) return "right";
 	if (position.includes("center")) return "center";
 	return "left";
-}
-
-/* ----------------------------- Render icon helper ----------------------------- */
-
-function renderIcon(icon: unknown, state: FluixToastItem["state"]) {
-	if (icon != null) {
-		if (typeof icon === "object" && icon !== null && "type" in icon) {
-			return icon as ReactElement;
-		}
-		return <span aria-hidden>{String(icon)}</span>;
-	}
-	return <DefaultIcon state={state} />;
 }
 
 /* ----------------------------- Single toast item (internal) ----------------------------- */
@@ -337,18 +162,17 @@ function ToastItem({
 
 	// Root style with CSS custom properties for CSS selectors
 	const rootVars = useMemo<Record<string, string>>(
-		() => ({
-			"--_h": `${open ? expanded : HEIGHT}px`,
-			"--_pw": `${resolvedPillWidth}px`,
-			"--_px": `${pillX}px`,
-			"--_ht": `translateY(${open ? (edge === "bottom" ? 3 : -3) : 0}px) scale(${open ? 0.9 : 1})`,
-			"--_co": `${open ? 1 : 0}`,
-			"--_cy": `${open ? 0 : -14}px`,
-			"--_cm": `${open ? expandedContent : 0}px`,
-			"--_by": `${open ? HEIGHT - BODY_MERGE_OVERLAP : HEIGHT}px`,
-			"--_bh": `${open ? expandedContent : 0}px`,
-			"--_bo": `${open ? 1 : 0}`,
-		}),
+		() =>
+			getToastRootVars({
+				open,
+				expanded,
+				height: HEIGHT,
+				resolvedPillWidth,
+				pillX,
+				edge,
+				expandedContent,
+				bodyMergeOverlap: BODY_MERGE_OVERLAP,
+			}),
 		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
 	);
 
@@ -711,7 +535,7 @@ function ToastItem({
 							data-state={headerLayer.current.view.state}
 							className={headerLayer.current.view.styles?.badge}
 						>
-							{renderIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
+							{renderToastIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
 						</div>
 						<span
 							{...attrs.title}
@@ -733,7 +557,7 @@ function ToastItem({
 								data-state={headerLayer.prev.view.state}
 								className={headerLayer.prev.view.styles?.badge}
 							>
-								{renderIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
+								{renderToastIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
 							</div>
 							<span
 								data-fluix-title

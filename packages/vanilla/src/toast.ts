@@ -329,13 +329,14 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 	// Canvas div
 	const canvasDiv = document.createElement("div");
 
-	// SVG
+	// SVG — initial height accounts for description area (matches React/Vue)
+	const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
+	const initialSvgHeight = hasDesc ? minExpanded : HEIGHT;
 	const svg = document.createElementNS(SVG_NS, "svg");
-	svg.setAttribute("xmlns", SVG_NS);
 	svg.setAttribute("data-fluix-svg", "");
 	svg.setAttribute("width", String(WIDTH));
-	svg.setAttribute("height", String(HEIGHT));
-	svg.setAttribute("viewBox", `0 0 ${WIDTH} ${HEIGHT}`);
+	svg.setAttribute("height", String(initialSvgHeight));
+	svg.setAttribute("viewBox", `0 0 ${WIDTH} ${initialSvgHeight}`);
 	svg.setAttribute("aria-hidden", "true");
 
 	// Defs + filter
@@ -346,7 +347,7 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 	filter.setAttribute("y", "-20%");
 	filter.setAttribute("width", "140%");
 	filter.setAttribute("height", "140%");
-	filter.setAttribute("colorInterpolationFilters", "sRGB");
+	filter.setAttribute("color-interpolation-filters", "sRGB");
 
 	const feBlur = document.createElementNS(SVG_NS, "feGaussianBlur");
 	feBlur.setAttribute("in", "SourceGraphic");
@@ -373,10 +374,16 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 	const g = document.createElementNS(SVG_NS, "g");
 	g.setAttribute("filter", `url(#${filterId})`);
 
-	// Pill rect
+	// Pill rect — initial position matches React/Vue (computed from position)
+	const initialPillX =
+		getPillAlign(item.position) === "right"
+			? WIDTH - HEIGHT
+			: getPillAlign(item.position) === "center"
+				? (WIDTH - HEIGHT) / 2
+				: 0;
 	const pillEl = document.createElementNS(SVG_NS, "rect");
 	pillEl.setAttribute("data-fluix-pill", "");
-	pillEl.setAttribute("x", "0");
+	pillEl.setAttribute("x", String(initialPillX));
 	pillEl.setAttribute("y", "0");
 	pillEl.setAttribute("width", String(HEIGHT));
 	pillEl.setAttribute("height", String(HEIGHT));
@@ -500,7 +507,7 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 		pillRo: null!,
 		contentRo: null,
 		pillAnim: null,
-		prevPill: { x: 0, width: HEIGHT, height: HEIGHT },
+		prevPill: { x: initialPillX, width: HEIGHT, height: HEIGHT },
 		pillFirst: true,
 		headerKey,
 		headerPad: null,
@@ -597,11 +604,16 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 /* ----------------------------- measurePillWidth ----------------------------- */
 
 function measurePillWidth(inst: ToastInstance) {
+	// Skip measurement if the element is not connected to the DOM yet
+	if (!inst.el.isConnected) return;
+
 	if (inst.headerPad === null) {
 		const cs = getComputedStyle(inst.headerEl);
 		inst.headerPad = Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.paddingRight);
 	}
-	const w = inst.innerEl.scrollWidth + inst.headerPad + PILL_PADDING;
+	// Use getBoundingClientRect for accurate measurement (matches Vue adapter)
+	const intrinsicWidth = inst.innerEl.getBoundingClientRect().width;
+	const w = intrinsicWidth + inst.headerPad + PILL_PADDING;
 	if (w > PILL_PADDING && w !== inst.pillWidth) {
 		inst.pillWidth = w;
 	}
@@ -638,8 +650,6 @@ function applyVars(inst: ToastInstance, item: FluixToastItem) {
 /* ----------------------------- animatePill ----------------------------- */
 
 function animatePill(inst: ToastInstance, item: FluixToastItem) {
-	if (!inst.localState.ready) return;
-
 	const layout = computeLayout(item, inst);
 	const { open, resolvedPillWidth, pillX, pillHeight } = layout;
 
@@ -650,7 +660,8 @@ function animatePill(inst: ToastInstance, item: FluixToastItem) {
 
 	inst.pillAnim?.cancel();
 
-	if (inst.pillFirst) {
+	// Before ready or on first measurement, set attributes directly (no spring)
+	if (!inst.localState.ready || inst.pillFirst) {
 		inst.pillFirst = false;
 		inst.pillEl.setAttribute("x", String(next.x));
 		inst.pillEl.setAttribute("width", String(next.width));
