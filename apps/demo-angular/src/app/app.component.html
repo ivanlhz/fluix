@@ -1,0 +1,73 @@
+<main [class]="'demo-shell theme-' + theme()">
+  <div class="demo-card">
+    <div class="demo-header">
+      <div>
+        <h1 class="demo-title">Fluix Playground (Angular)</h1>
+        <p class="demo-subtitle">
+          Proba posiciones, tipos de toast, layout stack/notch y tema visual.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="demo-pill"
+        (click)="theme() === 'dark' ? setTheme('light') : setTheme('dark')"
+      >
+        {{ theme() === 'dark' ? 'Dark' : 'Light' }}
+      </button>
+    </div>
+
+    <div class="demo-row">
+      @for (item of layouts; track item) {
+        <button
+          type="button"
+          class="demo-pill"
+          [class.is-active]="layout() === item"
+          (click)="setLayout(item)"
+        >
+          Layout: {{ item }}
+        </button>
+      }
+    </div>
+
+    <div class="demo-row">
+      @for (item of positions; track item) {
+        <button
+          type="button"
+          class="demo-pill"
+          [class.is-active]="position() === item"
+          (click)="setPosition(item)"
+        >
+          {{ item }}
+        </button>
+      }
+    </div>
+
+    <hr class="demo-divider" />
+
+    <div class="demo-row">
+      <button type="button" class="demo-pill" (click)="showSuccess()">
+        Success
+      </button>
+      <button type="button" class="demo-pill" (click)="showError()">
+        Error
+      </button>
+      <button type="button" class="demo-pill" (click)="showWarning()">
+        Warning
+      </button>
+      <button type="button" class="demo-pill" (click)="showInfo()">Info</button>
+      <button type="button" class="demo-pill" (click)="showAction()">
+        Action
+      </button>
+      <button type="button" class="demo-pill" (click)="showIcon()">Icon</button>
+      <button type="button" class="demo-pill" (click)="showPromise()">
+        Promise
+      </button>
+    </div>
+
+    <div class="demo-row">
+      <button type="button" class="demo-pill" (click)="clear()">Clear</button>
+    </div>
+  </div>
+
+  <fluix-toaster [config]="toasterConfig()" />
+</main>

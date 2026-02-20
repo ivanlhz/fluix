@@ -3,7 +3,7 @@
  * renders viewports and FluixToastItemComponent per toast.
  */
 
-import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, NgZone, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { CommonModule } from "@angular/common";
 import {
@@ -32,12 +32,15 @@ import { FluixToastItemComponent } from "./toast-item.component";
 					[attr.role]="'region'"
 					[ngStyle]="getViewportOffsetStyle(resolvedOffset(s), position)"
 				>
-					<fluix-toast-item
-						*ngFor="let item of getToastsForPosition(s, position); track item.instanceId"
-						[item]="item"
-						[localState]="getLocalState(item.id)"
-						(localStateChange)="setToastLocal(item.id, $event)"
-					/>
+					@for (item of getToastsForPosition(s, position); track item?.instanceId ?? $index) {
+						@if (item) {
+							<fluix-toast-item
+								[item]="item"
+								[localState]="getLocalState(item.id)"
+								(localStateChange)="setToastLocal(item.id, $event)"
+							/>
+						}
+					}
 				</section>
 			}
 		}
@@ -54,18 +57,25 @@ export class FluixToasterComponent {
 	private localState = new Map<string, { ready: boolean; expanded: boolean }>();
 	private machine = CoreToaster.getMachine();
 	private destroyRef = inject(DestroyRef);
+	private ngZone = inject(NgZone);
 
 	constructor() {
+		// Set initial snapshot so viewport structure can render as soon as toasts exist
+		const initial = this.machine.store.getSnapshot();
+		this.snapshot.set(initial);
+
 		this.snapshot$
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe((s) => {
-				const ids = new Set(s.toasts.map((t) => t.id));
-				const next = new Map<string, { ready: boolean; expanded: boolean }>();
-				for (const id of ids) {
-					next.set(id, this.localState.get(id) ?? { ready: false, expanded: false });
-				}
-				this.localState = next;
-				this.snapshot.set(s);
+				this.ngZone.run(() => {
+					const ids = new Set(s.toasts.map((t) => t.id));
+					const next = new Map<string, { ready: boolean; expanded: boolean }>();
+					for (const id of ids) {
+						next.set(id, this.localState.get(id) ?? { ready: false, expanded: false });
+					}
+					this.localState = next;
+					this.snapshot.set(s);
+				});
 			});
 
 		effect(() => {

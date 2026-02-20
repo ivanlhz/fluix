@@ -19,6 +19,7 @@
 		"demo": "pnpm run build && pnpm --filter demo run dev",
 		"demo:svelte": "pnpm run build && pnpm --filter demo-svelte run dev",
 		"demo:vanilla": "pnpm run build && pnpm --filter demo-vanilla run dev",
+		"demo:angular": "pnpm run build && pnpm --filter demo-angular run start",
 		"build:core": "pnpm --filter @fluix-ui/core run build",
 		"build:css": "pnpm --filter @fluix-ui/css run build",
 		"dev": "pnpm --parallel --filter \"./packages/*\" run dev",

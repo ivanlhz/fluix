@@ -27,14 +27,14 @@ export function getViewportOffsetStyle(
 	const sides = resolveSides(offset);
 	const style: Record<string, string> = {};
 
-	if (position.startsWith("top") && sides.top) style.top = sides.top;
-	if (position.startsWith("bottom") && sides.bottom) style.bottom = sides.bottom;
-	if (position.endsWith("right") && sides.right) style.right = sides.right;
-	if (position.endsWith("left") && sides.left) style.left = sides.left;
+	if (position.startsWith("top") && sides["top"]) style["top"] = sides["top"];
+	if (position.startsWith("bottom") && sides["bottom"]) style["bottom"] = sides["bottom"];
+	if (position.endsWith("right") && sides["right"]) style["right"] = sides["right"];
+	if (position.endsWith("left") && sides["left"]) style["left"] = sides["left"];
 
 	if (position.endsWith("center")) {
-		if (sides.left) style.paddingLeft = sides.left;
-		if (sides.right) style.paddingRight = sides.right;
+		if (sides["left"]) style["paddingLeft"] = sides["left"];
+		if (sides["right"]) style["paddingRight"] = sides["right"];
 	}
 
 	return style;
