@@ -18,6 +18,7 @@ import {
 } from "@fluix-ui/core";
 import {
 	type ReactNode,
+	memo,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -39,10 +40,15 @@ const MIN_EXPAND_RATIO = 2.25;
 const HEADER_EXIT_MS = 600 * 0.7;
 const BODY_MERGE_OVERLAP = 6;
 
+// Rule 5.4 (rerender-memo-with-default-value): Extract non-primitive defaults
+// outside component body to prevent new object allocation on every render.
+const DEFAULT_LOCAL: { ready: boolean; expanded: boolean } = { ready: false, expanded: false };
+const DEFAULT_FILL = "var(--fluix-surface-contrast)";
+const FILTER_ID_REGEX = /[^a-z0-9-]/gi;
+
 /* ----------------------------- Types ----------------------------- */
 
 export interface ToasterProps {
-	/** Default position and viewport config. Applied on mount and when changed. */
 	config?: FluixToasterConfig;
 }
 
@@ -68,216 +74,164 @@ function getPillAlign(position: FluixPosition): "left" | "center" | "right" {
 	return "left";
 }
 
-/* ----------------------------- Single toast item (internal) ----------------------------- */
+/* ----------------------------- Grouped refs for transient state ----------------------------- */
 
-function ToastItem({
-	item,
-	machine,
-	localState,
-	onLocalStateChange,
-}: {
-	item: FluixToastItem;
-	machine: ToastMachine;
-	localState: { ready: boolean; expanded: boolean };
-	onLocalStateChange: (patch: Partial<{ ready: boolean; expanded: boolean }>) => void;
-}) {
-	const rootRef = useRef<HTMLButtonElement>(null);
-	const headerRef = useRef<HTMLDivElement>(null);
-	const innerRef = useRef<HTMLDivElement>(null);
-	const contentRef = useRef<HTMLDivElement>(null);
-	const pillRef = useRef<SVGRectElement>(null);
-	const connectCleanupRef = useRef<(() => void) | null>(null);
-	const hoveringRef = useRef(false);
-	const pendingDismissRef = useRef(false);
-	const dismissRequestedRef = useRef(false);
-	const forcedDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const headerPadRef = useRef<number | null>(null);
-	const pillRoRef = useRef<ResizeObserver | null>(null);
-	const pillRafRef = useRef(0);
-	const pillObservedRef = useRef<Element | null>(null);
-	const headerExitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const onLocalStateChangeRef = useRef(onLocalStateChange);
-	onLocalStateChangeRef.current = onLocalStateChange;
+// Rule 5.12 (rerender-use-ref-transient-values): Group related transient
+// values into a single ref object to reduce ref count and improve readability.
+interface ToastTransientState {
+	hovering: boolean;
+	pendingDismiss: boolean;
+	dismissRequested: boolean;
+	forcedDismissTimer: ReturnType<typeof setTimeout> | null;
+	headerPad: number | null;
+	pillObserved: Element | null;
+	pillRafId: number;
+	headerExitTimer: ReturnType<typeof setTimeout> | null;
+	pillAnim: Animation | null;
+	pillFirstRender: boolean;
+	prevPill: { x: number; width: number; height: number };
+}
 
-	// Animation refs
-	const pillAnimRef = useRef<Animation | null>(null);
-	const pillFirstRef = useRef(true);
-	const prevPillRef = useRef({ x: 0, width: HEIGHT, height: HEIGHT });
+function createTransientState(): ToastTransientState {
+	return {
+		hovering: false,
+		pendingDismiss: false,
+		dismissRequested: false,
+		forcedDismissTimer: null,
+		headerPad: null,
+		pillObserved: null,
+		pillRafId: 0,
+		headerExitTimer: null,
+		pillAnim: null,
+		pillFirstRender: true,
+		prevPill: { x: 0, width: HEIGHT, height: HEIGHT },
+	};
+}
 
-	// Local measurements
-	const [pillWidth, setPillWidth] = useState(0);
-	const [contentHeight, setContentHeight] = useState(0);
+/* ----------------------------- Header crossfade hook ----------------------------- */
 
-	// Header crossfade state
+// Rule 5.1 (rerender-derived-state-no-effect): Derive header layer during
+// render instead of useLayoutEffect + useState to eliminate an extra render cycle.
+function useHeaderCrossfade(item: FluixToastItem) {
 	const headerKey = `${item.state}-${item.title ?? item.state}`;
-	const [headerLayer, setHeaderLayer] = useState<HeaderLayerState>(() => ({
+	const prevKeyRef = useRef(headerKey);
+	const layerRef = useRef<HeaderLayerState>({
 		current: {
 			key: headerKey,
-			view: {
-				state: item.state,
-				title: item.title ?? item.state,
-				icon: item.icon,
-				styles: item.styles,
-			},
+			view: { state: item.state, title: item.title ?? item.state, icon: item.icon, styles: item.styles },
 		},
 		prev: null,
-	}));
+	});
 
-	// Derived layout
-	const { ready, expanded: isExpanded } = localState;
-	const roundness = item.roundness ?? TOAST_DEFAULTS.roundness;
-	// Keep gooey merge subtle; large blur distorts corners during expansion.
-	const blur = Math.min(10, Math.max(6, roundness * 0.45));
-	const filterId = `fluix-gooey-${item.id.replace(/[^a-z0-9-]/gi, "-")}`;
-	const hasDesc = Boolean(item.description) || Boolean(item.button);
-	const isLoading = item.state === "loading";
-	const open = hasDesc && isExpanded && !isLoading;
-	const position = getPillAlign(item.position);
-	const edge = item.position.startsWith("top") ? "bottom" : "top";
+	// Derive during render phase — no useState/useLayoutEffect needed
+	const currentView: HeaderLayerView = {
+		state: item.state,
+		title: item.title ?? item.state,
+		icon: item.icon,
+		styles: item.styles,
+	};
 
-	const resolvedPillWidth = Math.max(pillWidth || HEIGHT, HEIGHT);
-	const pillHeight = HEIGHT + blur * 3;
-	const pillX =
-		position === "right"
-			? WIDTH - resolvedPillWidth
-			: position === "center"
-				? (WIDTH - resolvedPillWidth) / 2
-				: 0;
-
-	const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
-	const rawExpanded = hasDesc ? Math.max(minExpanded, HEIGHT + contentHeight) : minExpanded;
-	const frozenExpandedRef = useRef(rawExpanded);
-	if (open) {
-		frozenExpandedRef.current = rawExpanded;
-	}
-	const expanded = open ? rawExpanded : frozenExpandedRef.current;
-	const expandedContent = Math.max(0, expanded - HEIGHT);
-	const svgHeight = hasDesc ? Math.max(expanded, minExpanded) : HEIGHT;
-	const viewBox = `0 0 ${WIDTH} ${svgHeight}`;
-
-	const attrs = useMemo(
-		() => CoreToaster.getAttrs(item, { ready, expanded: isExpanded }),
-		[item, ready, isExpanded],
-	);
-
-	// Root style with CSS custom properties for CSS selectors
-	const rootVars = useMemo<Record<string, string>>(
-		() =>
-			getToastRootVars({
-				open,
-				expanded,
-				height: HEIGHT,
-				resolvedPillWidth,
-				pillX,
-				edge,
-				expandedContent,
-				bodyMergeOverlap: BODY_MERGE_OVERLAP,
-			}),
-		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
-	);
-
-	useLayoutEffect(() => {
-		const el = rootRef.current;
-		if (!el) return;
-		for (const [key, value] of Object.entries(rootVars)) {
-			el.style.setProperty(key, value);
-		}
-	}, [rootVars]);
-
-	// ----------------------------- Header crossfade -----------------------------
-	useLayoutEffect(() => {
-		setHeaderLayer((state) => {
-			if (state.current.key === headerKey) {
-				// Same key, just update view in place
-				const newView = {
-					state: item.state,
-					title: item.title ?? item.state,
-					icon: item.icon,
-					styles: item.styles,
-				};
-				if (state.current.view === newView) return state;
-				return { ...state, current: { key: headerKey, view: newView } };
-			}
-			// New key: swap current → prev
-			return {
-				prev: state.current,
-				current: {
-					key: headerKey,
-					view: {
-						state: item.state,
-						title: item.title ?? item.state,
-						icon: item.icon,
-						styles: item.styles,
-					},
-				},
-			};
-		});
-	}, [headerKey, item.state, item.title, item.icon, item.styles]);
-
-	// Clean prev layer after exit animation
-	useEffect(() => {
-		if (!headerLayer.prev) return;
-		if (headerExitRef.current) clearTimeout(headerExitRef.current);
-		headerExitRef.current = setTimeout(() => {
-			setHeaderLayer((s) => (s.prev ? { ...s, prev: null } : s));
-			headerExitRef.current = null;
-		}, HEADER_EXIT_MS);
-		return () => {
-			if (headerExitRef.current) clearTimeout(headerExitRef.current);
+	if (prevKeyRef.current !== headerKey) {
+		// Key changed: swap current → prev
+		layerRef.current = {
+			prev: layerRef.current.current,
+			current: { key: headerKey, view: currentView },
 		};
-	}, [headerLayer.prev]);
+		prevKeyRef.current = headerKey;
+	} else {
+		// Same key: update view in place
+		layerRef.current = { ...layerRef.current, current: { key: headerKey, view: currentView } };
+	}
 
-	// ----------------------------- Measure pill width (ResizeObserver) -----------------------------
+	// Timer to clear prev layer after exit animation
+	const [, forceRender] = useState(0);
+	useEffect(() => {
+		if (!layerRef.current.prev) return;
+
+		const timer = setTimeout(() => {
+			layerRef.current = { ...layerRef.current, prev: null };
+			forceRender((n) => n + 1);
+		}, HEADER_EXIT_MS);
+
+		return () => clearTimeout(timer);
+	}, [layerRef.current.prev?.key]);
+
+	return { headerKey, headerLayer: layerRef.current };
+}
+
+/* ----------------------------- Pill measurement hook ----------------------------- */
+
+function usePillMeasurement(
+	headerRef: React.RefObject<HTMLDivElement | null>,
+	innerRef: React.RefObject<HTMLDivElement | null>,
+	transient: React.RefObject<ToastTransientState>,
+	headerKey: string,
+) {
+	const [pillWidth, setPillWidth] = useState(0);
+	const pillRoRef = useRef<ResizeObserver | null>(null);
+
 	useLayoutEffect(() => {
 		const el = innerRef.current;
 		const header = headerRef.current;
-		if (!el || !header) return;
+		const t = transient.current;
+		if (!el || !header || !t) return;
 
-		if (headerPadRef.current === null) {
+		if (t.headerPad === null) {
 			const cs = getComputedStyle(header);
-			headerPadRef.current = Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.paddingRight);
+			t.headerPad = Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.paddingRight);
 		}
 
 		const measure = () => {
 			const inner = innerRef.current;
-			const pad = headerPadRef.current ?? 0;
+			const pad = transient.current?.headerPad ?? 0;
 			if (!inner) return;
 			const w = inner.scrollWidth + pad + PILL_PADDING;
-			// Always update when we have a valid measure (allow shrink: no min check beyond PILL_PADDING)
+			// Rule 5.9 (rerender-functional-setstate): functional update avoids stale closure
 			if (w >= PILL_PADDING) {
 				setPillWidth((prev) => (prev === w ? prev : w));
 			}
 		};
 
-		// Defer first measure to after layout so new header content (e.g. after title change) has correct scrollWidth
 		const rafId = requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				measure();
-			});
+			requestAnimationFrame(measure);
 		});
 
 		if (!pillRoRef.current) {
 			pillRoRef.current = new ResizeObserver(() => {
-				cancelAnimationFrame(pillRafRef.current);
-				pillRafRef.current = requestAnimationFrame(() => {
-					measure();
-				});
+				cancelAnimationFrame(t.pillRafId);
+				t.pillRafId = requestAnimationFrame(measure);
 			});
 		}
 
-		if (pillObservedRef.current !== el) {
-			if (pillObservedRef.current) {
-				pillRoRef.current.unobserve(pillObservedRef.current);
-			}
+		if (t.pillObserved !== el) {
+			if (t.pillObserved) pillRoRef.current.unobserve(t.pillObserved);
 			pillRoRef.current.observe(el);
-			pillObservedRef.current = el;
+			t.pillObserved = el;
 		}
 
 		return () => cancelAnimationFrame(rafId);
-		// Re-run when header content changes (title/state) so we observe the new inner element and re-measure
-	}, [headerKey]);
+	}, [headerKey, headerRef, innerRef, transient]);
 
-	// ----------------------------- Measure content height (ResizeObserver) -----------------------------
+	// Cleanup on unmount
+	useEffect(() => {
+		const t = transient.current;
+		return () => {
+			pillRoRef.current?.disconnect();
+			if (t) cancelAnimationFrame(t.pillRafId);
+		};
+	}, [transient]);
+
+	return pillWidth;
+}
+
+/* ----------------------------- Content measurement hook ----------------------------- */
+
+function useContentMeasurement(
+	contentRef: React.RefObject<HTMLDivElement | null>,
+	hasDesc: boolean,
+) {
+	const [contentHeight, setContentHeight] = useState(0);
+
 	useLayoutEffect(() => {
 		if (!hasDesc) {
 			setContentHeight(0);
@@ -302,48 +256,296 @@ function ToastItem({
 			cancelAnimationFrame(rafId);
 			ro.disconnect();
 		};
-	}, [hasDesc]);
+	}, [hasDesc, contentRef]);
 
-	// ----------------------------- Mark ready after mount -----------------------------
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			onLocalStateChangeRef.current({ ready: true });
-		}, 32);
-		return () => clearTimeout(timer);
-	}, []);
+	return contentHeight;
+}
 
-	// Reset transient hover/dismiss flags for each new toast instance payload.
+/* ----------------------------- ToastHeader sub-component ----------------------------- */
+
+// Rule 5.2 (rerender-defer-reads): Extract into a sub-component so that
+// header crossfade re-renders do not trigger the entire ToastItem tree.
+const ToastHeader = memo(function ToastHeader({
+	innerRef,
+	headerRef,
+	headerLayer,
+	attrs,
+}: {
+	innerRef: React.RefObject<HTMLDivElement | null>;
+	headerRef: React.RefObject<HTMLDivElement | null>;
+	headerLayer: HeaderLayerState;
+	attrs: ReturnType<typeof CoreToaster.getAttrs>;
+}) {
+	return (
+		<div ref={headerRef} {...attrs.header}>
+			<div data-fluix-header-stack>
+				<div
+					ref={innerRef}
+					key={headerLayer.current.key}
+					data-fluix-header-inner
+					data-layer="current"
+				>
+					<div
+						{...attrs.badge}
+						data-state={headerLayer.current.view.state}
+						className={headerLayer.current.view.styles?.badge}
+					>
+						{renderToastIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
+					</div>
+					<span
+						{...attrs.title}
+						data-state={headerLayer.current.view.state}
+						className={headerLayer.current.view.styles?.title}
+					>
+						{headerLayer.current.view.title}
+					</span>
+				</div>
+				{headerLayer.prev && (
+					<div
+						key={headerLayer.prev.key}
+						data-fluix-header-inner
+						data-layer="prev"
+						data-exiting="true"
+					>
+						<div
+							data-fluix-badge
+							data-state={headerLayer.prev.view.state}
+							className={headerLayer.prev.view.styles?.badge}
+						>
+							{renderToastIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
+						</div>
+						<span
+							data-fluix-title
+							data-state={headerLayer.prev.view.state}
+							className={headerLayer.prev.view.styles?.title}
+						>
+							{headerLayer.prev.view.title}
+						</span>
+					</div>
+				)}
+			</div>
+		</div>
+	);
+});
+
+/* ----------------------------- ToastSvg sub-component ----------------------------- */
+
+// Rule 6.3 (rendering-hoist-jsx): The gooey color matrix values are static — hoisted.
+const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
+
+const ToastSvg = memo(function ToastSvg({
+	pillRef,
+	filterId,
+	blur,
+	roundness,
+	fill,
+	svgHeight,
+	viewBox,
+	pillX,
+	resolvedPillWidth,
+}: {
+	pillRef: React.RefObject<SVGRectElement | null>;
+	filterId: string;
+	blur: number;
+	roundness: number;
+	fill: string;
+	svgHeight: number;
+	viewBox: string;
+	pillX: number;
+	resolvedPillWidth: number;
+}) {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			data-fluix-svg
+			width={WIDTH}
+			height={svgHeight}
+			viewBox={viewBox}
+			aria-hidden
+		>
+			<defs>
+				<filter
+					id={filterId}
+					x="-20%"
+					y="-20%"
+					width="140%"
+					height="140%"
+					colorInterpolationFilters="sRGB"
+				>
+					<feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
+					<feColorMatrix in="blur" type="matrix" values={GOO_MATRIX} result="goo" />
+					<feComposite in="SourceGraphic" in2="goo" operator="atop" />
+				</filter>
+			</defs>
+			<g filter={`url(#${filterId})`}>
+				<rect
+					ref={pillRef}
+					data-fluix-pill
+					x={pillX}
+					y={0}
+					width={resolvedPillWidth}
+					height={HEIGHT}
+					rx={roundness}
+					ry={roundness}
+					fill={fill}
+				/>
+				<rect
+					data-fluix-body
+					x={0}
+					y={HEIGHT}
+					width={WIDTH}
+					height={0}
+					rx={roundness}
+					ry={roundness}
+					fill={fill}
+					opacity={0}
+				/>
+			</g>
+		</svg>
+	);
+});
+
+/* ----------------------------- Single toast item (internal) ----------------------------- */
+
+function ToastItem({
+	item,
+	machine,
+	localState,
+	onLocalStateChange,
+}: {
+	item: FluixToastItem;
+	machine: ToastMachine;
+	localState: { ready: boolean; expanded: boolean };
+	onLocalStateChange: (id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) => void;
+}) {
+	const rootRef = useRef<HTMLButtonElement>(null);
+	const headerRef = useRef<HTMLDivElement>(null);
+	const innerRef = useRef<HTMLDivElement>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
+	const pillRef = useRef<SVGRectElement>(null);
+
+	// Rule 5.12: Group transient non-rendering values in a single ref
+	const transientRef = useRef<ToastTransientState | null>(null);
+	if (transientRef.current === null) {
+		transientRef.current = createTransientState();
+	}
+	const t = transientRef.current;
+
+	// Rule 8.2 (advanced-event-handler-refs): Store callback in ref for stable reference
+	const onLocalStateChangeRef = useRef(onLocalStateChange);
+	onLocalStateChangeRef.current = onLocalStateChange;
+
+	// Rule 5.1: Derive header crossfade during render (no extra useState + useLayoutEffect)
+	const { headerKey, headerLayer } = useHeaderCrossfade(item);
+
+	// Derived values needed by hooks must come before hook calls
+	const hasDesc = Boolean(item.description) || Boolean(item.button);
+
+	// Hooks must be called before derived values that use them
+	const pillWidth = usePillMeasurement(headerRef, innerRef, transientRef as React.RefObject<ToastTransientState>, headerKey);
+	const contentHeight = useContentMeasurement(contentRef, hasDesc);
+
+	// Derived layout — Rule 5.3: simple primitive expressions, no useMemo needed
+	const { ready, expanded: isExpanded } = localState;
+	const roundness = item.roundness ?? TOAST_DEFAULTS.roundness;
+	const blur = Math.min(10, Math.max(6, roundness * 0.45));
+	const filterId = `fluix-gooey-${item.id.replace(FILTER_ID_REGEX, "-")}`;
+	const isLoading = item.state === "loading";
+	const open = hasDesc && isExpanded && !isLoading;
+	const position = getPillAlign(item.position);
+	const edge = item.position.startsWith("top") ? "bottom" : "top";
+
+	const resolvedPillWidth = Math.max(pillWidth || HEIGHT, HEIGHT);
+	const pillHeight = HEIGHT + blur * 3;
+	const pillX =
+		position === "right"
+			? WIDTH - resolvedPillWidth
+			: position === "center"
+				? (WIDTH - resolvedPillWidth) / 2
+				: 0;
+
+	const minExpanded = HEIGHT * MIN_EXPAND_RATIO;
+	const rawExpanded = hasDesc ? Math.max(minExpanded, HEIGHT + contentHeight) : minExpanded;
+	const frozenExpandedRef = useRef(rawExpanded);
+	if (open) {
+		frozenExpandedRef.current = rawExpanded;
+	}
+	const expanded = open ? rawExpanded : frozenExpandedRef.current;
+	const expandedContent = Math.max(0, expanded - HEIGHT);
+	const svgHeight = hasDesc ? Math.max(expanded, minExpanded) : HEIGHT;
+	const viewBox = `0 0 ${WIDTH} ${svgHeight}`;
+	const fill = item.fill ?? DEFAULT_FILL;
+
+	const attrs = useMemo(
+		() => CoreToaster.getAttrs(item, { ready, expanded: isExpanded }),
+		[item, ready, isExpanded],
+	);
+
+	// Rule 7.1 (js-batch-dom-css): Batch CSS custom property writes via cssText
+	const rootVars = useMemo<Record<string, string>>(
+		() =>
+			getToastRootVars({
+				open,
+				expanded,
+				height: HEIGHT,
+				resolvedPillWidth,
+				pillX,
+				edge,
+				expandedContent,
+				bodyMergeOverlap: BODY_MERGE_OVERLAP,
+			}),
+		[open, expanded, resolvedPillWidth, pillX, edge, expandedContent],
+	);
+
+	useLayoutEffect(() => {
+		const el = rootRef.current;
+		if (!el) return;
+		// Batch: set all CSS vars at once via cssText append
+		const vars = Object.entries(rootVars)
+			.map(([key, value]) => `${key}:${value}`)
+			.join(";");
+		el.style.cssText += `;${vars}`;
+	}, [rootVars]);
+
+	// Consolidated mount effect — Rule: reduce hook count by merging empty-dep effects
 	useEffect(() => {
-		hoveringRef.current = false;
-		pendingDismissRef.current = false;
-		dismissRequestedRef.current = false;
-		if (forcedDismissTimerRef.current) {
-			clearTimeout(forcedDismissTimerRef.current);
-			forcedDismissTimerRef.current = null;
+		// Reset transient flags on mount
+		t.hovering = false;
+		t.pendingDismiss = false;
+		t.dismissRequested = false;
+		if (t.forcedDismissTimer) {
+			clearTimeout(t.forcedDismissTimer);
+			t.forcedDismissTimer = null;
 		}
-	}, []);
 
-	// ----------------------------- WAAPI: animate pill rect -----------------------------
+		// Mark ready after brief delay
+		const timer = setTimeout(() => {
+			onLocalStateChangeRef.current(item.id, { ready: true });
+		}, 32);
+
+		return () => clearTimeout(timer);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// WAAPI: animate pill rect
 	useEffect(() => {
 		const el = pillRef.current;
 		if (!el || !ready) return;
 
-		const prev = prevPillRef.current;
+		const prev = t.prevPill;
 		const next = { x: pillX, width: resolvedPillWidth, height: open ? pillHeight : HEIGHT };
 
-		// Skip if no meaningful change
+		// Rule 7.8 (js-early-exit): Return early if no change
 		if (prev.x === next.x && prev.width === next.width && prev.height === next.height) return;
 
-		// Cancel previous animation
-		pillAnimRef.current?.cancel();
+		t.pillAnim?.cancel();
 
 		// On first render, set values directly (no animation from default size)
-		if (pillFirstRef.current) {
-			pillFirstRef.current = false;
+		if (t.pillFirstRender) {
+			t.pillFirstRender = false;
 			el.setAttribute("x", String(next.x));
 			el.setAttribute("width", String(next.width));
 			el.setAttribute("height", String(next.height));
-			prevPillRef.current = next;
+			t.prevPill = next;
 			return;
 		}
 
@@ -357,45 +559,44 @@ function ToastItem({
 			FLUIX_SPRING,
 		);
 
-		pillAnimRef.current = anim;
-		prevPillRef.current = next;
+		t.pillAnim = anim;
+		t.prevPill = next;
 
 		return () => {
 			anim?.cancel();
 		};
-	}, [ready, pillX, resolvedPillWidth, open, pillHeight]);
+	}, [ready, pillX, resolvedPillWidth, open, pillHeight, t]);
 
-	// ----------------------------- Auto-dismiss timer -----------------------------
+	// Auto-dismiss timer
 	useEffect(() => {
 		const duration = item.duration;
 		if (duration == null || duration <= 0) return;
 
 		const timer = setTimeout(() => {
-			if (hoveringRef.current) {
-				pendingDismissRef.current = true;
-				// Safety net: if hover state gets stuck, force dismiss shortly after.
-				forcedDismissTimerRef.current = setTimeout(() => {
-					if (dismissRequestedRef.current) return;
-					dismissRequestedRef.current = true;
-					pendingDismissRef.current = false;
+			if (t.hovering) {
+				t.pendingDismiss = true;
+				t.forcedDismissTimer = setTimeout(() => {
+					if (t.dismissRequested) return;
+					t.dismissRequested = true;
+					t.pendingDismiss = false;
 					machine.dismiss(item.id);
 				}, 1200);
 				return;
 			}
-			pendingDismissRef.current = false;
-			dismissRequestedRef.current = true;
+			t.pendingDismiss = false;
+			t.dismissRequested = true;
 			machine.dismiss(item.id);
 		}, duration);
 		return () => {
 			clearTimeout(timer);
-			if (forcedDismissTimerRef.current) {
-				clearTimeout(forcedDismissTimerRef.current);
-				forcedDismissTimerRef.current = null;
+			if (t.forcedDismissTimer) {
+				clearTimeout(t.forcedDismissTimer);
+				t.forcedDismissTimer = null;
 			}
 		};
-	}, [item.id, item.duration, machine]);
+	}, [item.id, item.duration, machine, t]);
 
-	// ----------------------------- Autopilot: auto-expand then auto-collapse -----------------------------
+	// Autopilot: auto-expand then auto-collapse
 	useEffect(() => {
 		if (!ready) return;
 		const timers: ReturnType<typeof setTimeout>[] = [];
@@ -403,7 +604,7 @@ function ToastItem({
 		if (item.autoExpandDelayMs != null && item.autoExpandDelayMs > 0) {
 			timers.push(
 				setTimeout(() => {
-					if (!hoveringRef.current) onLocalStateChangeRef.current({ expanded: true });
+					if (!t.hovering) onLocalStateChangeRef.current(item.id, { expanded: true });
 				}, item.autoExpandDelayMs),
 			);
 		}
@@ -411,171 +612,74 @@ function ToastItem({
 		if (item.autoCollapseDelayMs != null && item.autoCollapseDelayMs > 0) {
 			timers.push(
 				setTimeout(() => {
-					if (!hoveringRef.current) onLocalStateChangeRef.current({ expanded: false });
+					if (!t.hovering) onLocalStateChangeRef.current(item.id, { expanded: false });
 				}, item.autoCollapseDelayMs),
 			);
 		}
 
 		return () => timers.forEach(clearTimeout);
-	}, [item.autoExpandDelayMs, item.autoCollapseDelayMs, ready]);
+	}, [item.id, item.autoExpandDelayMs, item.autoCollapseDelayMs, ready, t]);
 
-	// ----------------------------- Wire DOM events via connectToast -----------------------------
+	// Wire DOM events via connectToast
 	useEffect(() => {
 		const el = rootRef.current;
 		if (!el) return;
 
 		const callbacks = {
 			onExpand: () => {
-				if (item.exiting || dismissRequestedRef.current) return;
-				onLocalStateChangeRef.current({ expanded: true });
+				if (item.exiting || t.dismissRequested) return;
+				onLocalStateChangeRef.current(item.id, { expanded: true });
 			},
 			onCollapse: () => {
-				if (item.exiting || dismissRequestedRef.current) return;
-				// With autopilot enabled, avoid collapsing immediately on mouseleave.
-				// Let the configured collapse timer drive this to prevent early compact state.
+				if (item.exiting || t.dismissRequested) return;
 				if (item.autopilot !== false) return;
-				onLocalStateChangeRef.current({ expanded: false });
+				onLocalStateChangeRef.current(item.id, { expanded: false });
 			},
 			onDismiss: () => {
-				if (dismissRequestedRef.current) return;
-				dismissRequestedRef.current = true;
+				if (t.dismissRequested) return;
+				t.dismissRequested = true;
 				machine.dismiss(item.id);
 			},
 			onHoverStart: () => {
-				hoveringRef.current = true;
+				t.hovering = true;
 			},
 			onHoverEnd: () => {
-				hoveringRef.current = false;
-				if (pendingDismissRef.current) {
-					pendingDismissRef.current = false;
-					if (dismissRequestedRef.current) return;
-					dismissRequestedRef.current = true;
+				t.hovering = false;
+				if (t.pendingDismiss) {
+					t.pendingDismiss = false;
+					if (t.dismissRequested) return;
+					t.dismissRequested = true;
 					machine.dismiss(item.id);
 				}
 			},
 		};
 
 		const { destroy } = CoreToaster.connect(el, callbacks, item);
-		connectCleanupRef.current = destroy;
-		return () => {
-			destroy();
-			connectCleanupRef.current = null;
-		};
-	}, [item, machine]);
-
-	// ----------------------------- Cleanup ResizeObserver on unmount -----------------------------
-	useEffect(() => {
-		return () => {
-			pillRoRef.current?.disconnect();
-			cancelAnimationFrame(pillRafRef.current);
-		};
-	}, []);
+		return destroy;
+	}, [item, machine, t]);
 
 	return (
 		<button ref={rootRef} type="button" {...attrs.root}>
 			<div {...attrs.canvas}>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					data-fluix-svg
-					width={WIDTH}
-					height={svgHeight}
+				<ToastSvg
+					pillRef={pillRef}
+					filterId={filterId}
+					blur={blur}
+					roundness={roundness}
+					fill={fill}
+					svgHeight={svgHeight}
 					viewBox={viewBox}
-					aria-hidden
-				>
-					<defs>
-						<filter
-							id={filterId}
-							x="-20%"
-							y="-20%"
-							width="140%"
-							height="140%"
-							colorInterpolationFilters="sRGB"
-						>
-							<feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
-							<feColorMatrix
-								in="blur"
-								type="matrix"
-								values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10"
-								result="goo"
-							/>
-							<feComposite in="SourceGraphic" in2="goo" operator="atop" />
-						</filter>
-					</defs>
-					<g filter={`url(#${filterId})`}>
-						<rect
-							ref={pillRef}
-							data-fluix-pill
-							x={pillX}
-							y={0}
-							width={resolvedPillWidth}
-							height={HEIGHT}
-							rx={roundness}
-							ry={roundness}
-							fill={item.fill ?? "var(--fluix-surface-contrast)"}
-						/>
-						<rect
-							data-fluix-body
-							x={0}
-							y={HEIGHT}
-							width={WIDTH}
-							height={0}
-							rx={roundness}
-							ry={roundness}
-							fill={item.fill ?? "var(--fluix-surface-contrast)"}
-							opacity={0}
-						/>
-					</g>
-				</svg>
+					pillX={pillX}
+					resolvedPillWidth={resolvedPillWidth}
+				/>
 			</div>
 
-			<div ref={headerRef} {...attrs.header}>
-				<div data-fluix-header-stack>
-					<div
-						ref={innerRef}
-						key={headerLayer.current.key}
-						data-fluix-header-inner
-						data-layer="current"
-					>
-						<div
-							{...attrs.badge}
-							data-state={headerLayer.current.view.state}
-							className={headerLayer.current.view.styles?.badge}
-						>
-							{renderToastIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
-						</div>
-						<span
-							{...attrs.title}
-							data-state={headerLayer.current.view.state}
-							className={headerLayer.current.view.styles?.title}
-						>
-							{headerLayer.current.view.title}
-						</span>
-					</div>
-					{headerLayer.prev && (
-						<div
-							key={headerLayer.prev.key}
-							data-fluix-header-inner
-							data-layer="prev"
-							data-exiting="true"
-						>
-							<div
-								data-fluix-badge
-								data-state={headerLayer.prev.view.state}
-								className={headerLayer.prev.view.styles?.badge}
-							>
-								{renderToastIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
-							</div>
-							<span
-								data-fluix-title
-								data-state={headerLayer.prev.view.state}
-								className={headerLayer.prev.view.styles?.title}
-							>
-								{headerLayer.prev.view.title}
-							</span>
-						</div>
-					)}
-				</div>
-			</div>
+			<ToastHeader
+				innerRef={innerRef}
+				headerRef={headerRef}
+				headerLayer={headerLayer}
+				attrs={attrs}
+			/>
 
 			{hasDesc && (
 				<div {...attrs.content}>
@@ -628,7 +732,6 @@ function ViewportGroup({
 	useLayoutEffect(() => {
 		const el = sectionRef.current;
 		if (!el) return;
-		// Clear previous offset props before applying the next resolved style.
 		el.style.top = "";
 		el.style.right = "";
 		el.style.bottom = "";
@@ -653,21 +756,20 @@ export function Toaster({ config }: ToasterProps = {}) {
 		getServerSnapshot,
 	);
 
-	// Apply config when provided
 	useEffect(() => {
 		if (config) machine.configure(config);
 	}, [machine, config]);
 
-	// Per-toast local state: ready, expanded
 	const [localState, setLocalState] = useState<ToastLocalState>(() => ({}));
 
+	// Rule 8.2 + 5.4: Stable callback that receives id as argument instead
+	// of creating a new closure per toast in the render loop.
 	const setToastLocal = useCallback(
 		(id: string, patch: Partial<{ ready: boolean; expanded: boolean }>) => {
 			setLocalState((prev) => {
-				const next = { ...prev };
-				if (!next[id]) next[id] = { ready: false, expanded: false };
-				next[id] = { ...next[id]!, ...patch };
-				return next;
+				const current = prev[id] ?? DEFAULT_LOCAL;
+				const next = { ...current, ...patch };
+				return { ...prev, [id]: next };
 			});
 		},
 		[],
@@ -679,7 +781,7 @@ export function Toaster({ config }: ToasterProps = {}) {
 		setLocalState((prev) => {
 			const next: ToastLocalState = {};
 			for (const id of ids) {
-				next[id] = prev[id] ?? { ready: false, expanded: false };
+				next[id] = prev[id] ?? DEFAULT_LOCAL;
 			}
 			return Object.keys(next).length ? next : prev;
 		});
@@ -713,8 +815,8 @@ export function Toaster({ config }: ToasterProps = {}) {
 							key={item.instanceId}
 							item={item}
 							machine={machine}
-							localState={localState[item.id] ?? { ready: false, expanded: false }}
-							onLocalStateChange={(patch) => setToastLocal(item.id, patch)}
+							localState={localState[item.id] ?? DEFAULT_LOCAL}
+							onLocalStateChange={setToastLocal}
 						/>
 					))}
 				</ViewportGroup>
