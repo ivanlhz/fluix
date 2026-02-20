@@ -12,7 +12,7 @@ function makeItem(overrides: Partial<FluixToastItem> = {}): FluixToastItem {
 		position: "top-right",
 		duration: 6000,
 		exiting: false,
-		fill: "#FFFFFF",
+		fill: undefined,
 		roundness: 16,
 		...overrides,
 	};

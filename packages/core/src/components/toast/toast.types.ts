@@ -3,7 +3,7 @@
  */
 
 export type FluixToastState = "success" | "loading" | "error" | "warning" | "info" | "action";
-export type FluixTheme = "light" | "dark";
+export type FluixTheme = "light" | "dark" | (string & {});
 export type FluixVariant = "solid";
 export type FluixToastLayout = "stack" | "notch";
 
@@ -45,7 +45,7 @@ export interface FluixToastOptions {
 	icon?: unknown;
 	/** CSS class overrides for sub-elements. */
 	styles?: FluixToastStyles;
-	/** Toast background color. Default: "#FFFFFF" */
+	/** Toast background color. If omitted, derived from CSS `--fluix-surface-contrast`. */
 	fill?: string;
 	/** Border radius / gooey blur factor. Default: 16 */
 	roundness?: number;

@@ -52,10 +52,45 @@ export class MyComponent {
 }
 ```
 
+## Custom description (template, like React/Vue)
+
+For rich content (e.g. promise success), pass a **template + context** instead of a string:
+
+```ts
+import { FluixToastService, type FluixDescriptionTemplate } from "@fluix-ui/angular";
+import { TemplateRef, ViewChild } from "@angular/core";
+
+@Component({ ... })
+export class MyComponent {
+  @ViewChild("myTemplate") myTemplate!: TemplateRef<MyData>;
+
+  constructor(private fluix: FluixToastService) {}
+
+  showWithTemplate() {
+    this.fluix.success({
+      title: "Done",
+      description: {
+        templateRef: this.myTemplate,
+        context: { label: "Value" },
+      } satisfies FluixDescriptionTemplate<MyData>,
+    });
+  }
+}
+```
+
+```html
+<ng-template #myTemplate let-data>
+  <div class="my-content">{{ data.label }}</div>
+</ng-template>
+```
+
+Use the same shape in `fluix.promise(..., { success: (data) => ({ description: { templateRef, context: data } }) })`.
+
 ## API
 
 - **FluixToastService** (injectable): `success()`, `error()`, `warning()`, `info()`, `action()`, `promise()`, `dismiss(id)`, `clear(position?)`, `getMachine()`
 - **FluixToasterComponent**: standalone component; place once in your app.
+- **FluixDescriptionTemplate\<T\>**: `{ templateRef: TemplateRef<T>; context: T }` for custom description content.
 - **fluix**: imperative API re-exported from `@fluix-ui/core` (use the service for Angular apps).
 
 ## Docs

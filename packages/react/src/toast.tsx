@@ -511,7 +511,7 @@ function ToastItem({
 							height={HEIGHT}
 							rx={roundness}
 							ry={roundness}
-							fill={item.fill ?? "#FFFFFF"}
+							fill={item.fill ?? "var(--fluix-surface-contrast)"}
 						/>
 						<rect
 							data-fluix-body
@@ -521,7 +521,7 @@ function ToastItem({
 							height={0}
 							rx={roundness}
 							ry={roundness}
-							fill={item.fill ?? "#FFFFFF"}
+							fill={item.fill ?? "var(--fluix-surface-contrast)"}
 							opacity={0}
 						/>
 					</g>

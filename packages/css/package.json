@@ -8,7 +8,8 @@
 		".": "./dist/fluix.css",
 		"./toast": "./dist/toast.css",
 		"./variables": "./dist/variables.css",
-		"./animations": "./dist/animations.css"
+		"./animations": "./dist/animations.css",
+		"./themes/dark": "./dist/themes/dark.css"
 	},
 	"files": ["dist"],
 	"sideEffects": true,

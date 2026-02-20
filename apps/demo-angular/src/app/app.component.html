@@ -70,4 +70,19 @@
   </div>
 
   <fluix-toaster [config]="toasterConfig()" />
+
+  <ng-template #flightCard let-data>
+    <div class="flight-card">
+      <div class="flight-card-top">
+        <span class="flight-card-airline">{{ data.airline }}</span>
+        <span class="flight-card-pnr">PNR {{ data.pnr }}</span>
+      </div>
+      <div class="flight-card-route">
+        <span class="flight-card-code">{{ data.from }}</span>
+        <span class="flight-card-arrow">↗</span>
+        <span class="flight-card-code">{{ data.to }}</span>
+      </div>
+      <div class="flight-card-meta">Booking ID {{ data.bookingId }}</div>
+    </div>
+  </ng-template>
 </main>

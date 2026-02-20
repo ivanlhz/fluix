@@ -389,7 +389,7 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 	pillEl.setAttribute("height", String(HEIGHT));
 	pillEl.setAttribute("rx", String(roundness));
 	pillEl.setAttribute("ry", String(roundness));
-	pillEl.setAttribute("fill", item.fill ?? "#FFFFFF");
+	pillEl.setAttribute("fill", item.fill ?? "var(--fluix-surface-contrast)");
 
 	// Body rect
 	const bodyEl = document.createElementNS(SVG_NS, "rect");
@@ -400,7 +400,7 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 	bodyEl.setAttribute("height", "0");
 	bodyEl.setAttribute("rx", String(roundness));
 	bodyEl.setAttribute("ry", String(roundness));
-	bodyEl.setAttribute("fill", item.fill ?? "#FFFFFF");
+	bodyEl.setAttribute("fill", item.fill ?? "var(--fluix-surface-contrast)");
 	bodyEl.setAttribute("opacity", "0");
 
 	g.appendChild(pillEl);
@@ -836,8 +836,8 @@ function applyUpdate(inst: ToastInstance, item: FluixToastItem, _machine: ToastM
 	}
 
 	// Update pill fill
-	inst.pillEl.setAttribute("fill", item.fill ?? "#FFFFFF");
-	inst.bodyEl.setAttribute("fill", item.fill ?? "#FFFFFF");
+	inst.pillEl.setAttribute("fill", item.fill ?? "var(--fluix-surface-contrast)");
+	inst.bodyEl.setAttribute("fill", item.fill ?? "var(--fluix-surface-contrast)");
 
 	// Header crossfade
 	const newHeaderKey = `${item.state}-${item.title ?? item.state}`;

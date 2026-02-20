@@ -22,8 +22,6 @@ import type {
 
 export const TOAST_DEFAULTS = {
 	duration: 6000,
-	lightFill: "#FFFFFF",
-	darkFill: "#141416",
 	roundness: 16,
 	theme: "light" as const,
 	position: "top-right" as FluixPosition,
@@ -128,7 +126,7 @@ export function createToastMachine(): ToastMachine {
 			position:
 				merged.position ?? fallbackPosition ?? getConfig().position ?? TOAST_DEFAULTS.position,
 			duration,
-			fill: merged.fill ?? (theme === "dark" ? TOAST_DEFAULTS.darkFill : TOAST_DEFAULTS.lightFill),
+			fill: merged.fill,
 			roundness: merged.roundness ?? TOAST_DEFAULTS.roundness,
 			exiting: false,
 			autoExpandDelayMs: auto.expandDelayMs,

@@ -28,3 +28,6 @@ export type {
 	FluixToastState,
 	FluixToasterConfig,
 } from "@fluix-ui/core";
+
+export type { FluixDescriptionTemplate } from "./toast-description";
+export { isDescriptionTemplate } from "./toast-description";

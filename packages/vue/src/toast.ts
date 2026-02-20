@@ -608,7 +608,7 @@ const ToastItem = defineComponent({
 									height: HEIGHT,
 									rx: roundness.value,
 									ry: roundness.value,
-									fill: item.fill ?? "#FFFFFF",
+									fill: item.fill ?? "var(--fluix-surface-contrast)",
 								}),
 								h("rect", {
 									"data-fluix-body": "",
@@ -618,7 +618,7 @@ const ToastItem = defineComponent({
 									height: 0,
 									rx: 0,
 									ry: 0,
-									fill: item.fill ?? "#FFFFFF",
+									fill: item.fill ?? "var(--fluix-surface-contrast)",
 									opacity: 0,
 								}),
 							]),

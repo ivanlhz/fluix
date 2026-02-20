@@ -187,18 +187,27 @@ describe("createToastMachine", () => {
 		machine.create({ title: "D" });
 		const item = machine.store.getSnapshot().toasts[0];
 		expect(item.position).toBe(TOAST_DEFAULTS.position);
-		expect(item.fill).toBe(TOAST_DEFAULTS.lightFill);
+		expect(item.fill).toBeUndefined();
 		expect(item.theme).toBe(TOAST_DEFAULTS.theme);
 		expect(item.roundness).toBe(TOAST_DEFAULTS.roundness);
 		machine.destroy();
 	});
 
-	it("dark theme resolves dark fill when fill is omitted", () => {
+	it("fill is undefined when not explicitly set regardless of theme", () => {
 		const machine = createToastMachine();
 		machine.create({ title: "Dark", theme: "dark" });
 		const item = machine.store.getSnapshot().toasts[0];
 		expect(item.theme).toBe("dark");
-		expect(item.fill).toBe(TOAST_DEFAULTS.darkFill);
+		expect(item.fill).toBeUndefined();
+		machine.destroy();
+	});
+
+	it("accepts arbitrary theme strings", () => {
+		const machine = createToastMachine();
+		machine.create({ title: "Custom", theme: "midnight" });
+		const item = machine.store.getSnapshot().toasts[0];
+		expect(item.theme).toBe("midnight");
+		expect(item.fill).toBeUndefined();
 		machine.destroy();
 	});
 

@@ -375,14 +375,14 @@ $effect(() => {
 					x={pillX} y={0}
 					width={resolvedPillWidth} height={HEIGHT}
 					rx={roundness} ry={roundness}
-					fill={item.fill ?? "#FFFFFF"}
+					fill={item.fill ?? "var(--fluix-surface-contrast)"}
 				/>
 				<rect
 					data-fluix-body=""
 					x={0} y={HEIGHT}
 					width={WIDTH} height={0}
 					rx={0} ry={0}
-					fill={item.fill ?? "#FFFFFF"}
+					fill={item.fill ?? "var(--fluix-surface-contrast)"}
 					opacity={0}
 				/>
 			</g>

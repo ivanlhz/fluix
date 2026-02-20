@@ -17,6 +17,7 @@ import {
 	ViewChild,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { isDescriptionTemplate } from "./toast-description";
 import {
 	Toaster as CoreToaster,
 	FLUIX_SPRING,
@@ -90,7 +91,7 @@ function getPillAlign(position: FluixToastItem["position"]): "left" | "center" |
 							[attr.height]="HEIGHT"
 							[attr.rx]="roundness"
 							[attr.ry]="roundness"
-							[attr.fill]="item.fill ?? '#FFFFFF'"
+							[attr.fill]="item.fill ?? 'var(--fluix-surface-contrast)'"
 						/>
 						<rect
 							data-fluix-body
@@ -100,7 +101,7 @@ function getPillAlign(position: FluixToastItem["position"]): "left" | "center" |
 							height="0"
 							[attr.rx]="roundness"
 							[attr.ry]="roundness"
-							[attr.fill]="item.fill ?? '#FFFFFF'"
+							[attr.fill]="item.fill ?? 'var(--fluix-surface-contrast)'"
 							opacity="0"
 						/>
 					</g>
@@ -123,7 +124,11 @@ function getPillAlign(position: FluixToastItem["position"]): "left" | "center" |
 			@if (hasDesc) {
 				<div [fluixAttrs]="attrs.content">
 					<div #contentRef [fluixAttrs]="attrs.description" [class]="item.styles?.description ?? ''">
-						{{ item.description }}
+						@if (isDescriptionTemplate(item.description)) {
+							<ng-container *ngTemplateOutlet="item.description.templateRef; context: { $implicit: item.description.context }" />
+						} @else if (typeof item.description === 'string') {
+							{{ item.description }}
+						}
 						@if (item.button) {
 							<button
 								type="button"
@@ -186,6 +191,9 @@ export class FluixToastItemComponent implements AfterViewInit, OnChanges, OnDest
 	get hasDesc(): boolean {
 		return Boolean(this.item.description) || Boolean(this.item.button);
 	}
+
+	/** Used in template to render description as string or NgTemplateOutlet. */
+	readonly isDescriptionTemplate = isDescriptionTemplate;
 
 	get edge(): "top" | "bottom" {
 		return this.item.position.startsWith("top") ? "bottom" : "top";

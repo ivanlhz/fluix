@@ -1,6 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, TemplateRef, ViewChild } from '@angular/core';
 import { FluixToasterComponent, FluixToastService } from '@fluix-ui/angular';
 import type { FluixPosition, FluixToasterConfig } from '@fluix-ui/core';
+
+export interface FlightBookingData {
+  airline: string;
+  from: string;
+  to: string;
+  pnr: string;
+  bookingId: string;
+}
 
 const POSITIONS: FluixPosition[] = [
   'top-left',
@@ -23,6 +31,8 @@ type LayoutMode = (typeof LAYOUTS)[number];
 })
 export class AppComponent {
   readonly fluix = inject(FluixToastService);
+
+  @ViewChild('flightCard') flightCardRef!: TemplateRef<FlightBookingData>;
 
   readonly theme = signal<'light' | 'dark'>('dark');
   readonly position = signal<FluixPosition>('top-right');
@@ -102,13 +112,7 @@ export class AppComponent {
   }
 
   showPromise(): void {
-    const promise = new Promise<{
-      airline: string;
-      from: string;
-      to: string;
-      pnr: string;
-      bookingId: string;
-    }>((resolve) => {
+    const promise = new Promise<FlightBookingData>((resolve) => {
       setTimeout(
         () =>
           resolve({
@@ -127,7 +131,9 @@ export class AppComponent {
         title: 'Booking Confirmed',
         state: 'success',
         roundness: 20,
-        description: `${data.airline} ${data.from} → ${data.to}. PNR ${data.pnr}. Booking ID ${data.bookingId}`,
+        description: this.flightCardRef
+          ? { templateRef: this.flightCardRef, context: data }
+          : `${data.airline} ${data.from} → ${data.to}. PNR ${data.pnr}. Booking ID ${data.bookingId}`,
         button: {
           title: 'View Details',
           onClick: () =>
@@ -135,6 +141,9 @@ export class AppComponent {
               title: 'Trip details opened',
               description: `Reservation ${data.bookingId} ready.`,
             }),
+        },
+        styles: {
+          button: 'flight-card-button',
         },
       }),
       error: () => ({

@@ -1,0 +1,12 @@
+/* Dark theme for Fluix Toast */
+
+[data-fluix-toast][data-theme="dark"] {
+	--fluix-text: oklch(0.93 0 0);
+	--fluix-text-muted: oklch(0.74 0 0);
+	--fluix-surface-contrast: #141416;
+}
+
+[data-fluix-toast][data-theme="dark"] [data-fluix-button][data-state] {
+	--fluix-btn-bg: color-mix(in oklch, var(--_c) 20%, var(--fluix-surface-contrast));
+	--fluix-btn-bg-hover: color-mix(in oklch, var(--_c) 32%, var(--fluix-surface-contrast));
+}
