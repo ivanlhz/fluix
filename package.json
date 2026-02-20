@@ -1,40 +1,42 @@
 {
-	"name": "fluix",
-	"version": "0.1.0",
-	"private": true,
-	"description": "Physics-based, cross-framework UI components. Beautiful by default.",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/ivanlhz/fluix.git"
-	},
-	"homepage": "https://fluix.ivanlopezdev.es",
-	"license": "MIT",
-	"engines": {
-		"node": ">=18",
-		"pnpm": ">=9"
-	},
-	"packageManager": "pnpm@9.15.4",
-	"scripts": {
-		"build": "pnpm run build:core && pnpm run build:css && pnpm --filter \"./packages/*\" run build",
-		"demo": "pnpm run build && pnpm --filter demo run dev",
-		"demo:svelte": "pnpm run build && pnpm --filter demo-svelte run dev",
-		"demo:vanilla": "pnpm run build && pnpm --filter demo-vanilla run dev",
-		"demo:angular": "pnpm run build && pnpm --filter demo-angular run start",
-		"build:core": "pnpm --filter @fluix-ui/core run build",
-		"build:css": "pnpm --filter @fluix-ui/css run build",
-		"dev": "pnpm --parallel --filter \"./packages/*\" run dev",
-		"test": "vitest run",
-		"test:watch": "vitest",
-		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
-		"format": "biome format --write .",
-		"clean": "pnpm -r exec rm -rf dist",
-		"typecheck": "pnpm -r run typecheck"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.0",
-		"tsup": "^8.3.0",
-		"typescript": "^5.7.0",
-		"vitest": "^3.0.0"
-	}
+  "name": "fluix",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Physics-based, cross-framework UI components. Beautiful by default.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanlhz/fluix.git"
+  },
+  "homepage": "https://fluix.ivanlopezdev.es",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm run build:core && pnpm run build:css && pnpm --filter \"./packages/*\" run build",
+    "demo": "pnpm run build && pnpm --filter demo run dev",
+    "demo:svelte": "pnpm run build && pnpm --filter demo-svelte run dev",
+    "demo:vanilla": "pnpm run build && pnpm --filter demo-vanilla run dev",
+    "demo:angular": "pnpm run build && pnpm --filter demo-angular run start",
+    "build:core": "pnpm --filter @fluix-ui/core run build",
+    "build:css": "pnpm --filter @fluix-ui/css run build",
+    "dev": "pnpm --parallel --filter \"./packages/*\" run dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "clean": "pnpm -r exec rm -rf dist",
+    "typecheck": "pnpm -r run typecheck",
+    "release": "pnpm run build && pnpm --filter \"./packages/*\" publish -r",
+    "release:dry": "pnpm run build && pnpm --filter \"./packages/*\" publish -r --dry-run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
 }

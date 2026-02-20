@@ -1,44 +1,53 @@
 {
-	"name": "@fluix-ui/react",
-	"version": "0.0.4",
-	"description": "React adapter for Fluix UI components.",
-	"license": "MIT",
-	"type": "module",
-	"exports": {
-		".": {
-			"import": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
-			},
-			"require": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
-			}
-		}
-	},
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"files": ["dist"],
-	"sideEffects": false,
-	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
-		"typecheck": "tsc --noEmit"
-	},
-	"peerDependencies": {
-		"@fluix-ui/core": "workspace:*",
-		"@fluix-ui/css": "workspace:*",
-		"react": ">=18",
-		"react-dom": ">=18"
-	},
-	"devDependencies": {
-		"@fluix-ui/core": "workspace:*",
-		"@types/react": "^19.0.0",
-		"@types/react-dom": "^19.0.0",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"tsup": "^8.3.0",
-		"typescript": "^5.7.0"
-	}
+  "name": "@fluix-ui/react",
+  "version": "0.0.5",
+  "description": "React adapter for Fluix UI components.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@fluix-ui/core": "workspace:*",
+    "@fluix-ui/css": "workspace:*",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@fluix-ui/core": "workspace:*",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanlhz/fluix.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

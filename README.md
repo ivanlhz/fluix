@@ -18,6 +18,7 @@ Source code: https://github.com/ivanlhz/fluix
 | `@fluix-ui/svelte` | Svelte 5+ adapter | ✅ Available |
 | `@fluix-ui/solid` | Solid.js adapter | ✅ Available |
 | `@fluix-ui/vanilla` | Zero-framework adapter | ✅ Available |
+| `@fluix-ui/angular` | Angular 17+ adapter | ✅ Available |
 
 ## Components
 
@@ -39,6 +40,9 @@ npm install @fluix-ui/react @fluix-ui/css
 
 # Vue
 npm install @fluix-ui/vue @fluix-ui/css
+
+# Angular
+npm install @fluix-ui/angular @fluix-ui/core @fluix-ui/css
 
 # Vanilla JS
 npm install @fluix-ui/vanilla @fluix-ui/css
@@ -63,6 +67,8 @@ function App() {
 
 ## Publish to npm
 
+All packages use `version` and `publishConfig.access: "public"` in their `package.json`. pnpm replaces `workspace:*` peer deps with the published version when publishing.
+
 ```bash
 # 1) Authenticate
 npm login
@@ -70,17 +76,17 @@ npm whoami
 
 # 2) Build and verify
 pnpm build
-pnpm -r --filter "./packages/*" run typecheck
+pnpm typecheck
 pnpm test
 pnpm lint
 
-# 3) Dry run publish
-pnpm -r --filter "./packages/*" publish --dry-run --access public --no-git-checks
+# 3) Dry run (build + publish --dry-run for all packages)
+pnpm run release:dry
 
-# 4) Publish
-pnpm -r --filter "./packages/*" publish --access public
-# if your git tree is intentionally dirty:
-# pnpm -r --filter "./packages/*" publish --access public --no-git-checks
+# 4) Publish all packages (build + publish -r)
+pnpm run release
+# If your git tree is dirty on purpose:
+# pnpm --filter "./packages/*" publish -r --no-git-checks
 ```
 
 ## Architecture
@@ -93,6 +99,7 @@ pnpm -r --filter "./packages/*" publish --access public
 @fluix-ui/svelte  → Thin Svelte adapter
 @fluix-ui/solid   → Thin Solid adapter
 @fluix-ui/vanilla → Thin Vanilla JS adapter
+@fluix-ui/angular → Thin Angular 17+ adapter
 ```
 
 See [AGENTS.md](./AGENTS.md) for the full architectural guide.

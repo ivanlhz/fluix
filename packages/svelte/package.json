@@ -1,38 +1,47 @@
 {
-	"name": "@fluix-ui/svelte",
-	"version": "0.0.4",
-	"description": "Svelte 5 adapter for Fluix UI components.",
-	"license": "MIT",
-	"type": "module",
-	"svelte": "./dist/index.js",
-	"exports": {
-		".": {
-			"svelte": "./dist/index.js",
-			"import": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
-			}
-		}
-	},
-	"types": "./dist/index.d.ts",
-	"files": ["dist"],
-	"sideEffects": false,
-	"scripts": {
-		"build": "svelte-package -i src",
-		"dev": "svelte-package -w -i src",
-		"typecheck": "svelte-check --tsconfig ./tsconfig.json"
-	},
-	"peerDependencies": {
-		"@fluix-ui/core": "workspace:*",
-		"@fluix-ui/css": "workspace:*",
-		"svelte": ">=5"
-	},
-	"devDependencies": {
-		"@fluix-ui/core": "workspace:*",
-		"@sveltejs/package": "^2.0.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
-		"svelte": "^5.0.0",
-		"svelte-check": "^4.0.0",
-		"typescript": "^5.7.0"
-	}
+  "name": "@fluix-ui/svelte",
+  "version": "0.0.5",
+  "description": "Svelte 5 adapter for Fluix UI components.",
+  "license": "MIT",
+  "type": "module",
+  "svelte": "./dist/index.js",
+  "exports": {
+    ".": {
+      "svelte": "./dist/index.js",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "svelte-package -i src",
+    "dev": "svelte-package -w -i src",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "peerDependencies": {
+    "@fluix-ui/core": "workspace:*",
+    "@fluix-ui/css": "workspace:*",
+    "svelte": ">=5"
+  },
+  "devDependencies": {
+    "@fluix-ui/core": "workspace:*",
+    "@sveltejs/package": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanlhz/fluix.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

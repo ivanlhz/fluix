@@ -86,6 +86,14 @@ export class MyComponent {
 
 Use the same shape in `fluix.promise(..., { success: (data) => ({ description: { templateRef, context: data } }) })`.
 
+## Custom themes
+
+Pass any theme name — themes are pure CSS. See `@fluix-ui/css` for details.
+
+```ts
+this.fluix.success({ title: "Done", theme: "midnight" });
+```
+
 ## API
 
 - **FluixToastService** (injectable): `success()`, `error()`, `warning()`, `info()`, `action()`, `promise()`, `dismiss(id)`, `clear(position?)`, `getMachine()`

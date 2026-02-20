@@ -15,6 +15,14 @@ import { createToaster, fluix } from "@fluix-ui/vanilla";
 import "@fluix-ui/css";
 ```
 
+### Custom themes
+
+Pass any theme name — themes are pure CSS. See `@fluix-ui/css` for details.
+
+```ts
+fluix.success({ title: "Done", theme: "midnight" });
+```
+
 ## Docs
 
 - Official docs: https://fluix.ivanlopezdev.es
