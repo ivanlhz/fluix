@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, TemplateRef, ViewChild } from '@angular/core';
-import { FluixToasterComponent, FluixToastService } from '@fluix-ui/angular';
-import type { FluixPosition, FluixToasterConfig } from '@fluix-ui/core';
+import { FluixNotchComponent, FluixToasterComponent, FluixToastService } from '@fluix-ui/angular';
+import type { FluixPosition, FluixToasterConfig, NotchTrigger } from '@fluix-ui/core';
 
 export interface FlightBookingData {
   airline: string;
@@ -25,7 +25,7 @@ type LayoutMode = (typeof LAYOUTS)[number];
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FluixToasterComponent],
+  imports: [FluixToasterComponent, FluixNotchComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -51,6 +51,9 @@ export class AppComponent {
 
   readonly positions = POSITIONS;
   readonly layouts = LAYOUTS;
+  readonly notchTriggers: NotchTrigger[] = ['hover', 'click', 'manual'];
+  readonly notchTrigger = signal<NotchTrigger>('hover');
+  readonly notchOpen = signal(false);
 
   setTheme(value: 'light' | 'dark'): void {
     this.theme.set(value);
@@ -156,5 +159,18 @@ export class AppComponent {
 
   clear(): void {
     this.fluix.clear();
+  }
+
+  setNotchTrigger(t: NotchTrigger): void {
+    this.notchTrigger.set(t);
+    this.notchOpen.set(false);
+  }
+
+  toggleNotchOpen(): void {
+    this.notchOpen.set(!this.notchOpen());
+  }
+
+  onNotchOpenChange(open: boolean): void {
+    this.notchOpen.set(open);
   }
 }

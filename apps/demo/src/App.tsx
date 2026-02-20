@@ -1,4 +1,5 @@
-import { type FluixPosition, Toaster, fluix } from "@fluix-ui/react";
+import { type FluixPosition, Notch, Toaster, fluix } from "@fluix-ui/react";
+import type { NotchTrigger } from "@fluix-ui/core";
 import { useMemo, useState } from "react";
 
 const POSITIONS: FluixPosition[] = [
@@ -13,10 +14,14 @@ const POSITIONS: FluixPosition[] = [
 const LAYOUTS = ["stack", "notch"] as const;
 type LayoutMode = (typeof LAYOUTS)[number];
 
+const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
+
 export default function App() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [position, setPosition] = useState<FluixPosition>("top-right");
 	const [layout, setLayout] = useState<LayoutMode>("stack");
+	const [notchTrigger, setNotchTrigger] = useState<NotchTrigger>("hover");
+	const [notchOpen, setNotchOpen] = useState(false);
 	const toastTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
 	const toasterConfig = useMemo(
 		() => ({
@@ -212,6 +217,69 @@ export default function App() {
 			</div>
 
 			<Toaster config={toasterConfig} />
+
+			{/* Notch Demo */}
+			<div className="demo-card" style={{ marginTop: "2rem" }}>
+				<div className="demo-header">
+					<div>
+						<h2 className="demo-title">Notch Menu</h2>
+						<p className="demo-subtitle">
+							Liquid expanding pill with gooey SVG morphing.
+						</p>
+					</div>
+				</div>
+
+				<div className="demo-row">
+					{NOTCH_TRIGGERS.map((t) => (
+						<button
+							key={t}
+							type="button"
+							onClick={() => { setNotchTrigger(t); setNotchOpen(false); }}
+							className={`demo-pill ${notchTrigger === t ? "is-active" : ""}`}
+						>
+							Trigger: {t}
+						</button>
+					))}
+				</div>
+
+				{notchTrigger === "manual" && (
+					<div className="demo-row" style={{ marginTop: "1rem" }}>
+						<button
+							type="button"
+							onClick={() => setNotchOpen(!notchOpen)}
+							className="demo-pill"
+						>
+							{notchOpen ? "Close" : "Open"} Notch
+						</button>
+					</div>
+				)}
+			</div>
+
+			<Notch
+				key={notchTrigger}
+				trigger={notchTrigger}
+				position="top-center"
+				dotSize={36}
+				roundness={20}
+				theme={toastTheme}
+				open={notchTrigger === "manual" ? notchOpen : undefined}
+				onOpenChange={notchTrigger === "manual" ? setNotchOpen : undefined}
+				pill={
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+						<line x1="3" y1="6" x2="21" y2="6" />
+						<line x1="3" y1="12" x2="21" y2="12" />
+						<line x1="3" y1="18" x2="21" y2="18" />
+					</svg>
+				}
+				content={
+					<nav style={{ display: "flex", gap: "1rem", padding: "0.25rem 1.75rem", fontSize: "0.85rem", fontWeight: 500 }}>
+						<a href="#home" style={{ color: "inherit", textDecoration: "none" }}>Home</a>
+						<a href="#about" style={{ color: "inherit", textDecoration: "none" }}>About</a>
+						<a href="#work" style={{ color: "inherit", textDecoration: "none" }}>Work</a>
+						<a href="#contact" style={{ color: "inherit", textDecoration: "none" }}>Contact</a>
+					</nav>
+				}
+			/>
 		</main>
 	);
 }
