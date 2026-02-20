@@ -83,8 +83,8 @@ function getViewportOffsetStyle(
 	}
 
 	const parts: string[] = [];
-	if (position.startsWith("top") && top) parts.push(`top:${top}`);
-	if (position.startsWith("bottom") && bottom) parts.push(`bottom:${bottom}`);
+	if (position.startsWith("top") && top) parts.push(`--fluix-viewport-top:${top}`);
+	if (position.startsWith("bottom") && bottom) parts.push(`--fluix-viewport-bottom:${bottom}`);
 	if (position.endsWith("right") && right) parts.push(`right:${right}`);
 	if (position.endsWith("left") && left) parts.push(`left:${left}`);
 	if (position.endsWith("center")) {

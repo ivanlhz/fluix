@@ -272,7 +272,7 @@ const showPromise = () =>
 				</svg>
 			{/snippet}
 			{#snippet content()}
-				<nav style="display:flex;gap:1.5rem;padding:0.25rem 1.25rem;font-size:0.85rem;font-weight:500;">
+				<nav style="display:flex;gap:1rem;padding:0.25rem 1.75rem;font-size:0.85rem;font-weight:500;">
 					<a href="#home" style="color:inherit;text-decoration:none;">Home</a>
 					<a href="#about" style="color:inherit;text-decoration:none;">About</a>
 					<a href="#work" style="color:inherit;text-decoration:none;">Work</a>

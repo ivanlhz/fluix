@@ -5,19 +5,21 @@
 
 [data-fluix-notch] {
 	position: fixed;
-	z-index: 50;
+	z-index: 60;
 	pointer-events: auto;
 	cursor: pointer;
 
 	/* Default theme: dark bg, white text */
 	--fluix-notch-bg: oklch(0.15 0 0);
 	--fluix-notch-color: #fff;
+	--fluix-notch-hl: oklch(0.28 0 0);
 }
 
 /* Light theme: white bg, dark text */
 [data-fluix-notch][data-theme="light"] {
 	--fluix-notch-bg: #fff;
 	--fluix-notch-color: oklch(0.15 0 0);
+	--fluix-notch-hl: oklch(0.92 0 0);
 }
 
 /* Position variants */
@@ -92,6 +94,21 @@
 	pointer-events: auto;
 }
 
+/* Interactive items inside expanded content */
+[data-fluix-notch-content] :is(a, button) {
+	position: relative;
+	color: var(--fluix-notch-color);
+	text-decoration: none;
+	padding: 0.35rem 0.5rem;
+	font-weight: 400;
+	opacity: 0.55;
+	transition: font-weight 180ms ease, opacity 180ms ease;
+}
+[data-fluix-notch-content] :is(a, button):hover {
+	font-weight: 700;
+	opacity: 1;
+}
+
 /* Hidden measurer */
 [data-fluix-notch-measure] {
 	position: fixed;
@@ -102,6 +119,13 @@
 	white-space: nowrap;
 	display: inline-flex;
 	align-items: center;
+}
+
+/* ---- Collision avoidance with toast viewport ---- */
+/* When a notch exists at the same edge, nudge the toast viewport past it.
+   Uses --fluix-viewport-nudge-top which is additive with the user's offset. */
+:root:has([data-fluix-notch][data-position^="top"]) {
+	--fluix-viewport-nudge-top: calc(0.75rem + var(--fluix-notch-offset, 48px));
 }
 
 @media (prefers-reduced-motion: reduce) {

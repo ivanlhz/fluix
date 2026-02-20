@@ -28,12 +28,12 @@
 
 /* Vertical edge */
 [data-fluix-viewport][data-position^="top"] {
-	top: 0;
+	top: calc(var(--fluix-viewport-top, 0px) + var(--fluix-viewport-nudge-top, 0px));
 	flex-direction: column-reverse;
 }
 
 [data-fluix-viewport][data-position^="bottom"] {
-	bottom: 0;
+	bottom: calc(var(--fluix-viewport-bottom, 0px) + var(--fluix-viewport-nudge-bottom, 0px));
 	flex-direction: column;
 }
 

@@ -74,7 +74,9 @@ $effect(() => {
 // Refs
 let rootEl: HTMLDivElement | null = $state(null);
 let measureContentEl: HTMLDivElement | null = $state(null);
+let contentEl: HTMLDivElement | null = $state(null);
 let svgRectEl: SVGRectElement | null = $state(null);
+let highlightRectEl: SVGRectElement | null = $state(null);
 
 // State
 const isOpen = $derived(snapshot.open);
@@ -105,9 +107,10 @@ $effect(() => {
 	return () => { cancelAnimationFrame(raf); obs.disconnect(); };
 });
 
-// Expanded height = at least dotSize so the pill always looks good
-const expandedW = $derived(contentSize.w);
-const expandedH = $derived(Math.max(contentSize.h, dotSize));
+// Expanded = content + padding for highlight blob overflow
+const hlPad = 12; // extra space so highlight rect fits inside SVG viewBox
+const expandedW = $derived(contentSize.w + hlPad * 2);
+const expandedH = $derived(Math.max(contentSize.h + hlPad, dotSize));
 
 // Target dimensions
 const targetW = $derived(isOpen ? expandedW : collapsedW);
@@ -119,6 +122,83 @@ const rootH = $derived(Math.max(expandedH, collapsedH));
 
 // Track previous for animation (mutable, not reactive)
 const prev = { w: 0, h: 0, initialized: false };
+
+// --- Highlight blob state ---
+let highlightAnim: Animation | null = null;
+const hlPrev = { x: 0, y: 0, w: 0, h: 0, visible: false };
+
+function onItemEnter(e: MouseEvent) {
+	const target = (e.target as HTMLElement).closest("a, button") as HTMLElement | null;
+	const rect = highlightRectEl;
+	const root = rootEl;
+	if (!target || !rect || !root || !isOpen) return;
+
+	const rootRect = root.getBoundingClientRect();
+	const itemRect = target.getBoundingClientRect();
+
+	const padX = 8;
+	const padY = 4;
+	const toX = itemRect.left - rootRect.left - padX;
+	const toY = itemRect.top - rootRect.top - padY;
+	const toW = itemRect.width + padX * 2;
+	const toH = itemRect.height + padY * 2;
+	const toRx = toH / 2;
+
+	if (!hlPrev.visible) {
+		// First hover — snap into place, no animation
+		rect.setAttribute("x", String(toX));
+		rect.setAttribute("y", String(toY));
+		rect.setAttribute("width", String(toW));
+		rect.setAttribute("height", String(toH));
+		rect.setAttribute("rx", String(toRx));
+		rect.setAttribute("ry", String(toRx));
+		rect.setAttribute("opacity", "1");
+		hlPrev.x = toX;
+		hlPrev.y = toY;
+		hlPrev.w = toW;
+		hlPrev.h = toH;
+		hlPrev.visible = true;
+		return;
+	}
+
+	// Animate from previous position
+	if (highlightAnim) { highlightAnim.cancel(); highlightAnim = null; }
+
+	const a = animateSpring(rect, {
+		x: { from: hlPrev.x, to: toX, unit: "px" },
+		y: { from: hlPrev.y, to: toY, unit: "px" },
+		width: { from: hlPrev.w, to: toW, unit: "px" },
+		height: { from: hlPrev.h, to: toH, unit: "px" },
+		rx: { from: hlPrev.h / 2, to: toRx, unit: "px" },
+		ry: { from: hlPrev.h / 2, to: toRx, unit: "px" },
+	}, { ...springConfig, stiffness: (springConfig.stiffness ?? 300) * 1.2 });
+
+	hlPrev.x = toX;
+	hlPrev.y = toY;
+	hlPrev.w = toW;
+	hlPrev.h = toH;
+
+	if (a) {
+		highlightAnim = a;
+		a.onfinish = () => {
+			highlightAnim = null;
+			rect.setAttribute("x", String(toX));
+			rect.setAttribute("y", String(toY));
+			rect.setAttribute("width", String(toW));
+			rect.setAttribute("height", String(toH));
+			rect.setAttribute("rx", String(toRx));
+			rect.setAttribute("ry", String(toRx));
+		};
+	}
+}
+
+function onItemLeave() {
+	const rect = highlightRectEl;
+	if (!rect) return;
+	rect.setAttribute("opacity", "0");
+	hlPrev.visible = false;
+	if (highlightAnim) { highlightAnim.cancel(); highlightAnim = null; }
+}
 
 // --- Event handlers ---
 function handleOpen() {
@@ -134,7 +214,10 @@ function handleToggle() {
 	else onOpenChange?.(!snapshot.open);
 }
 function onMouseEnter() { if (trigger === "hover") handleOpen(); }
-function onMouseLeave() { if (trigger === "hover") handleClose(); }
+function onMouseLeave() {
+	if (trigger === "hover") handleClose();
+	onItemLeave();
+}
 function onClick() { if (trigger === "click") handleToggle(); }
 
 // --- Measure pill (not needed, pill = dotSize x dotSize) ---
@@ -216,6 +299,22 @@ $effect(() => {
 	}
 });
 
+// Reset highlight when closing
+$effect(() => {
+	if (!isOpen) {
+		onItemLeave();
+	}
+});
+
+// Expose notch height as CSS variable on :root for toast collision avoidance
+$effect(() => {
+	const h = rootH;
+	document.documentElement.style.setProperty("--fluix-notch-offset", `${h}px`);
+	return () => {
+		document.documentElement.style.removeProperty("--fluix-notch-offset");
+	};
+});
+
 $effect(() => () => machine.destroy());
 </script>
 
@@ -233,6 +332,7 @@ $effect(() => () => machine.destroy());
 	style="width:{rootW}px;height:{rootH}px;"
 	onmouseenter={onMouseEnter}
 	onmouseleave={onMouseLeave}
+	onmouseover={onItemEnter}
 	onclick={onClick}
 >
 	<!-- SVG gooey background -->
@@ -271,6 +371,14 @@ $effect(() => () => machine.destroy());
 					fill={fill ?? "var(--fluix-notch-bg)"}
 				/>
 			</g>
+			<!-- Highlight blob: independent rect (no gooey), sits on top of bg -->
+			<rect
+				bind:this={highlightRectEl}
+				x="0" y="0" width="0" height="0"
+				rx="0" ry="0"
+				opacity="0"
+				fill="var(--fluix-notch-hl)"
+			/>
 		</svg>
 	</div>
 
@@ -280,7 +388,11 @@ $effect(() => () => machine.destroy());
 	</div>
 
 	<!-- Expanded content — centered -->
-	<div {...attrs.content}>
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		bind:this={contentEl}
+		{...attrs.content}
+	>
 		{@render content()}
 	</div>
 </div>
