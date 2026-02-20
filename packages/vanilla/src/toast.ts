@@ -585,15 +585,14 @@ function createInstance(item: FluixToastItem, machine: ToastMachine): ToastInsta
 		() => {
 			inst.localState.ready = true;
 			applyUpdate(inst, inst.item, machine);
+			// Autopilot must be set up after ready (matches React's useEffect dep on ready)
+			setupAutopilot(inst, inst.item, machine);
 		},
 		32,
 	);
 
 	// Auto-dismiss timer
 	setupAutoDismiss(inst, item, machine);
-
-	// Autopilot timers
-	setupAutopilot(inst, item, machine);
 
 	// Initial pill measurement
 	measurePillWidth(inst);
@@ -718,8 +717,6 @@ function setupAutoDismiss(inst: ToastInstance, item: FluixToastItem, machine: To
 /* ----------------------------- setupAutopilot ----------------------------- */
 
 function setupAutopilot(inst: ToastInstance, item: FluixToastItem, machine: ToastMachine) {
-	if (!inst.localState.ready) return;
-
 	if (item.autoExpandDelayMs != null && item.autoExpandDelayMs > 0) {
 		setTimer(
 			inst,
@@ -774,14 +771,68 @@ function applyUpdate(inst: ToastInstance, item: FluixToastItem, _machine: ToastM
 		if (item.styles?.title) (titleEl as HTMLElement).className = item.styles.title;
 	}
 
-	// Content
-	if (inst.contentEl) applyAttrs(inst.contentEl, attrs.content);
-	if (inst.descriptionEl) applyAttrs(inst.descriptionEl, attrs.description);
+	// Content — update description text and button (notch mode swaps content)
+	const hasDesc = Boolean(item.description) || Boolean(item.button);
+	if (hasDesc && !inst.contentEl) {
+		// Toast gained a description — create content elements
+		const contentEl = document.createElement("div");
+		const descriptionEl = document.createElement("div");
+		contentEl.appendChild(descriptionEl);
+		inst.el.appendChild(contentEl);
+		inst.contentEl = contentEl;
+		inst.descriptionEl = descriptionEl;
 
-	// Button attrs
-	if (item.button && inst.descriptionEl) {
-		const btnEl = inst.descriptionEl.querySelector("button");
-		if (btnEl) applyAttrs(btnEl, attrs.button);
+		// Set up content ResizeObserver
+		inst.contentRo = new ResizeObserver(() => {
+			requestAnimationFrame(() => {
+				const h = descriptionEl.scrollHeight;
+				if (h !== inst.contentHeight) {
+					inst.contentHeight = h;
+					applyVars(inst, inst.item);
+				}
+			});
+		});
+		inst.contentRo.observe(descriptionEl);
+	}
+
+	if (inst.contentEl) applyAttrs(inst.contentEl, attrs.content);
+	if (inst.descriptionEl) {
+		applyAttrs(inst.descriptionEl, attrs.description);
+		if (item.styles?.description) {
+			inst.descriptionEl.className = item.styles.description;
+		}
+
+		// Update description content
+		// Remove old children except action button
+		const existingBtn = inst.descriptionEl.querySelector("[data-fluix-button]");
+		inst.descriptionEl.textContent = "";
+
+		if (item.description != null) {
+			if (typeof item.description === "string") {
+				inst.descriptionEl.textContent = item.description;
+			} else if (item.description instanceof HTMLElement) {
+				inst.descriptionEl.appendChild(item.description);
+			}
+		}
+
+		// Update or create action button
+		if (item.button) {
+			let btnEl = existingBtn as HTMLButtonElement | null;
+			if (!btnEl) {
+				btnEl = document.createElement("button");
+				btnEl.type = "button";
+			}
+			btnEl.textContent = item.button.title;
+			if (item.styles?.button) btnEl.className = item.styles.button;
+			applyAttrs(btnEl, attrs.button);
+			// Re-wire click handler
+			const newBtn = btnEl.cloneNode(true) as HTMLButtonElement;
+			newBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				item.button?.onClick();
+			});
+			inst.descriptionEl.appendChild(newBtn);
+		}
 	}
 
 	// Update pill fill
