@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type FluixPosition, fluix } from "@fluix-ui/svelte";
+import { type FluixPosition, type NotchTrigger, fluix, Notch, Toaster } from "@fluix-ui/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [
@@ -15,8 +15,8 @@ const LAYOUTS = ["stack", "notch"] as const;
 type LayoutMode = (typeof LAYOUTS)[number];
 
 let theme = $state<"light" | "dark">("dark");
-const position = $state<FluixPosition>("top-right");
-const layout = $state<LayoutMode>("stack");
+let position = $state<FluixPosition>("top-right");
+let layout = $state<LayoutMode>("stack");
 
 const toastTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "light");
 const toasterConfig = $derived({
@@ -57,6 +57,11 @@ let flightData = $state<{
 	pnr: string;
 	bookingId: string;
 } | null>(null);
+
+// Notch demo state
+const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
+let notchTrigger = $state<NotchTrigger>("hover");
+let notchOpen = $state(false);
 
 const showPromise = () =>
 	fluix.promise(createBookingPromise(), {
@@ -211,4 +216,69 @@ const showPromise = () =>
 	</div>
 
 	<Toaster config={toasterConfig} />
+
+	<!-- Notch Demo -->
+	<div class="demo-card" style="margin-top:2rem;">
+		<div class="demo-header">
+			<div>
+				<h2 class="demo-title">Notch Menu</h2>
+				<p class="demo-subtitle">
+					Liquid expanding pill with gooey SVG morphing.
+				</p>
+			</div>
+		</div>
+
+		<div class="demo-row">
+			{#each NOTCH_TRIGGERS as t}
+				<button
+					type="button"
+					class="demo-pill"
+					class:is-active={notchTrigger === t}
+					onclick={() => { notchTrigger = t; notchOpen = false; }}
+				>
+					Trigger: {t}
+				</button>
+			{/each}
+		</div>
+
+		{#if notchTrigger === "manual"}
+			<div class="demo-row" style="margin-top:1rem;">
+				<button
+					type="button"
+					class="demo-pill"
+					onclick={() => (notchOpen = !notchOpen)}
+				>
+					{notchOpen ? "Close" : "Open"} Notch
+				</button>
+			</div>
+		{/if}
+	</div>
+
+	{#key notchTrigger}
+		<Notch
+			trigger={notchTrigger}
+			position="top-center"
+			dotSize={36}
+			roundness={20}
+			theme={toastTheme}
+			open={notchTrigger === "manual" ? notchOpen : undefined}
+			onOpenChange={notchTrigger === "manual" ? (v) => (notchOpen = v) : undefined}
+		>
+			{#snippet pill()}
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="3" y1="6" x2="21" y2="6" />
+					<line x1="3" y1="12" x2="21" y2="12" />
+					<line x1="3" y1="18" x2="21" y2="18" />
+				</svg>
+			{/snippet}
+			{#snippet content()}
+				<nav style="display:flex;gap:1.5rem;padding:0.25rem 1.25rem;font-size:0.85rem;font-weight:500;">
+					<a href="#home" style="color:inherit;text-decoration:none;">Home</a>
+					<a href="#about" style="color:inherit;text-decoration:none;">About</a>
+					<a href="#work" style="color:inherit;text-decoration:none;">Work</a>
+					<a href="#contact" style="color:inherit;text-decoration:none;">Contact</a>
+				</nav>
+			{/snippet}
+		</Notch>
+	{/key}
 </main>

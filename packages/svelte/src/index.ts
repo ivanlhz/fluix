@@ -19,3 +19,8 @@ export type {
 	FluixToasterConfig,
 } from "@fluix-ui/core";
 export type { ToasterProps } from "./Toaster.svelte";
+
+// Notch
+export { default as Notch } from "./Notch.svelte";
+export type { NotchProps } from "./Notch.svelte";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";

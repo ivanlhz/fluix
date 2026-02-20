@@ -46,3 +46,23 @@ export type {
 	FluixOffsetValue,
 	FluixOffsetConfig,
 } from "./components/toast";
+
+// Notch component
+export {
+	createNotchMachine,
+	NOTCH_DEFAULTS,
+	getNotchAttrs,
+	connectNotch,
+} from "./components/notch";
+
+export type {
+	NotchMachine,
+	NotchMachineState,
+	NotchAttrs,
+	NotchConnectCallbacks,
+	NotchConfig,
+	NotchPosition,
+	NotchTrigger,
+	NotchTheme,
+	NotchSize,
+} from "./components/notch";

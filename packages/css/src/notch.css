@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Fluix Notch Component Styles
+   A dot that expands into a pill with gooey SVG morphing.
+   ========================================================================== */
+
+[data-fluix-notch] {
+	position: fixed;
+	z-index: 50;
+	pointer-events: auto;
+	cursor: pointer;
+
+	/* Default theme: dark bg, white text */
+	--fluix-notch-bg: oklch(0.15 0 0);
+	--fluix-notch-color: #fff;
+}
+
+/* Light theme: white bg, dark text */
+[data-fluix-notch][data-theme="light"] {
+	--fluix-notch-bg: #fff;
+	--fluix-notch-color: oklch(0.15 0 0);
+}
+
+/* Position variants */
+[data-fluix-notch][data-position="top-center"] {
+	top: 0.75rem;
+	left: 50%;
+	transform: translateX(-50%);
+}
+[data-fluix-notch][data-position="top-left"] {
+	top: 0.75rem;
+	left: 0.75rem;
+}
+[data-fluix-notch][data-position="top-right"] {
+	top: 0.75rem;
+	right: 0.75rem;
+}
+[data-fluix-notch][data-position="bottom-center"] {
+	bottom: 0.75rem;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+/* SVG Canvas */
+[data-fluix-notch-canvas] {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: visible;
+}
+[data-fluix-notch-canvas] svg {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: visible;
+}
+
+/* Pill dot (collapsed) — centered in root */
+[data-fluix-notch-pill] {
+	position: absolute;
+	z-index: 10;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	overflow: hidden;
+	color: var(--fluix-notch-color);
+	pointer-events: none;
+	transition: opacity 180ms ease-out;
+}
+[data-fluix-notch][data-open="true"] [data-fluix-notch-pill] {
+	opacity: 0;
+}
+
+/* Expanded content — centered, fills root */
+[data-fluix-notch-content] {
+	position: absolute;
+	z-index: 10;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--fluix-notch-color);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 180ms ease-out;
+}
+[data-fluix-notch][data-open="true"] [data-fluix-notch-content] {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Hidden measurer */
+[data-fluix-notch-measure] {
+	position: fixed;
+	top: -9999px;
+	left: -9999px;
+	visibility: hidden;
+	pointer-events: none;
+	white-space: nowrap;
+	display: inline-flex;
+	align-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-fluix-notch-pill],
+	[data-fluix-notch-content] {
+		transition-duration: 0.01ms !important;
+	}
+}
