@@ -237,27 +237,30 @@ function ToastItem({
 			const cs = getComputedStyle(header);
 			headerPadRef.current = Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.paddingRight);
 		}
-		const px = headerPadRef.current;
 
 		const measure = () => {
-			const w = el.scrollWidth + px + PILL_PADDING;
-			if (w > PILL_PADDING) {
+			const inner = innerRef.current;
+			const pad = headerPadRef.current ?? 0;
+			if (!inner) return;
+			const w = inner.scrollWidth + pad + PILL_PADDING;
+			// Always update when we have a valid measure (allow shrink: no min check beyond PILL_PADDING)
+			if (w >= PILL_PADDING) {
 				setPillWidth((prev) => (prev === w ? prev : w));
 			}
 		};
-		measure();
+
+		// Defer first measure to after layout so new header content (e.g. after title change) has correct scrollWidth
+		const rafId = requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				measure();
+			});
+		});
 
 		if (!pillRoRef.current) {
 			pillRoRef.current = new ResizeObserver(() => {
 				cancelAnimationFrame(pillRafRef.current);
 				pillRafRef.current = requestAnimationFrame(() => {
-					const inner = innerRef.current;
-					const pad = headerPadRef.current ?? 0;
-					if (!inner) return;
-					const w = inner.scrollWidth + pad + PILL_PADDING;
-					if (w > PILL_PADDING) {
-						setPillWidth((prev) => (prev === w ? prev : w));
-					}
+					measure();
 				});
 			});
 		}
@@ -269,7 +272,10 @@ function ToastItem({
 			pillRoRef.current.observe(el);
 			pillObservedRef.current = el;
 		}
-	}, []);
+
+		return () => cancelAnimationFrame(rafId);
+		// Re-run when header content changes (title/state) so we observe the new inner element and re-measure
+	}, [headerKey]);
 
 	// ----------------------------- Measure content height (ResizeObserver) -----------------------------
 	useLayoutEffect(() => {
