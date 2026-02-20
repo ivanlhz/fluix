@@ -16,4 +16,7 @@ export type {
 	FluixToasterConfig,
 } from "@fluix-ui/core";
 
+export { Notch } from "./notch";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
+
 // TODO: Implement Toaster component + createFluixToasts signal

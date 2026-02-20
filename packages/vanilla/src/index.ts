@@ -19,3 +19,7 @@ export type {
 } from "@fluix-ui/core";
 
 export { createToaster } from "./toast";
+
+export { createNotch } from "./notch";
+export type { NotchOptions } from "./notch";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";

@@ -23,3 +23,6 @@ export type {
 	FluixToasterConfig,
 } from "@fluix-ui/core";
 export type { ToasterProps } from "./toast";
+export { Notch } from "./notch";
+export type { NotchProps } from "./notch";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";

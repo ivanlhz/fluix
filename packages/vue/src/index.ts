@@ -9,6 +9,7 @@
 
 export { fluix } from "@fluix-ui/core";
 export { Toaster, useFluixToasts } from "./toast";
+export { Notch } from "./notch";
 export type {
 	FluixToastOptions,
 	FluixToastPromiseOptions,
@@ -16,5 +17,9 @@ export type {
 	FluixTheme,
 	FluixToastState,
 	FluixToasterConfig,
+	NotchConfig,
+	NotchPosition,
+	NotchTrigger,
+	NotchTheme,
 } from "@fluix-ui/core";
 export type { ToasterProps } from "./toast";

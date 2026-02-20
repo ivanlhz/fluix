@@ -31,3 +31,6 @@ export type {
 
 export type { FluixDescriptionTemplate } from "./toast-description";
 export { isDescriptionTemplate } from "./toast-description";
+
+export { FluixNotchComponent } from "./notch.component";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
