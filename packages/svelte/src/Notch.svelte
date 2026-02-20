@@ -134,14 +134,20 @@ function onItemEnter(e: MouseEvent) {
 	if (!target || !rect || !root || !isOpen) return;
 
 	const rootRect = root.getBoundingClientRect();
+	// Use offsetWidth/Height to get size without CSS transforms (scale)
+	const itemW = target.offsetWidth;
+	const itemH = target.offsetHeight;
+	// Use getBoundingClientRect only for position (center point is stable with scale)
 	const itemRect = target.getBoundingClientRect();
+	const itemCenterX = itemRect.left + itemRect.width / 2;
+	const itemCenterY = itemRect.top + itemRect.height / 2;
 
 	const padX = 8;
 	const padY = 4;
-	const toX = itemRect.left - rootRect.left - padX;
-	const toY = itemRect.top - rootRect.top - padY;
-	const toW = itemRect.width + padX * 2;
-	const toH = itemRect.height + padY * 2;
+	const toW = itemW + padX * 2;
+	const toH = itemH + padY * 2;
+	const toX = itemCenterX - rootRect.left - toW / 2;
+	const toY = itemCenterY - rootRect.top - toH / 2;
 	const toRx = toH / 2;
 
 	if (!hlPrev.visible) {

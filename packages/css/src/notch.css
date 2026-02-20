@@ -102,11 +102,13 @@
 	padding: 0.35rem 0.5rem;
 	font-weight: 400;
 	opacity: 0.55;
-	transition: font-weight 180ms ease, opacity 180ms ease;
+	transform: scale(1);
+	transition: font-weight 180ms ease, opacity 180ms ease, transform 180ms ease;
 }
 [data-fluix-notch-content] :is(a, button):hover {
 	font-weight: 700;
 	opacity: 1;
+	transform: scale(1.25);
 }
 
 /* Hidden measurer */
