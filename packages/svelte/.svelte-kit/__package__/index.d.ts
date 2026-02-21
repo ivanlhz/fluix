@@ -11,4 +11,7 @@ export { default as Toaster } from "./Toaster.svelte";
 export { createFluixToasts } from "./toast.svelte.js";
 export type { FluixToastOptions, FluixToastPromiseOptions, FluixPosition, FluixTheme, FluixToastState, FluixToasterConfig, } from "@fluix-ui/core";
 export type { ToasterProps } from "./Toaster.svelte";
+export { default as Notch } from "./Notch.svelte";
+export type { NotchProps } from "./Notch.svelte";
+export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
 //# sourceMappingURL=index.d.ts.map

@@ -89,6 +89,13 @@
 
 /* ---- Toast root ---- */
 
+[data-fluix-toast],
+[data-fluix-toast] *,
+[data-fluix-toast] *::before,
+[data-fluix-toast] *::after {
+	box-sizing: border-box;
+}
+
 [data-fluix-toast] {
 	position: relative;
 	cursor: pointer;
@@ -274,7 +281,6 @@
 	align-items: center;
 	justify-content: center;
 	padding: 2px;
-	box-sizing: border-box;
 	border-radius: 9999px;
 	color: var(--fluix-tone, currentColor);
 	background-color: var(--fluix-tone-bg, transparent);

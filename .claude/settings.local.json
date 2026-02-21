@@ -23,7 +23,30 @@
       "Bash(pnpm add:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: use published @fluix-ui npm packages instead of local links\n\nReplace local link: dependencies with @fluix-ui/core, @fluix-ui/css,\nand @fluix-ui/react from npm. Update all imports and documentation\nexamples to use the @fluix-ui scope.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx astro build:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:fluix.ivanlopezdev.es)",
+      "Bash(pnpm --filter demo-svelte build:*)",
+      "Bash(npx --yes sharp-cli:*)",
+      "Bash(pnpm --filter @fluix-ui/svelte build:*)",
+      "Bash(pnpm --filter @fluix-ui/core build:*)",
+      "Bash(pnpm --filter @fluix-ui/css build:*)",
+      "Bash(pnpm --filter demo-svelte dev:*)",
+      "Bash(git status:*)",
+      "WebFetch(domain:ivanlopezdev.es)",
+      "Bash(test:*)",
+      "Bash(pnpm --filter @fluix-ui/css run build:*)",
+      "Bash(pnpm --filter @fluix-ui/svelte run build:*)",
+      "Bash(pnpm install)",
+      "Bash(npx astro check:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(pnpm --filter @fluix-ui/react build:*)",
+      "Bash(pnpm --filter @fluix-ui/react typecheck:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\ivanl\\\\develop\\\\2026\\\\fluix\\\\apps\"\" | grep -E \"^d \")",
+      "Bash(npx sharp-cli:*)",
+      "Bash(npx sharp:*)"
     ]
   }
 }
