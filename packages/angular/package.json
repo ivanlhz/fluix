@@ -1,6 +1,6 @@
 {
   "name": "@fluix-ui/angular",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Angular adapter for Fluix UI components.",
   "license": "MIT",
   "type": "module",
