@@ -120,7 +120,7 @@ export function createNotch(
 	const prev = { w: 0, h: 0, initialized: false };
 	let currentAnim: Animation | null = null;
 
-	/* ---- Highlight blob state ---- */
+	/* ---- Hover blob state ---- */
 	let highlightAnim: Animation | null = null;
 	const hlPrev = { x: 0, y: 0, w: 0, h: 0, visible: false };
 
@@ -198,17 +198,17 @@ export function createNotch(
 	gGroup.appendChild(svgRectEl);
 	svg.appendChild(gGroup);
 
-	// Highlight rect (independent, sits on top of bg, no gooey filter)
-	const highlightRectEl = document.createElementNS(SVG_NS, "rect");
-	highlightRectEl.setAttribute("x", "0");
-	highlightRectEl.setAttribute("y", "0");
-	highlightRectEl.setAttribute("width", "0");
-	highlightRectEl.setAttribute("height", "0");
-	highlightRectEl.setAttribute("rx", "0");
-	highlightRectEl.setAttribute("ry", "0");
-	highlightRectEl.setAttribute("opacity", "0");
-	highlightRectEl.setAttribute("fill", "var(--fluix-notch-hl)");
-	svg.appendChild(highlightRectEl);
+	// Hover blob (same fill, inside gooey group for local deformation)
+	const hoverBlobEl = document.createElementNS(SVG_NS, "rect");
+	hoverBlobEl.setAttribute("x", String((rootW() - cw) / 2));
+	hoverBlobEl.setAttribute("y", String((rootH() - ch) / 2));
+	hoverBlobEl.setAttribute("width", "0");
+	hoverBlobEl.setAttribute("height", "0");
+	hoverBlobEl.setAttribute("rx", "0");
+	hoverBlobEl.setAttribute("ry", "0");
+	hoverBlobEl.setAttribute("opacity", "0");
+	hoverBlobEl.setAttribute("fill", fill ?? "var(--fluix-notch-bg)");
+	gGroup.appendChild(hoverBlobEl);
 
 	canvasDiv.appendChild(svg);
 	rootEl.appendChild(canvasDiv);
@@ -271,24 +271,12 @@ export function createNotch(
 		const toY = itemCenterY - rootRect.top - toH / 2;
 		const toRx = toH / 2;
 
-		if (!hlPrev.visible) {
-			// First hover -- snap into place
-			highlightRectEl.setAttribute("x", String(toX));
-			highlightRectEl.setAttribute("y", String(toY));
-			highlightRectEl.setAttribute("width", String(toW));
-			highlightRectEl.setAttribute("height", String(toH));
-			highlightRectEl.setAttribute("rx", String(toRx));
-			highlightRectEl.setAttribute("ry", String(toRx));
-			highlightRectEl.setAttribute("opacity", "1");
-			hlPrev.x = toX;
-			hlPrev.y = toY;
-			hlPrev.w = toW;
-			hlPrev.h = toH;
-			hlPrev.visible = true;
-			return;
-		}
+		const fromX = hlPrev.visible ? hlPrev.x : toX + toW / 2;
+		const fromY = hlPrev.visible ? hlPrev.y : toY + toH / 2;
+		const fromW = hlPrev.visible ? hlPrev.w : 0;
+		const fromH = hlPrev.visible ? hlPrev.h : 0;
+		const fromR = hlPrev.visible ? hlPrev.h / 2 : 0;
 
-		// Animate from previous position
 		if (highlightAnim) {
 			highlightAnim.cancel();
 			highlightAnim = null;
@@ -296,14 +284,14 @@ export function createNotch(
 
 		const sc = springConfig();
 		const a = animateSpring(
-			highlightRectEl,
+			hoverBlobEl,
 			{
-				x: { from: hlPrev.x, to: toX, unit: "px" },
-				y: { from: hlPrev.y, to: toY, unit: "px" },
-				width: { from: hlPrev.w, to: toW, unit: "px" },
-				height: { from: hlPrev.h, to: toH, unit: "px" },
-				rx: { from: hlPrev.h / 2, to: toRx, unit: "px" },
-				ry: { from: hlPrev.h / 2, to: toRx, unit: "px" },
+				x: { from: fromX, to: toX, unit: "px" },
+				y: { from: fromY, to: toY, unit: "px" },
+				width: { from: fromW, to: toW, unit: "px" },
+				height: { from: fromH, to: toH, unit: "px" },
+				rx: { from: fromR, to: toRx, unit: "px" },
+				ry: { from: fromR, to: toRx, unit: "px" },
 			},
 			{ ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 },
 		);
@@ -317,23 +305,81 @@ export function createNotch(
 			highlightAnim = a;
 			a.onfinish = () => {
 				highlightAnim = null;
-				highlightRectEl.setAttribute("x", String(toX));
-				highlightRectEl.setAttribute("y", String(toY));
-				highlightRectEl.setAttribute("width", String(toW));
-				highlightRectEl.setAttribute("height", String(toH));
-				highlightRectEl.setAttribute("rx", String(toRx));
-				highlightRectEl.setAttribute("ry", String(toRx));
+				hoverBlobEl.setAttribute("x", String(toX));
+				hoverBlobEl.setAttribute("y", String(toY));
+				hoverBlobEl.setAttribute("width", String(toW));
+				hoverBlobEl.setAttribute("height", String(toH));
+				hoverBlobEl.setAttribute("rx", String(toRx));
+				hoverBlobEl.setAttribute("ry", String(toRx));
+				hoverBlobEl.setAttribute("opacity", "1");
 			};
+		} else {
+			hoverBlobEl.setAttribute("x", String(toX));
+			hoverBlobEl.setAttribute("y", String(toY));
+			hoverBlobEl.setAttribute("width", String(toW));
+			hoverBlobEl.setAttribute("height", String(toH));
+			hoverBlobEl.setAttribute("rx", String(toRx));
+			hoverBlobEl.setAttribute("ry", String(toRx));
+			hoverBlobEl.setAttribute("opacity", "1");
 		}
+		hoverBlobEl.setAttribute("opacity", "1");
+		hlPrev.visible = true;
 	}
 
-	function onItemLeave() {
-		highlightRectEl.setAttribute("opacity", "0");
-		hlPrev.visible = false;
+	function resetHoverBlobImmediate() {
 		if (highlightAnim) {
 			highlightAnim.cancel();
 			highlightAnim = null;
 		}
+		hoverBlobEl.setAttribute("x", String(rootW() / 2));
+		hoverBlobEl.setAttribute("y", String(rootH() / 2));
+		hoverBlobEl.setAttribute("width", "0");
+		hoverBlobEl.setAttribute("height", "0");
+		hoverBlobEl.setAttribute("rx", "0");
+		hoverBlobEl.setAttribute("ry", "0");
+		hoverBlobEl.setAttribute("opacity", "0");
+		hlPrev.visible = false;
+	}
+
+	function onItemLeave() {
+		if (!hlPrev.visible) return;
+		const cx = hlPrev.x + hlPrev.w / 2;
+		const cy = hlPrev.y + hlPrev.h / 2;
+		const sc = springConfig();
+		const a = animateSpring(
+			hoverBlobEl,
+			{
+				x: { from: hlPrev.x, to: cx, unit: "px" },
+				y: { from: hlPrev.y, to: cy, unit: "px" },
+				width: { from: hlPrev.w, to: 0, unit: "px" },
+				height: { from: hlPrev.h, to: 0, unit: "px" },
+				rx: { from: hlPrev.h / 2, to: 0, unit: "px" },
+				ry: { from: hlPrev.h / 2, to: 0, unit: "px" },
+			},
+			{ ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 },
+		);
+		if (a) {
+			highlightAnim = a;
+			a.onfinish = () => {
+				highlightAnim = null;
+				hoverBlobEl.setAttribute("x", String(cx));
+				hoverBlobEl.setAttribute("y", String(cy));
+				hoverBlobEl.setAttribute("width", "0");
+				hoverBlobEl.setAttribute("height", "0");
+				hoverBlobEl.setAttribute("rx", "0");
+				hoverBlobEl.setAttribute("ry", "0");
+				hoverBlobEl.setAttribute("opacity", "0");
+			};
+		} else {
+			hoverBlobEl.setAttribute("x", String(cx));
+			hoverBlobEl.setAttribute("y", String(cy));
+			hoverBlobEl.setAttribute("width", "0");
+			hoverBlobEl.setAttribute("height", "0");
+			hoverBlobEl.setAttribute("rx", "0");
+			hoverBlobEl.setAttribute("ry", "0");
+			hoverBlobEl.setAttribute("opacity", "0");
+		}
+		hlPrev.visible = false;
 	}
 
 	/* ---- Event handlers ---- */
@@ -353,7 +399,11 @@ export function createNotch(
 		if (trigger === "hover") handleOpen();
 	}
 	function onMouseLeave() {
-		if (trigger === "hover") handleClose();
+		if (trigger === "hover") {
+			handleClose();
+			resetHoverBlobImmediate();
+			return;
+		}
 		onItemLeave();
 	}
 	function onClick() {
@@ -449,6 +499,7 @@ export function createNotch(
 
 		// Update fill
 		svgRectEl.setAttribute("fill", fill ?? "var(--fluix-notch-bg)");
+		hoverBlobEl.setAttribute("fill", fill ?? "var(--fluix-notch-bg)");
 
 		// Update content attrs
 		applyAttrs(contentDiv, newAttrs.content);
@@ -456,9 +507,9 @@ export function createNotch(
 		// Animate the SVG rect
 		animateRect();
 
-		// Reset highlight when closing
+		// Reset hover blob when closing
 		if (!isOpen) {
-			onItemLeave();
+			resetHoverBlobImmediate();
 		}
 
 		// Expose notch height as CSS variable for toast collision avoidance

@@ -76,7 +76,7 @@ let rootEl: HTMLDivElement | null = $state(null);
 let measureContentEl: HTMLDivElement | null = $state(null);
 let contentEl: HTMLDivElement | null = $state(null);
 let svgRectEl: SVGRectElement | null = $state(null);
-let highlightRectEl: SVGRectElement | null = $state(null);
+let hoverBlobEl: SVGRectElement | null = $state(null);
 
 // State
 const isOpen = $derived(snapshot.open);
@@ -102,13 +102,19 @@ $effect(() => {
 	};
 	measure();
 	let raf = 0;
-	const obs = new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(measure); });
+	const obs = new ResizeObserver(() => {
+		cancelAnimationFrame(raf);
+		raf = requestAnimationFrame(measure);
+	});
 	obs.observe(el);
-	return () => { cancelAnimationFrame(raf); obs.disconnect(); };
+	return () => {
+		cancelAnimationFrame(raf);
+		obs.disconnect();
+	};
 });
 
-// Expanded = content + padding for highlight blob overflow
-const hlPad = 12; // extra space so highlight rect fits inside SVG viewBox
+// Expanded = content + padding for local gooey deformation space
+const hlPad = 12;
 const expandedW = $derived(contentSize.w + hlPad * 2);
 const expandedH = $derived(Math.max(contentSize.h + hlPad, dotSize));
 
@@ -123,21 +129,19 @@ const rootH = $derived(Math.max(expandedH, collapsedH));
 // Track previous for animation (mutable, not reactive)
 const prev = { w: 0, h: 0, initialized: false };
 
-// --- Highlight blob state ---
+// Hover blob state
 let highlightAnim: Animation | null = null;
 const hlPrev = { x: 0, y: 0, w: 0, h: 0, visible: false };
 
 function onItemEnter(e: MouseEvent) {
 	const target = (e.target as HTMLElement).closest("a, button") as HTMLElement | null;
-	const rect = highlightRectEl;
+	const rect = hoverBlobEl;
 	const root = rootEl;
 	if (!target || !rect || !root || !isOpen) return;
 
 	const rootRect = root.getBoundingClientRect();
-	// Use offsetWidth/Height to get size without CSS transforms (scale)
 	const itemW = target.offsetWidth;
 	const itemH = target.offsetHeight;
-	// Use getBoundingClientRect only for position (center point is stable with scale)
 	const itemRect = target.getBoundingClientRect();
 	const itemCenterX = itemRect.left + itemRect.width / 2;
 	const itemCenterY = itemRect.top + itemRect.height / 2;
@@ -150,33 +154,24 @@ function onItemEnter(e: MouseEvent) {
 	const toY = itemCenterY - rootRect.top - toH / 2;
 	const toRx = toH / 2;
 
-	if (!hlPrev.visible) {
-		// First hover — snap into place, no animation
-		rect.setAttribute("x", String(toX));
-		rect.setAttribute("y", String(toY));
-		rect.setAttribute("width", String(toW));
-		rect.setAttribute("height", String(toH));
-		rect.setAttribute("rx", String(toRx));
-		rect.setAttribute("ry", String(toRx));
-		rect.setAttribute("opacity", "1");
-		hlPrev.x = toX;
-		hlPrev.y = toY;
-		hlPrev.w = toW;
-		hlPrev.h = toH;
-		hlPrev.visible = true;
-		return;
+	const fromX = hlPrev.visible ? hlPrev.x : toX + toW / 2;
+	const fromY = hlPrev.visible ? hlPrev.y : toY + toH / 2;
+	const fromW = hlPrev.visible ? hlPrev.w : 0;
+	const fromH = hlPrev.visible ? hlPrev.h : 0;
+	const fromR = hlPrev.visible ? hlPrev.h / 2 : 0;
+
+	if (highlightAnim) {
+		highlightAnim.cancel();
+		highlightAnim = null;
 	}
 
-	// Animate from previous position
-	if (highlightAnim) { highlightAnim.cancel(); highlightAnim = null; }
-
 	const a = animateSpring(rect, {
-		x: { from: hlPrev.x, to: toX, unit: "px" },
-		y: { from: hlPrev.y, to: toY, unit: "px" },
-		width: { from: hlPrev.w, to: toW, unit: "px" },
-		height: { from: hlPrev.h, to: toH, unit: "px" },
-		rx: { from: hlPrev.h / 2, to: toRx, unit: "px" },
-		ry: { from: hlPrev.h / 2, to: toRx, unit: "px" },
+		x: { from: fromX, to: toX, unit: "px" },
+		y: { from: fromY, to: toY, unit: "px" },
+		width: { from: fromW, to: toW, unit: "px" },
+		height: { from: fromH, to: toH, unit: "px" },
+		rx: { from: fromR, to: toRx, unit: "px" },
+		ry: { from: fromR, to: toRx, unit: "px" },
 	}, { ...springConfig, stiffness: (springConfig.stiffness ?? 300) * 1.2 });
 
 	hlPrev.x = toX;
@@ -194,19 +189,85 @@ function onItemEnter(e: MouseEvent) {
 			rect.setAttribute("height", String(toH));
 			rect.setAttribute("rx", String(toRx));
 			rect.setAttribute("ry", String(toRx));
+			rect.setAttribute("opacity", "1");
 		};
+	} else {
+		rect.setAttribute("x", String(toX));
+		rect.setAttribute("y", String(toY));
+		rect.setAttribute("width", String(toW));
+		rect.setAttribute("height", String(toH));
+		rect.setAttribute("rx", String(toRx));
+		rect.setAttribute("ry", String(toRx));
+		rect.setAttribute("opacity", "1");
 	}
+	rect.setAttribute("opacity", "1");
+
+	hlPrev.visible = true;
+}
+
+function resetHoverBlobImmediate() {
+	const rect = hoverBlobEl;
+	if (!rect) return;
+	if (highlightAnim) {
+		highlightAnim.cancel();
+		highlightAnim = null;
+	}
+	rect.setAttribute("x", String(rootW / 2));
+	rect.setAttribute("y", String(rootH / 2));
+	rect.setAttribute("width", "0");
+	rect.setAttribute("height", "0");
+	rect.setAttribute("rx", "0");
+	rect.setAttribute("ry", "0");
+	rect.setAttribute("opacity", "0");
+	hlPrev.visible = false;
 }
 
 function onItemLeave() {
-	const rect = highlightRectEl;
+	const rect = hoverBlobEl;
 	if (!rect) return;
-	rect.setAttribute("opacity", "0");
+	if (highlightAnim) {
+		highlightAnim.cancel();
+		highlightAnim = null;
+	}
+	if (!hlPrev.visible) return;
+
+	const cx = hlPrev.x + hlPrev.w / 2;
+	const cy = hlPrev.y + hlPrev.h / 2;
+	const a = animateSpring(rect, {
+		x: { from: hlPrev.x, to: cx, unit: "px" },
+		y: { from: hlPrev.y, to: cy, unit: "px" },
+		width: { from: hlPrev.w, to: 0, unit: "px" },
+		height: { from: hlPrev.h, to: 0, unit: "px" },
+		rx: { from: hlPrev.h / 2, to: 0, unit: "px" },
+		ry: { from: hlPrev.h / 2, to: 0, unit: "px" },
+	}, { ...springConfig, stiffness: (springConfig.stiffness ?? 300) * 1.2 });
+
+	if (a) {
+		highlightAnim = a;
+		a.onfinish = () => {
+			highlightAnim = null;
+			rect.setAttribute("x", String(cx));
+			rect.setAttribute("y", String(cy));
+			rect.setAttribute("width", "0");
+			rect.setAttribute("height", "0");
+			rect.setAttribute("rx", "0");
+			rect.setAttribute("ry", "0");
+			rect.setAttribute("opacity", "0");
+		};
+	} else {
+		rect.setAttribute("x", String(cx));
+		rect.setAttribute("y", String(cy));
+		rect.setAttribute("width", "0");
+		rect.setAttribute("height", "0");
+		rect.setAttribute("rx", "0");
+		rect.setAttribute("ry", "0");
+		rect.setAttribute("opacity", "0");
+	}
+
 	hlPrev.visible = false;
-	if (highlightAnim) { highlightAnim.cancel(); highlightAnim = null; }
 }
 
-// --- Event handlers ---
+// Event handlers
 function handleOpen() {
 	if (controlledOpen === undefined) machine.open();
 	else onOpenChange?.(true);
@@ -221,12 +282,14 @@ function handleToggle() {
 }
 function onMouseEnter() { if (trigger === "hover") handleOpen(); }
 function onMouseLeave() {
-	if (trigger === "hover") handleClose();
+	if (trigger === "hover") {
+		handleClose();
+		resetHoverBlobImmediate();
+		return;
+	}
 	onItemLeave();
 }
 function onClick() { if (trigger === "click") handleToggle(); }
-
-// --- Measure pill (not needed, pill = dotSize x dotSize) ---
 
 // Init: set rect to collapsed size, centered
 $effect(() => {
@@ -258,7 +321,10 @@ $effect(() => {
 
 	if (tw === prev.w && th === prev.h) return;
 
-	if (currentAnim) { currentAnim.cancel(); currentAnim = null; }
+	if (currentAnim) {
+		currentAnim.cancel();
+		currentAnim = null;
+	}
 
 	const fromW = prev.w;
 	const fromH = prev.h;
@@ -305,11 +371,9 @@ $effect(() => {
 	}
 });
 
-// Reset highlight when closing
+// Reset blob when closing
 $effect(() => {
-	if (!isOpen) {
-		onItemLeave();
-	}
+	if (!isOpen) resetHoverBlobImmediate();
 });
 
 // Expose notch height as CSS variable on :root for toast collision avoidance
@@ -376,29 +440,29 @@ $effect(() => () => machine.destroy());
 					ry={collapsedH / 2}
 					fill={fill ?? "var(--fluix-notch-bg)"}
 				/>
+				<rect
+					bind:this={hoverBlobEl}
+					x={(rootW - collapsedW) / 2}
+					y={(rootH - collapsedH) / 2}
+					width="0"
+					height="0"
+					rx="0"
+					ry="0"
+					opacity="0"
+					fill={fill ?? "var(--fluix-notch-bg)"}
+				/>
 			</g>
-			<!-- Highlight blob: independent rect (no gooey), sits on top of bg -->
-			<rect
-				bind:this={highlightRectEl}
-				x="0" y="0" width="0" height="0"
-				rx="0" ry="0"
-				opacity="0"
-				fill="var(--fluix-notch-hl)"
-			/>
 		</svg>
 	</div>
 
-	<!-- Pill dot (collapsed icon) — centered -->
+	<!-- Pill dot (collapsed icon) -->
 	<div {...attrs.pill} style="width:{dotSize}px;height:{dotSize}px;">
 		{@render pill()}
 	</div>
 
-	<!-- Expanded content — centered -->
+	<!-- Expanded content -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		bind:this={contentEl}
-		{...attrs.content}
-	>
+	<div bind:this={contentEl} {...attrs.content}>
 		{@render content()}
 	</div>
 </div>

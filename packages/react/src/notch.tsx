@@ -124,7 +124,7 @@ export function Notch({
 	const measureContentRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const svgRectRef = useRef<SVGRectElement>(null);
-	const highlightRectRef = useRef<SVGRectElement>(null);
+	const hoverBlobRef = useRef<SVGRectElement>(null);
 	const transientRef = useRef<NotchTransient | null>(null);
 	if (transientRef.current === null) {
 		transientRef.current = createTransient();
@@ -303,13 +303,6 @@ export function Notch({
 		}
 	}, [targetW, targetH, rootW, rootH, collapsedW, collapsedH, roundness, springConfig, t]);
 
-	// --- Reset highlight when closing ---
-	useEffect(() => {
-		if (!isOpen) {
-			onItemLeave();
-		}
-	}, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-
 	// --- Expose CSS variable for toast collision avoidance ---
 	useEffect(() => {
 		document.documentElement.style.setProperty("--fluix-notch-offset", `${rootH}px`);
@@ -326,7 +319,7 @@ export function Notch({
 	// --- Highlight item tracking ---
 	const onItemEnter = useCallback((e: React.MouseEvent) => {
 		const target = (e.target as HTMLElement).closest("a, button") as HTMLElement | null;
-		const rect = highlightRectRef.current;
+		const rect = hoverBlobRef.current;
 		const root = rootRef.current;
 		const snap = machine.store.getSnapshot();
 		if (!target || !rect || !root || !snap.open) return;
@@ -347,22 +340,11 @@ export function Notch({
 		const toRx = toH / 2;
 
 		const hl = t.hlPrev;
-
-		if (!hl.visible) {
-			rect.setAttribute("x", String(toX));
-			rect.setAttribute("y", String(toY));
-			rect.setAttribute("width", String(toW));
-			rect.setAttribute("height", String(toH));
-			rect.setAttribute("rx", String(toRx));
-			rect.setAttribute("ry", String(toRx));
-			rect.setAttribute("opacity", "1");
-			hl.x = toX;
-			hl.y = toY;
-			hl.w = toW;
-			hl.h = toH;
-			hl.visible = true;
-			return;
-		}
+		const fromX = hl.visible ? hl.x : toX + toW / 2;
+		const fromY = hl.visible ? hl.y : toY + toH / 2;
+		const fromW = hl.visible ? hl.w : 0;
+		const fromH = hl.visible ? hl.h : 0;
+		const fromR = hl.visible ? hl.h / 2 : 0;
 
 		if (t.highlightAnim) {
 			t.highlightAnim.cancel();
@@ -371,12 +353,12 @@ export function Notch({
 
 		const sc = spring ?? FLUIX_SPRING;
 		const a = animateSpring(rect, {
-			x: { from: hl.x, to: toX, unit: "px" },
-			y: { from: hl.y, to: toY, unit: "px" },
-			width: { from: hl.w, to: toW, unit: "px" },
-			height: { from: hl.h, to: toH, unit: "px" },
-			rx: { from: hl.h / 2, to: toRx, unit: "px" },
-			ry: { from: hl.h / 2, to: toRx, unit: "px" },
+			x: { from: fromX, to: toX, unit: "px" },
+			y: { from: fromY, to: toY, unit: "px" },
+			width: { from: fromW, to: toW, unit: "px" },
+			height: { from: fromH, to: toH, unit: "px" },
+			rx: { from: fromR, to: toRx, unit: "px" },
+			ry: { from: fromR, to: toRx, unit: "px" },
 		}, { ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 });
 
 		hl.x = toX;
@@ -394,20 +376,87 @@ export function Notch({
 				rect.setAttribute("height", String(toH));
 				rect.setAttribute("rx", String(toRx));
 				rect.setAttribute("ry", String(toRx));
+				rect.setAttribute("opacity", "1");
 			};
+		} else {
+			rect.setAttribute("x", String(toX));
+			rect.setAttribute("y", String(toY));
+			rect.setAttribute("width", String(toW));
+			rect.setAttribute("height", String(toH));
+			rect.setAttribute("rx", String(toRx));
+			rect.setAttribute("ry", String(toRx));
+			rect.setAttribute("opacity", "1");
 		}
+		rect.setAttribute("opacity", "1");
+		hl.visible = true;
 	}, [machine, spring, t]);
 
-	const onItemLeave = useCallback(() => {
-		const rect = highlightRectRef.current;
+	const resetHoverBlobImmediate = useCallback(() => {
+		const rect = hoverBlobRef.current;
 		if (!rect) return;
-		rect.setAttribute("opacity", "0");
-		t.hlPrev.visible = false;
 		if (t.highlightAnim) {
 			t.highlightAnim.cancel();
 			t.highlightAnim = null;
 		}
-	}, [t]);
+		rect.setAttribute("x", String(rootW / 2));
+		rect.setAttribute("y", String(rootH / 2));
+		rect.setAttribute("width", "0");
+		rect.setAttribute("height", "0");
+		rect.setAttribute("rx", "0");
+		rect.setAttribute("ry", "0");
+		rect.setAttribute("opacity", "0");
+		t.hlPrev.visible = false;
+	}, [rootW, rootH, t]);
+
+	const onItemLeave = useCallback(() => {
+		const rect = hoverBlobRef.current;
+		if (!rect) return;
+		const hl = t.hlPrev;
+		if (t.highlightAnim) {
+			t.highlightAnim.cancel();
+			t.highlightAnim = null;
+		}
+		if (!hl.visible) return;
+		const cx = hl.x + hl.w / 2;
+		const cy = hl.y + hl.h / 2;
+		const sc = spring ?? FLUIX_SPRING;
+		const a = animateSpring(rect, {
+			x: { from: hl.x, to: cx, unit: "px" },
+			y: { from: hl.y, to: cy, unit: "px" },
+			width: { from: hl.w, to: 0, unit: "px" },
+			height: { from: hl.h, to: 0, unit: "px" },
+			rx: { from: hl.h / 2, to: 0, unit: "px" },
+			ry: { from: hl.h / 2, to: 0, unit: "px" },
+		}, { ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 });
+		if (a) {
+			t.highlightAnim = a;
+			a.onfinish = () => {
+				t.highlightAnim = null;
+				rect.setAttribute("x", String(cx));
+				rect.setAttribute("y", String(cy));
+				rect.setAttribute("width", "0");
+				rect.setAttribute("height", "0");
+				rect.setAttribute("rx", "0");
+				rect.setAttribute("ry", "0");
+				rect.setAttribute("opacity", "0");
+			};
+		} else {
+			rect.setAttribute("x", String(cx));
+			rect.setAttribute("y", String(cy));
+			rect.setAttribute("width", "0");
+			rect.setAttribute("height", "0");
+			rect.setAttribute("rx", "0");
+			rect.setAttribute("ry", "0");
+			rect.setAttribute("opacity", "0");
+		}
+		hl.visible = false;
+	}, [spring, t]);
+
+	useEffect(() => {
+		if (!isOpen) {
+			resetHoverBlobImmediate();
+		}
+	}, [isOpen, resetHoverBlobImmediate]);
 
 	// --- Event handlers ---
 	const handleOpen = useCallback(() => {
@@ -430,9 +479,13 @@ export function Notch({
 	}, [handleOpen]);
 
 	const onMouseLeave = useCallback(() => {
-		if (triggerRef.current === "hover") handleClose();
+		if (triggerRef.current === "hover") {
+			handleClose();
+			resetHoverBlobImmediate();
+			return;
+		}
 		onItemLeave();
-	}, [handleClose, onItemLeave]);
+	}, [handleClose, onItemLeave, resetHoverBlobImmediate]);
 
 	const onClick = useCallback(() => {
 		if (triggerRef.current === "click") handleToggle();
@@ -495,19 +548,18 @@ export function Notch({
 								ry={collapsedH / 2}
 								fill={fill ?? "var(--fluix-notch-bg)"}
 							/>
+							<rect
+								ref={hoverBlobRef}
+								x={(rootW - collapsedW) / 2}
+								y={(rootH - collapsedH) / 2}
+								width="0"
+								height="0"
+								rx="0"
+								ry="0"
+								opacity="0"
+								fill={fill ?? "var(--fluix-notch-bg)"}
+							/>
 						</g>
-						{/* Highlight blob: independent rect (no gooey), sits on top of bg */}
-						<rect
-							ref={highlightRectRef}
-							x="0"
-							y="0"
-							width="0"
-							height="0"
-							rx="0"
-							ry="0"
-							opacity="0"
-							fill="var(--fluix-notch-hl)"
-						/>
 					</svg>
 				</div>
 

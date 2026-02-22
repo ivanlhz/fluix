@@ -78,7 +78,7 @@ export const Notch = defineComponent({
 		const measureContentEl = ref<HTMLDivElement | null>(null);
 		const contentEl = ref<HTMLDivElement | null>(null);
 		const svgRectEl = ref<SVGRectElement | null>(null);
-		const highlightRectEl = ref<SVGRectElement | null>(null);
+		const hoverBlobEl = ref<SVGRectElement | null>(null);
 
 		// Content measurement
 		const contentSize = ref({ w: 200, h: 44 });
@@ -255,11 +255,6 @@ export const Notch = defineComponent({
 			},
 		);
 
-		// Reset highlight when closing
-		watch(isOpen, (open) => {
-			if (!open) onItemLeave();
-		});
-
 		// Expose notch height as CSS variable for toast collision avoidance
 		watchEffect((onCleanup) => {
 			const h = rootH.value;
@@ -274,10 +269,10 @@ export const Notch = defineComponent({
 			machine.destroy();
 		});
 
-		// --- Highlight blob ---
+		// --- Hover blob ---
 		function onItemEnter(e: MouseEvent) {
 			const target = (e.target as HTMLElement).closest("a, button") as HTMLElement | null;
-			const rect = highlightRectEl.value;
+			const rect = hoverBlobEl.value;
 			const root = rootEl.value;
 			if (!target || !rect || !root || !isOpen.value) return;
 
@@ -296,21 +291,11 @@ export const Notch = defineComponent({
 			const toY = itemCenterY - rootRect.top - toH / 2;
 			const toRx = toH / 2;
 
-			if (!hlPrev.visible) {
-				rect.setAttribute("x", String(toX));
-				rect.setAttribute("y", String(toY));
-				rect.setAttribute("width", String(toW));
-				rect.setAttribute("height", String(toH));
-				rect.setAttribute("rx", String(toRx));
-				rect.setAttribute("ry", String(toRx));
-				rect.setAttribute("opacity", "1");
-				hlPrev.x = toX;
-				hlPrev.y = toY;
-				hlPrev.w = toW;
-				hlPrev.h = toH;
-				hlPrev.visible = true;
-				return;
-			}
+			const fromX = hlPrev.visible ? hlPrev.x : toX + toW / 2;
+			const fromY = hlPrev.visible ? hlPrev.y : toY + toH / 2;
+			const fromW = hlPrev.visible ? hlPrev.w : 0;
+			const fromH = hlPrev.visible ? hlPrev.h : 0;
+			const fromR = hlPrev.visible ? hlPrev.h / 2 : 0;
 
 			if (highlightAnim) {
 				highlightAnim.cancel();
@@ -319,17 +304,17 @@ export const Notch = defineComponent({
 
 			const sc = springConfig.value;
 			const a = animateSpring(
-				rect,
-				{
-					x: { from: hlPrev.x, to: toX, unit: "px" },
-					y: { from: hlPrev.y, to: toY, unit: "px" },
-					width: { from: hlPrev.w, to: toW, unit: "px" },
-					height: { from: hlPrev.h, to: toH, unit: "px" },
-					rx: { from: hlPrev.h / 2, to: toRx, unit: "px" },
-					ry: { from: hlPrev.h / 2, to: toRx, unit: "px" },
-				},
-				{ ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 },
-			);
+					rect,
+					{
+						x: { from: fromX, to: toX, unit: "px" },
+						y: { from: fromY, to: toY, unit: "px" },
+						width: { from: fromW, to: toW, unit: "px" },
+						height: { from: fromH, to: toH, unit: "px" },
+						rx: { from: fromR, to: toRx, unit: "px" },
+						ry: { from: fromR, to: toRx, unit: "px" },
+					},
+					{ ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 },
+				);
 
 			hlPrev.x = toX;
 			hlPrev.y = toY;
@@ -346,19 +331,83 @@ export const Notch = defineComponent({
 					rect.setAttribute("height", String(toH));
 					rect.setAttribute("rx", String(toRx));
 					rect.setAttribute("ry", String(toRx));
+					rect.setAttribute("opacity", "1");
 				};
+			} else {
+				rect.setAttribute("x", String(toX));
+				rect.setAttribute("y", String(toY));
+				rect.setAttribute("width", String(toW));
+				rect.setAttribute("height", String(toH));
+				rect.setAttribute("rx", String(toRx));
+				rect.setAttribute("ry", String(toRx));
+				rect.setAttribute("opacity", "1");
 			}
+			rect.setAttribute("opacity", "1");
+			hlPrev.visible = true;
 		}
 
-		function onItemLeave() {
-			const rect = highlightRectEl.value;
+		function resetHoverBlobImmediate() {
+			const rect = hoverBlobEl.value;
 			if (!rect) return;
-			rect.setAttribute("opacity", "0");
-			hlPrev.visible = false;
 			if (highlightAnim) {
 				highlightAnim.cancel();
 				highlightAnim = null;
 			}
+			rect.setAttribute("x", String(rootW.value / 2));
+			rect.setAttribute("y", String(rootH.value / 2));
+			rect.setAttribute("width", "0");
+			rect.setAttribute("height", "0");
+			rect.setAttribute("rx", "0");
+			rect.setAttribute("ry", "0");
+			rect.setAttribute("opacity", "0");
+			hlPrev.visible = false;
+		}
+
+		function onItemLeave() {
+			const rect = hoverBlobEl.value;
+			if (!rect) return;
+			if (highlightAnim) {
+				highlightAnim.cancel();
+				highlightAnim = null;
+			}
+			if (!hlPrev.visible) return;
+			const cx = hlPrev.x + hlPrev.w / 2;
+			const cy = hlPrev.y + hlPrev.h / 2;
+			const sc = springConfig.value;
+			const a = animateSpring(
+				rect,
+				{
+					x: { from: hlPrev.x, to: cx, unit: "px" },
+					y: { from: hlPrev.y, to: cy, unit: "px" },
+					width: { from: hlPrev.w, to: 0, unit: "px" },
+					height: { from: hlPrev.h, to: 0, unit: "px" },
+					rx: { from: hlPrev.h / 2, to: 0, unit: "px" },
+					ry: { from: hlPrev.h / 2, to: 0, unit: "px" },
+				},
+				{ ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 },
+			);
+			if (a) {
+				highlightAnim = a;
+				a.onfinish = () => {
+					highlightAnim = null;
+					rect.setAttribute("x", String(cx));
+					rect.setAttribute("y", String(cy));
+					rect.setAttribute("width", "0");
+					rect.setAttribute("height", "0");
+					rect.setAttribute("rx", "0");
+					rect.setAttribute("ry", "0");
+					rect.setAttribute("opacity", "0");
+				};
+			} else {
+				rect.setAttribute("x", String(cx));
+				rect.setAttribute("y", String(cy));
+				rect.setAttribute("width", "0");
+				rect.setAttribute("height", "0");
+				rect.setAttribute("rx", "0");
+				rect.setAttribute("ry", "0");
+				rect.setAttribute("opacity", "0");
+			}
+			hlPrev.visible = false;
 		}
 
 		// --- Event handlers ---
@@ -378,9 +427,17 @@ export const Notch = defineComponent({
 			if (props.trigger === "hover") handleOpen();
 		}
 		function onMouseLeave() {
-			if (props.trigger === "hover") handleClose();
+			if (props.trigger === "hover") {
+				handleClose();
+				resetHoverBlobImmediate();
+				return;
+			}
 			onItemLeave();
 		}
+
+		watch(isOpen, (open) => {
+			if (!open) resetHoverBlobImmediate();
+		});
 		function onClick() {
 			if (props.trigger === "click") handleToggle();
 		}
@@ -471,19 +528,18 @@ export const Notch = defineComponent({
 											ry: ch / 2,
 											fill: fillVal,
 										}),
+										h("rect", {
+											ref: hoverBlobEl,
+											x: (rw - cw) / 2,
+											y: (rh - ch) / 2,
+											width: "0",
+											height: "0",
+											rx: "0",
+											ry: "0",
+											opacity: "0",
+											fill: fillVal,
+										}),
 									]),
-									// Highlight blob
-									h("rect", {
-										ref: highlightRectEl,
-										x: "0",
-										y: "0",
-										width: "0",
-										height: "0",
-										rx: "0",
-										ry: "0",
-										opacity: "0",
-										fill: "var(--fluix-notch-hl)",
-									}),
 								],
 							),
 						]),

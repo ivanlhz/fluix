@@ -219,7 +219,7 @@ export default function App() {
 			<Toaster config={toasterConfig} />
 
 			{/* Notch Demo */}
-			<div className="demo-card" style={{ marginTop: "2rem" }}>
+			<div className="demo-card">
 				<div className="demo-header">
 					<div>
 						<h2 className="demo-title">Notch Menu</h2>
@@ -243,7 +243,7 @@ export default function App() {
 				</div>
 
 				{notchTrigger === "manual" && (
-					<div className="demo-row" style={{ marginTop: "1rem" }}>
+					<div className="demo-row">
 						<button
 							type="button"
 							onClick={() => setNotchOpen(!notchOpen)}

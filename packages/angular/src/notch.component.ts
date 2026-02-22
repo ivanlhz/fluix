@@ -1,10 +1,3 @@
-/**
- * Angular Notch — standalone component wrapping core notch machine.
- *
- * Uses ViewChild refs for SVG rect manipulation and WAAPI spring animations.
- * Follows the same architecture as FluixToastItemComponent.
- */
-
 import {
 	AfterViewInit,
 	ChangeDetectionStrategy,
@@ -42,9 +35,7 @@ import { FluixAttrsDirective } from "./attrs.directive";
 	imports: [CommonModule, FluixAttrsDirective],
 	template: `
 		<!-- Hidden content measurer -->
-		<div data-fluix-notch-measure #measureContentEl>
-			<ng-content select="[notch-content]" />
-		</div>
+		<div data-fluix-notch-measure #measureContentEl></div>
 
 		<!-- Visible notch -->
 		<div
@@ -92,24 +83,27 @@ import { FluixAttrsDirective } from "./attrs.directive";
 							[attr.ry]="collapsedH() / 2"
 							[attr.fill]="fill || 'var(--fluix-notch-bg)'"
 						/>
+						<rect
+							#hoverBlobEl
+							[attr.x]="(rootW() - collapsedW()) / 2"
+							[attr.y]="(rootH() - collapsedH()) / 2"
+							width="0"
+							height="0"
+							rx="0"
+							ry="0"
+							opacity="0"
+							[attr.fill]="fill || 'var(--fluix-notch-bg)'"
+						/>
 					</g>
-					<!-- Highlight blob: independent rect (no gooey), sits on top of bg -->
-					<rect
-						#highlightRectEl
-						x="0" y="0" width="0" height="0"
-						rx="0" ry="0"
-						opacity="0"
-						fill="var(--fluix-notch-hl)"
-					/>
 				</svg>
 			</div>
 
-			<!-- Pill dot (collapsed icon) — centered -->
+			<!-- Pill dot -->
 			<div [fluixAttrs]="attrs().pill" [style.width.px]="dotSize" [style.height.px]="dotSize">
 				<ng-content select="[notch-pill]" />
 			</div>
 
-			<!-- Expanded content — centered -->
+			<!-- Expanded content -->
 			<div #contentEl [fluixAttrs]="attrs().content">
 				<ng-content select="[notch-content]" />
 			</div>
@@ -132,19 +126,17 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@ViewChild("measureContentEl") measureContentElRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("contentEl") contentElRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("svgRectEl") svgRectElRef!: ElementRef<SVGRectElement>;
-	@ViewChild("highlightRectEl") highlightRectElRef!: ElementRef<SVGRectElement>;
+	@ViewChild("hoverBlobEl") hoverBlobElRef!: ElementRef<SVGRectElement>;
 
 	private ngZone = inject(NgZone);
 
 	private machine!: NotchMachine;
 	private unsubscribe?: () => void;
 
-	// Reactive signals for Angular OnPush
 	readonly isOpen = signal(false);
 	readonly attrs = signal(getNotchAttrs({ open: false, position: "top-center", theme: "dark" }));
 	readonly contentSize = signal({ w: 200, h: 44 });
 
-	// Derived signals
 	readonly springConfig = () => this.spring ?? FLUIX_SPRING;
 	readonly blur = () => Math.min(10, Math.max(6, this.roundness * 0.45));
 	readonly collapsedW = () => this.dotSize;
@@ -160,7 +152,6 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 	readonly rootW = () => Math.max(this.expandedW(), this.collapsedW());
 	readonly rootH = () => Math.max(this.expandedH(), this.collapsedH());
 
-	// Mutable animation state
 	private prev = { w: 0, h: 0, initialized: false };
 	private currentAnim: Animation | null = null;
 	private highlightAnim: Animation | null = null;
@@ -180,7 +171,6 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 	}
 
 	ngAfterViewInit(): void {
-		// Subscribe to core store
 		this.unsubscribe = this.machine.store.subscribe(() => {
 			this.ngZone.run(() => {
 				const snap = this.machine.store.getSnapshot();
@@ -190,53 +180,35 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 					getNotchAttrs({ open: snap.open, position: this.position, theme: this.theme }),
 				);
 
-				// Notify parent on open change
 				if (this.prevOpenVal !== undefined && this.prevOpenVal !== snap.open) {
 					this.openChange.emit(snap.open);
 				}
 				this.prevOpenVal = snap.open;
 
-				// Animate SVG rect
 				this.animateRect();
 
-				// Reset highlight when closing
 				if (wasOpen && !snap.open) {
-					this.onItemLeave();
+					this.resetHoverBlobImmediate();
 				}
 
-				// Expose CSS variable for toast collision avoidance
-				document.documentElement.style.setProperty(
-					"--fluix-notch-offset",
-					`${this.rootH()}px`,
-				);
+				document.documentElement.style.setProperty("--fluix-notch-offset", `${this.rootH()}px`);
 			});
 		});
 
-		// Set initial state
 		const snap = this.machine.store.getSnapshot();
 		this.isOpen.set(snap.open);
 		this.prevOpenVal = snap.open;
-		this.attrs.set(
-			getNotchAttrs({ open: snap.open, position: this.position, theme: this.theme }),
-		);
+		this.attrs.set(getNotchAttrs({ open: snap.open, position: this.position, theme: this.theme }));
 
-		// Initialize SVG rect to collapsed size
 		this.initSvgRect();
-
-		// Measure hidden content
 		this.setupMeasureObserver();
 
-		// Initial CSS variable
-		document.documentElement.style.setProperty(
-			"--fluix-notch-offset",
-			`${this.rootH()}px`,
-		);
+		document.documentElement.style.setProperty("--fluix-notch-offset", `${this.rootH()}px`);
 	}
 
 	ngOnChanges(changes: SimpleChanges): void {
 		if (!this.machine) return;
 
-		// Reconfigure machine when props change
 		if (
 			changes["position"] ||
 			changes["trigger"] ||
@@ -253,14 +225,12 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 			});
 		}
 
-		// Sync controlled open
 		if (changes["open"] && this.open !== undefined) {
 			const snap = this.machine.store.getSnapshot();
 			if (this.open && !snap.open) this.machine.open();
 			else if (!this.open && snap.open) this.machine.close();
 		}
 
-		// Update attrs when theme/position changes
 		if (changes["theme"] || changes["position"]) {
 			this.attrs.set(
 				getNotchAttrs({ open: this.isOpen(), position: this.position, theme: this.theme }),
@@ -278,14 +248,16 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 		document.documentElement.style.removeProperty("--fluix-notch-offset");
 	}
 
-	/* ---- Event handlers ---- */
-
 	onMouseEnter(): void {
 		if (this.trigger === "hover") this.handleOpen();
 	}
 
 	onMouseLeave(): void {
-		if (this.trigger === "hover") this.handleClose();
+		if (this.trigger === "hover") {
+			this.handleClose();
+			this.resetHoverBlobImmediate();
+			return;
+		}
 		this.onItemLeave();
 	}
 
@@ -295,7 +267,7 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 
 	onItemEnter(e: MouseEvent): void {
 		const target = (e.target as HTMLElement).closest("a, button") as HTMLElement | null;
-		const rect = this.highlightRectElRef?.nativeElement;
+		const rect = this.hoverBlobElRef?.nativeElement;
 		const root = this.rootElRef?.nativeElement;
 		if (!target || !rect || !root || !this.isOpen()) return;
 
@@ -314,24 +286,12 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 		const toY = itemCenterY - rootRect.top - toH / 2;
 		const toRx = toH / 2;
 
-		if (!this.hlPrev.visible) {
-			// First hover — snap into place
-			rect.setAttribute("x", String(toX));
-			rect.setAttribute("y", String(toY));
-			rect.setAttribute("width", String(toW));
-			rect.setAttribute("height", String(toH));
-			rect.setAttribute("rx", String(toRx));
-			rect.setAttribute("ry", String(toRx));
-			rect.setAttribute("opacity", "1");
-			this.hlPrev.x = toX;
-			this.hlPrev.y = toY;
-			this.hlPrev.w = toW;
-			this.hlPrev.h = toH;
-			this.hlPrev.visible = true;
-			return;
-		}
+		const fromX = this.hlPrev.visible ? this.hlPrev.x : toX + toW / 2;
+		const fromY = this.hlPrev.visible ? this.hlPrev.y : toY + toH / 2;
+		const fromW = this.hlPrev.visible ? this.hlPrev.w : 0;
+		const fromH = this.hlPrev.visible ? this.hlPrev.h : 0;
+		const fromR = this.hlPrev.visible ? this.hlPrev.h / 2 : 0;
 
-		// Animate from previous position
 		if (this.highlightAnim) {
 			this.highlightAnim.cancel();
 			this.highlightAnim = null;
@@ -339,12 +299,12 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 
 		const sc = this.springConfig();
 		const a = animateSpring(rect, {
-			x: { from: this.hlPrev.x, to: toX, unit: "px" },
-			y: { from: this.hlPrev.y, to: toY, unit: "px" },
-			width: { from: this.hlPrev.w, to: toW, unit: "px" },
-			height: { from: this.hlPrev.h, to: toH, unit: "px" },
-			rx: { from: this.hlPrev.h / 2, to: toRx, unit: "px" },
-			ry: { from: this.hlPrev.h / 2, to: toRx, unit: "px" },
+			x: { from: fromX, to: toX, unit: "px" },
+			y: { from: fromY, to: toY, unit: "px" },
+			width: { from: fromW, to: toW, unit: "px" },
+			height: { from: fromH, to: toH, unit: "px" },
+			rx: { from: fromR, to: toRx, unit: "px" },
+			ry: { from: fromR, to: toRx, unit: "px" },
 		}, { ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 });
 
 		this.hlPrev.x = toX;
@@ -362,11 +322,21 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 				rect.setAttribute("height", String(toH));
 				rect.setAttribute("rx", String(toRx));
 				rect.setAttribute("ry", String(toRx));
+				rect.setAttribute("opacity", "1");
 			};
+		} else {
+			rect.setAttribute("x", String(toX));
+			rect.setAttribute("y", String(toY));
+			rect.setAttribute("width", String(toW));
+			rect.setAttribute("height", String(toH));
+			rect.setAttribute("rx", String(toRx));
+			rect.setAttribute("ry", String(toRx));
+			rect.setAttribute("opacity", "1");
 		}
-	}
 
-	/* ---- Private ---- */
+		rect.setAttribute("opacity", "1");
+		this.hlPrev.visible = true;
+	}
 
 	private handleOpen(): void {
 		if (this.open === undefined) this.machine.open();
@@ -383,15 +353,65 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 		else this.openChange.emit(!this.machine.store.getSnapshot().open);
 	}
 
-	private onItemLeave(): void {
-		const rect = this.highlightRectElRef?.nativeElement;
+	private resetHoverBlobImmediate(): void {
+		const rect = this.hoverBlobElRef?.nativeElement;
 		if (!rect) return;
-		rect.setAttribute("opacity", "0");
-		this.hlPrev.visible = false;
 		if (this.highlightAnim) {
 			this.highlightAnim.cancel();
 			this.highlightAnim = null;
 		}
+		rect.setAttribute("x", String(this.rootW() / 2));
+		rect.setAttribute("y", String(this.rootH() / 2));
+		rect.setAttribute("width", "0");
+		rect.setAttribute("height", "0");
+		rect.setAttribute("rx", "0");
+		rect.setAttribute("ry", "0");
+		rect.setAttribute("opacity", "0");
+		this.hlPrev.visible = false;
+	}
+
+	private onItemLeave(): void {
+		const rect = this.hoverBlobElRef?.nativeElement;
+		if (!rect) return;
+		if (this.highlightAnim) {
+			this.highlightAnim.cancel();
+			this.highlightAnim = null;
+		}
+		if (!this.hlPrev.visible) return;
+
+		const cx = this.hlPrev.x + this.hlPrev.w / 2;
+		const cy = this.hlPrev.y + this.hlPrev.h / 2;
+		const sc = this.springConfig();
+		const a = animateSpring(rect, {
+			x: { from: this.hlPrev.x, to: cx, unit: "px" },
+			y: { from: this.hlPrev.y, to: cy, unit: "px" },
+			width: { from: this.hlPrev.w, to: 0, unit: "px" },
+			height: { from: this.hlPrev.h, to: 0, unit: "px" },
+			rx: { from: this.hlPrev.h / 2, to: 0, unit: "px" },
+			ry: { from: this.hlPrev.h / 2, to: 0, unit: "px" },
+		}, { ...sc, stiffness: (sc.stiffness ?? 300) * 1.2 });
+		if (a) {
+			this.highlightAnim = a;
+			a.onfinish = () => {
+				this.highlightAnim = null;
+				rect.setAttribute("x", String(cx));
+				rect.setAttribute("y", String(cy));
+				rect.setAttribute("width", "0");
+				rect.setAttribute("height", "0");
+				rect.setAttribute("rx", "0");
+				rect.setAttribute("ry", "0");
+				rect.setAttribute("opacity", "0");
+			};
+		} else {
+			rect.setAttribute("x", String(cx));
+			rect.setAttribute("y", String(cy));
+			rect.setAttribute("width", "0");
+			rect.setAttribute("height", "0");
+			rect.setAttribute("rx", "0");
+			rect.setAttribute("ry", "0");
+			rect.setAttribute("opacity", "0");
+		}
+		this.hlPrev.visible = false;
 	}
 
 	private initSvgRect(): void {
@@ -418,6 +438,8 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 		const el = this.measureContentElRef?.nativeElement;
 		if (!el) return;
 
+		this.syncMeasureContent();
+
 		const measure = () => {
 			const r = el.getBoundingClientRect();
 			if (r.width > 0 && r.height > 0) {
@@ -439,13 +461,19 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 		this.measureObs.observe(el);
 	}
 
+	private syncMeasureContent(): void {
+		const measureEl = this.measureContentElRef?.nativeElement;
+		const contentEl = this.contentElRef?.nativeElement;
+		if (!measureEl || !contentEl) return;
+		measureEl.innerHTML = contentEl.innerHTML;
+	}
+
 	private animateRect(): void {
 		const rect = this.svgRectElRef?.nativeElement;
 		if (!rect || !this.prev.initialized) return;
 
 		const tw = this.targetW();
 		const th = this.targetH();
-
 		if (tw === this.prev.w && th === this.prev.h) return;
 
 		if (this.currentAnim) {
