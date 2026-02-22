@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type FluixPosition, Notch, fluix } from "@fluix-ui/vue";
+import { type FluixPosition, Notch, Toaster, fluix } from "@fluix-ui/vue";
 import type { NotchTrigger } from "@fluix-ui/core";
 import { computed, h, ref } from "vue";
 
