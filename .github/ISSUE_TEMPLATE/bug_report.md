@@ -13,7 +13,6 @@ assignees: []
 - [ ] `@fluix-ui/react`
 - [ ] `@fluix-ui/vue`
 - [ ] `@fluix-ui/svelte`
-- [ ] `@fluix-ui/solid`
 - [ ] `@fluix-ui/vanilla`
 
 ## Environment

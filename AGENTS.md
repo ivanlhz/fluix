@@ -2,7 +2,7 @@
 
 ## What is Fluix?
 
-Fluix is a cross-framework UI component library with physics-based animations and opinionated visual design. Components work identically across React, Vue, Svelte, Solid, and Vanilla JS.
+Fluix is a cross-framework UI component library with physics-based animations and opinionated visual design. Components work identically across React, Vue, Svelte, Angular, and Vanilla JS.
 
 The name comes from "fluid" + "UI" + "x" (cross-framework).
 
@@ -20,7 +20,7 @@ The name comes from "fluid" + "UI" + "x" (cross-framework).
 ┌─────────────────────────────────────────────┐
 │           Framework Adapters                │
 │  @fluix/react  @fluix/vue  @fluix/svelte    │
-│  @fluix/solid  @fluix/vanilla               │
+│  @fluix/angular @fluix/vanilla               │
 │  Role: mount, lifecycle, reactivity bridge  │
 ├─────────────────────────────────────────────┤
 │       @fluix/core — Component Logic         │
@@ -69,7 +69,6 @@ packages/
   react/          → @fluix/react       — React 18+ adapter
   vue/            → @fluix/vue         — Vue 3+ adapter
   svelte/         → @fluix/svelte      — Svelte 5+ adapter
-  solid/          → @fluix/solid       — Solid 1.x adapter
   vanilla/        → @fluix/vanilla     — No framework adapter
 ```
 
@@ -138,7 +137,6 @@ Framework consumption:
 - **React**: `useSyncExternalStore(store.subscribe, store.getSnapshot)`
 - **Vue**: `watchEffect` + `store.subscribe`
 - **Svelte**: Wrap as Svelte readable store
-- **Solid**: `createStore` bridge with `createEffect`
 - **Vanilla**: `store.subscribe(renderFn)`
 
 ### Spring (`primitives/spring.ts`)
@@ -388,7 +386,6 @@ The filter ID must be unique per toast instance to avoid conflicts: `fluix-gooey
 - [ ] React adapter: toast
 - [ ] Vue adapter: toast
 - [ ] Svelte adapter: toast
-- [ ] Solid adapter: toast
 - [ ] Vanilla adapter: toast
 - [ ] Documentation site
 

@@ -15,7 +15,6 @@ What user/developer problem does this solve?
 - [ ] `@fluix-ui/react`
 - [ ] `@fluix-ui/vue`
 - [ ] `@fluix-ui/svelte`
-- [ ] `@fluix-ui/solid`
 - [ ] `@fluix-ui/vanilla`
 - [ ] docs
 

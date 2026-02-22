@@ -2,7 +2,7 @@
 
 **Physics-based, cross-framework UI components. Beautiful by default.**
 
-Fluix delivers opinionated UI components that work identically across React, Vue, Svelte, Solid, and Vanilla JS. Powered by spring physics, SVG gooey morphing, and zero animation dependencies.
+Fluix delivers opinionated UI components that work identically across React, Vue, Svelte, Angular, and Vanilla JS. Powered by spring physics, SVG gooey morphing, and zero animation dependencies.
 
 Official documentation: https://fluix.ivanlopezdev.es
 Source code: https://github.com/ivanlhz/fluix
@@ -16,7 +16,6 @@ Source code: https://github.com/ivanlhz/fluix
 | `@fluix-ui/react` | React 18+ adapter | ✅ Available |
 | `@fluix-ui/vue` | Vue 3+ adapter | ✅ Available |
 | `@fluix-ui/svelte` | Svelte 5+ adapter | ✅ Available |
-| `@fluix-ui/solid` | Solid.js adapter | ✅ Available |
 | `@fluix-ui/vanilla` | Zero-framework adapter | ✅ Available |
 | `@fluix-ui/angular` | Angular 17+ adapter | ✅ Available |
 
@@ -97,7 +96,6 @@ pnpm run release
 @fluix-ui/react   → Thin React adapter (~60 lines per component)
 @fluix-ui/vue     → Thin Vue adapter
 @fluix-ui/svelte  → Thin Svelte adapter
-@fluix-ui/solid   → Thin Solid adapter
 @fluix-ui/vanilla → Thin Vanilla JS adapter
 @fluix-ui/angular → Thin Angular 17+ adapter
 ```
