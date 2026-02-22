@@ -280,8 +280,9 @@ export class FluixNotchComponent implements AfterViewInit, OnChanges, OnDestroy 
 
 		const padX = 8;
 		const padY = 4;
+		const blobOvershoot = Math.max(6, this.roundness * 0.35);
 		const toW = itemW + padX * 2;
-		const toH = itemH + padY * 2;
+		const toH = Math.max(itemH + padY * 2, rootRect.height + blobOvershoot * 2);
 		const toX = itemCenterX - rootRect.left - toW / 2;
 		const toY = itemCenterY - rootRect.top - toH / 2;
 		const toRx = toH / 2;

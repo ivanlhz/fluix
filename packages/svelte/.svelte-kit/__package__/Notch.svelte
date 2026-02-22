@@ -44,7 +44,11 @@ const {
 	content,
 }: NotchProps = $props();
 
-const machine = createNotchMachine({ position, trigger, roundness, fill, spring });
+const machine = createNotchMachine({
+	position: "top-center",
+	trigger: "click",
+	roundness: NOTCH_DEFAULTS.roundness,
+});
 
 let snapshot = $state.raw(machine.store.getSnapshot());
 $effect(() => {
@@ -148,8 +152,9 @@ function onItemEnter(e: MouseEvent) {
 
 	const padX = 8;
 	const padY = 4;
+	const blobOvershoot = Math.max(6, roundness * 0.35);
 	const toW = itemW + padX * 2;
-	const toH = itemH + padY * 2;
+	const toH = Math.max(itemH + padY * 2, rootRect.height + blobOvershoot * 2);
 	const toX = itemCenterX - rootRect.left - toW / 2;
 	const toY = itemCenterY - rootRect.top - toH / 2;
 	const toRx = toH / 2;

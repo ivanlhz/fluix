@@ -3,9 +3,26 @@ import { Notch } from "@fluix-ui/svelte";
 
 let theme = $state<"light" | "dark">("dark");
 const notchTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "light");
+
+function toggleTheme() {
+	theme = theme === "dark" ? "light" : "dark";
+}
+
+function onShellKeydown(event: KeyboardEvent) {
+	if (event.key !== "Enter" && event.key !== " ") return;
+	event.preventDefault();
+	toggleTheme();
+}
 </script>
 
-<main class="showcase theme-{theme}" onclick={() => (theme = theme === "dark" ? "light" : "dark")}>
+<div
+	class="showcase theme-{theme}"
+	role="button"
+	tabindex="0"
+	aria-label="Toggle theme"
+	onclick={toggleTheme}
+	onkeydown={onShellKeydown}
+>
 	<Notch
 		trigger="hover"
 		position="top-center"
@@ -22,29 +39,25 @@ const notchTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "ligh
 		{/snippet}
 		{#snippet content()}
 			<nav style="display:flex;gap:0.4rem;padding:0;align-items:center;">
-				<!-- Home -->
-				<a href="#home" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
+				<a href="#home" aria-label="Home" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
 					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
 						<polyline points="9 22 9 12 15 12 15 22"/>
 					</svg>
 				</a>
-				<!-- Search -->
-				<a href="#search" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
+				<a href="#search" aria-label="Search" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
 					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 						<circle cx="11" cy="11" r="8"/>
 						<line x1="21" y1="21" x2="16.65" y2="16.65"/>
 					</svg>
 				</a>
-				<!-- User -->
-				<a href="#profile" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
+				<a href="#profile" aria-label="Profile" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
 					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
 						<circle cx="12" cy="7" r="4"/>
 					</svg>
 				</a>
-				<!-- Settings -->
-				<a href="#settings" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
+				<a href="#settings" aria-label="Settings" style="color:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
 					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 						<circle cx="12" cy="12" r="3"/>
 						<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -55,7 +68,7 @@ const notchTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "ligh
 	</Notch>
 
 	<p class="showcase-hint">Click anywhere to toggle theme</p>
-</main>
+</div>
 
 <style>
 	.showcase {
