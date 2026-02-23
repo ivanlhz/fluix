@@ -126,9 +126,9 @@ export default function App() {
 
 				<Menu.Root
 					orientation={isMobile ? "horizontal" : "vertical"}
-					variant={isMobile ? "pill" : "tab"}
+					variant="tab"
 					theme={theme}
-					activeId={isMobile || menuReady ? route : null}
+					activeId={menuReady ? route : null}
 					onActiveChange={handleRouteChange}
 					className="demo-sidebar-menu"
 				>

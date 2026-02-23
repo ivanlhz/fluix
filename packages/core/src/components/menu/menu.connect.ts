@@ -1,5 +1,5 @@
 import { FLUIX_SPRING, type SpringConfig } from "../../primitives/spring";
-import type { MenuVariant } from "./menu.types";
+import type { MenuOrientation, MenuVariant } from "./menu.types";
 
 export interface MenuConnectOptions {
 	root: HTMLElement;
@@ -9,6 +9,7 @@ export interface MenuConnectOptions {
 	spring?: SpringConfig;
 	padding?: number;
 	variant?: MenuVariant;
+	orientation?: MenuOrientation;
 }
 
 interface IndicatorFrame {
@@ -34,6 +35,7 @@ function readItemFrame(
 	activeId: string,
 	padding: number,
 	variant?: MenuVariant,
+	orientation?: MenuOrientation,
 ): IndicatorFrame | null {
 	const activeItem = root.querySelector<HTMLElement>(
 		`${ITEM_SELECTOR}[data-menu-id="${CSS.escape(activeId)}"]`,
@@ -48,6 +50,20 @@ function readItemFrame(
 	const y = itemRect.top - rootRect.top - padding;
 
 	if (variant === "tab") {
+		if (orientation === "horizontal") {
+			// Horizontal tab: extend height downward to the root bottom edge.
+			// The root's padding-bottom controls how far below the items
+			// the indicator reaches (and where it meets the content area).
+			const extendedHeight = rootRect.height - y + 1; // +1 to avoid sub-pixel gap
+			return {
+				x,
+				y,
+				width,
+				height: extendedHeight,
+				radius: height / 2, // use original item height for top pill arc
+				visible: width > 0 && height > 0,
+			};
+		}
 		const extendedWidth = rootRect.width - x;
 		return {
 			x,
@@ -97,10 +113,48 @@ function generateTabPath(frame: IndicatorFrame, cr: number): string {
 	].join(" ");
 }
 
-function applyFrame(indicator: SVGRectElement | SVGPathElement, frame: IndicatorFrame, variant?: MenuVariant) {
+/**
+ * Generate an SVG path for the horizontal tab shape (rotated 90° from vertical):
+ * - Rounded top (pill arc at top-left, top-right)
+ * - Flat bottom edge (flush with content boundary)
+ * - Concave curves at bottom-left and bottom-right corners
+ */
+function generateHorizontalTabPath(frame: IndicatorFrame, cr: number): string {
+	const { x, y, width, height } = frame;
+	const r = Math.min(frame.radius, width / 2, height / 2);
+	const bottom = y + height; // bottom edge
+
+	// Allow concave curves as long as there's enough vertical space below the top arcs
+	const concaveR = Math.min(cr, width / 2, Math.max(0, height - r));
+
+	return [
+		// Start at top-left, after the rounded corner
+		`M ${x} ${y + r}`,
+		// Arc from left edge to top edge (top-left rounded corner)
+		`A ${r} ${r} 0 0 1 ${x + r} ${y}`,
+		// Top edge to top-right corner
+		`L ${x + width - r} ${y}`,
+		// Arc from top edge to right edge (top-right rounded corner)
+		`A ${r} ${r} 0 0 1 ${x + width} ${y + r}`,
+		// Right edge down to bottom-right concave
+		`L ${x + width} ${bottom - concaveR}`,
+		// Concave curve at bottom-right (curves outward)
+		`Q ${x + width} ${bottom} ${x + width + concaveR} ${bottom}`,
+		// Flat bottom edge (off to the right, then back to the left)
+		`L ${x - concaveR} ${bottom}`,
+		// Concave curve at bottom-left (curves outward)
+		`Q ${x} ${bottom} ${x} ${bottom - concaveR}`,
+		// Left edge back up
+		`L ${x} ${y + r}`,
+		"Z",
+	].join(" ");
+}
+
+function applyFrame(indicator: SVGRectElement | SVGPathElement, frame: IndicatorFrame, variant?: MenuVariant, orientation?: MenuOrientation) {
 	if (variant === "tab") {
 		const path = indicator as SVGPathElement;
-		path.setAttribute("d", generateTabPath(frame, TAB_CURVE_RADIUS));
+		const generator = orientation === "horizontal" ? generateHorizontalTabPath : generateTabPath;
+		path.setAttribute("d", generator(frame, TAB_CURVE_RADIUS));
 		path.setAttribute("opacity", frame.visible ? "1" : "0");
 	} else {
 		const rect = indicator as SVGRectElement;
@@ -221,6 +275,57 @@ function animateTabEnter(
 }
 
 /**
+ * Enter-only animation for horizontal tab: expands upward from the bottom edge.
+ */
+function animateHorizontalTabEnter(
+	path: SVGPathElement,
+	from: IndicatorFrame,
+	to: IndicatorFrame,
+	cr: number,
+	spring: Required<SpringConfig>,
+): AnimationHandle {
+	const bottomEdge = from.y + from.height;
+	const samples = simulateSpringValues(spring);
+	const count = samples.length;
+	const durationMs = (count / 120) * 1000;
+	const startTime = performance.now();
+	let cancelled = false;
+
+	const handle: AnimationHandle = {
+		onfinish: null,
+		cancel() { cancelled = true; },
+	};
+
+	function tick() {
+		if (cancelled) return;
+		const elapsed = performance.now() - startTime;
+		const progress = Math.min(elapsed / durationMs, 1);
+		const idx = Math.min(Math.floor(progress * (count - 1)), count - 1);
+		const t = samples[idx];
+
+		const frame: IndicatorFrame = {
+			x: to.x,
+			y: lerp(bottomEdge, to.y, t),
+			width: to.width,
+			height: lerp(0, to.height, t),
+			radius: to.radius,
+			visible: true,
+		};
+
+		path.setAttribute("d", generateHorizontalTabPath(frame, cr));
+
+		if (progress < 1) {
+			requestAnimationFrame(tick);
+		} else {
+			handle.onfinish?.();
+		}
+	}
+
+	requestAnimationFrame(tick);
+	return handle;
+}
+
+/**
  * Two-phase tab animation driven by requestAnimationFrame:
  *
  * Phase 1 (exit  ~130 ms):  Quick ease-out collapse to the right.
@@ -299,6 +404,93 @@ function animateTabIndicator(
 		}
 
 		path.setAttribute("d", generateTabPath(frame, cr));
+
+		if (elapsed < totalMs) {
+			requestAnimationFrame(tick);
+		} else {
+			handle.onfinish?.();
+		}
+	}
+
+	requestAnimationFrame(tick);
+	return handle;
+}
+
+/**
+ * Two-phase horizontal tab animation:
+ *
+ * Phase 1 (exit  ~130 ms):  Collapse downward to the bottom edge.
+ * Phase 2 (enter ~spring):  Expand upward from the bottom at the new X.
+ */
+function animateHorizontalTabIndicator(
+	path: SVGPathElement,
+	from: IndicatorFrame,
+	to: IndicatorFrame,
+	cr: number,
+	spring: Required<SpringConfig>,
+	onEnterStart?: () => void,
+): AnimationHandle {
+	const bottomEdge = from.y + from.height;
+
+	const enterSamples = simulateSpringValues({
+		stiffness: spring.stiffness * 3,
+		damping: spring.damping * 1.8,
+		mass: spring.mass,
+	});
+	const enterCount = enterSamples.length;
+	const enterMs = (enterCount / 120) * 1000;
+	const totalMs = EXIT_MS + enterMs;
+
+	const startTime = performance.now();
+	let cancelled = false;
+	let enteredPhase2 = false;
+
+	const handle: AnimationHandle = {
+		onfinish: null,
+		cancel() { cancelled = true; },
+	};
+
+	function tick() {
+		if (cancelled) return;
+
+		const elapsed = performance.now() - startTime;
+		let frame: IndicatorFrame;
+
+		if (elapsed < EXIT_MS) {
+			// ── Phase 1: exit (collapse downward to bottom edge) ──
+			const t = easeOutCubic(elapsed / EXIT_MS);
+			frame = {
+				x: from.x,
+				y: lerp(from.y, bottomEdge, t),
+				width: from.width,
+				height: lerp(from.height, 0, t),
+				radius: from.radius,
+				visible: true,
+			};
+		} else {
+			if (!enteredPhase2) {
+				enteredPhase2 = true;
+				onEnterStart?.();
+			}
+			// ── Phase 2: enter (expand upward from bottom at new X) ──
+			const phaseElapsed = elapsed - EXIT_MS;
+			const phaseProgress = Math.min(phaseElapsed / enterMs, 1);
+			const idx = Math.min(
+				Math.floor(phaseProgress * (enterCount - 1)),
+				enterCount - 1,
+			);
+			const t = enterSamples[idx];
+			frame = {
+				x: to.x,
+				y: lerp(bottomEdge, to.y, t),
+				width: to.width,
+				height: lerp(0, to.height, t),
+				radius: to.radius,
+				visible: true,
+			};
+		}
+
+		path.setAttribute("d", generateHorizontalTabPath(frame, cr));
 
 		if (elapsed < totalMs) {
 			requestAnimationFrame(tick);
@@ -400,6 +592,7 @@ export function connectMenu(options: MenuConnectOptions): {
 	const spring = options.spring ?? FLUIX_SPRING;
 	const padding = options.padding ?? 6;
 	const variant = options.variant;
+	const orientation = options.orientation;
 	const cleanups: Array<() => void> = [];
 	let currentAnimation: AnimationHandle | null = null;
 	let lastFrame: IndicatorFrame | null = null;
@@ -442,12 +635,12 @@ export function connectMenu(options: MenuConnectOptions): {
 	}
 
 	function apply(frame: IndicatorFrame) {
-		applyFrame(options.indicator, frame, variant);
+		applyFrame(options.indicator, frame, variant, orientation);
 	}
 
 	const updateIndicator = (immediate = false) => {
 		const activeId = options.getActiveId();
-		const nextFrame = activeId ? readItemFrame(options.root, activeId, padding, variant) : null;
+		const nextFrame = activeId ? readItemFrame(options.root, activeId, padding, variant, orientation) : null;
 		const fallbackFrame: IndicatorFrame =
 			nextFrame ??
 			lastFrame ?? {
@@ -478,33 +671,59 @@ export function connectMenu(options: MenuConnectOptions): {
 			const to = fallbackFrame;
 			lastFrame = to;
 			previousActiveId = activeId;
+			const isHorizontal = orientation === "horizontal";
 
-			// Build a collapsed frame at the right edge to animate from
-			const rightEdge = to.x + to.width;
-			const collapsedFrom: IndicatorFrame = {
-				x: rightEdge,
-				y: to.y,
-				width: 0,
-				height: to.height,
-				radius: to.radius,
-				visible: true,
-			};
+			// Build a collapsed frame at the edge to animate from
+			const collapsedFrom: IndicatorFrame = isHorizontal
+				? {
+					x: to.x,
+					y: to.y + to.height, // bottom edge
+					width: to.width,
+					height: 0,
+					radius: to.radius,
+					visible: true,
+				}
+				: {
+					x: to.x + to.width, // right edge
+					y: to.y,
+					width: 0,
+					height: to.height,
+					radius: to.radius,
+					visible: true,
+				};
 
 			// First appearance — no old item to manage, let React handle data-state naturally
 			(options.indicator as SVGPathElement).setAttribute("opacity", "1");
 
-			const enterAnim = animateTabEnter(
-				options.indicator as SVGPathElement,
-				collapsedFrom,
-				to,
-				TAB_CURVE_RADIUS,
-				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
-			);
+			const springConfig = { stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 };
+			const enterAnim = isHorizontal
+				? animateHorizontalTabEnter(
+					options.indicator as SVGPathElement,
+					collapsedFrom,
+					to,
+					TAB_CURVE_RADIUS,
+					springConfig,
+				)
+				: animateTabEnter(
+					options.indicator as SVGPathElement,
+					collapsedFrom,
+					to,
+					TAB_CURVE_RADIUS,
+					springConfig,
+				);
 
 			currentAnimation = enterAnim;
 			enterAnim.onfinish = () => {
 				currentAnimation = null;
-				apply(to);
+				// Re-read frame to absorb any font-weight layout shifts
+				const settledId = options.getActiveId();
+				const settled = settledId ? readItemFrame(options.root, settledId, padding, variant, orientation) : null;
+				if (settled) {
+					lastFrame = settled;
+					apply(settled);
+				} else {
+					apply(to);
+				}
 			};
 			return;
 		}
@@ -532,18 +751,30 @@ export function connectMenu(options: MenuConnectOptions): {
 			animPhase = "exit";
 			enforceAnimStates();
 
-			animation = animateTabIndicator(
-				options.indicator as SVGPathElement,
-				from,
-				to,
-				TAB_CURVE_RADIUS,
-				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
-				() => {
-					// Enter phase started — flip data-state
-					animPhase = "enter";
-					enforceAnimStates();
-				},
-			);
+			const springConfig = { stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 };
+			const onEnterStart = () => {
+				// Enter phase started — flip data-state
+				animPhase = "enter";
+				enforceAnimStates();
+			};
+
+			animation = orientation === "horizontal"
+				? animateHorizontalTabIndicator(
+					options.indicator as SVGPathElement,
+					from,
+					to,
+					TAB_CURVE_RADIUS,
+					springConfig,
+					onEnterStart,
+				)
+				: animateTabIndicator(
+					options.indicator as SVGPathElement,
+					from,
+					to,
+					TAB_CURVE_RADIUS,
+					springConfig,
+					onEnterStart,
+				);
 		} else {
 			animation = animatePillMorph(
 				options.indicator as SVGRectElement,
@@ -561,12 +792,22 @@ export function connectMenu(options: MenuConnectOptions): {
 		currentAnimation = animation;
 		animation.onfinish = () => {
 			currentAnimation = null;
-			apply(to);
 			// Ensure final data-state is correct and release control
 			if (variant === "tab") {
 				if (newActiveId) setItemState(newActiveId, "active");
 				if (oldActiveId && oldActiveId !== newActiveId) setItemState(oldActiveId, "inactive");
 				clearAnimState();
+			}
+			// Re-read frame after data-state change to absorb font-weight layout shifts.
+			// Without this, the width change from font-weight 500→650 causes readItemFrame
+			// to return a different frame, triggering an infinite animation loop.
+			const settledId = options.getActiveId();
+			const settled = settledId ? readItemFrame(options.root, settledId, padding, variant, orientation) : null;
+			if (settled) {
+				lastFrame = settled;
+				apply(settled);
+			} else {
+				apply(to);
 			}
 		};
 	};
@@ -590,7 +831,13 @@ export function connectMenu(options: MenuConnectOptions): {
 	options.root.addEventListener("click", handleClick);
 	cleanups.push(() => options.root.removeEventListener("click", handleClick));
 
-	const scheduleSync = () => sync(false);
+	const scheduleSync = () => {
+		// During tab animation, font-weight changes cause item resize which would
+		// cancel the running animation and restart it in an infinite loop.
+		// Skip resize-triggered syncs while animating — onfinish re-reads the frame.
+		if (animPhase) return;
+		sync(false);
+	};
 	resizeObserver = new ResizeObserver(scheduleSync);
 	resizeObserver.observe(options.root);
 	for (const item of options.root.querySelectorAll<HTMLElement>(ITEM_SELECTOR)) {

@@ -90,11 +90,22 @@
 [data-fluix-menu][data-variant="tab"] {
 	background: transparent;
 	border-radius: 0;
-	padding: 0;
+	padding-inline: 0;
+	padding-block-start: 0;
 	overflow: visible;
 }
 
 [data-fluix-menu][data-variant="tab"] [data-fluix-menu-canvas] svg {
+	overflow: visible;
+}
+
+/* ---------- Horizontal tab variant ---------- */
+
+[data-fluix-menu][data-variant="tab"][data-orientation="horizontal"] {
+	background: transparent;
+	border-radius: 0;
+	padding-inline: 0;
+	padding-block-start: 0;
 	overflow: visible;
 }
 

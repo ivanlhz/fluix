@@ -207,6 +207,7 @@ function Root({
 			},
 			spring: springConfig,
 			variant,
+			orientation,
 		});
 
 		connectionRef.current = connection;
@@ -214,7 +215,7 @@ function Root({
 			connection.destroy();
 			connectionRef.current = null;
 		};
-	}, [indicatorNode, machine, springConfig, variant]);
+	}, [indicatorNode, machine, springConfig, variant, orientation]);
 
 	useEffect(() => {
 		connectionRef.current?.sync(false);
