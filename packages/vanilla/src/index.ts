@@ -23,3 +23,8 @@ export { createToaster } from "./toast";
 export { createNotch } from "./notch";
 export type { NotchOptions } from "./notch";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
+
+// Menu
+export { createMenu } from "./menu";
+export type { MenuOptions, MenuInstance, MenuItemConfig } from "./menu";
+export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";

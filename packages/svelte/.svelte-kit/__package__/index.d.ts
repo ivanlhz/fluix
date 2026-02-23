@@ -14,4 +14,9 @@ export type { ToasterProps } from "./Toaster.svelte";
 export { default as Notch } from "./Notch.svelte";
 export type { NotchProps } from "./Notch.svelte";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
+export { default as Menu } from "./Menu.svelte";
+export { default as MenuItem } from "./MenuItem.svelte";
+export type { MenuProps } from "./Menu.svelte";
+export type { MenuItemProps } from "./MenuItem.svelte";
+export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";
 //# sourceMappingURL=index.d.ts.map

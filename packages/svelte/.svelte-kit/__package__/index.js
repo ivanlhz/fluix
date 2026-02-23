@@ -11,3 +11,6 @@ export { default as Toaster } from "./Toaster.svelte";
 export { createFluixToasts } from "./toast.svelte.js";
 // Notch
 export { default as Notch } from "./Notch.svelte";
+// Menu
+export { default as Menu } from "./Menu.svelte";
+export { default as MenuItem } from "./MenuItem.svelte";

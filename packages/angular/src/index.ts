@@ -34,3 +34,8 @@ export { isDescriptionTemplate } from "./toast-description";
 
 export { FluixNotchComponent } from "./notch.component";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
+
+// Menu
+export { FluixMenuComponent } from "./menu.component";
+export { FluixMenuItemComponent } from "./menu-item.component";
+export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";

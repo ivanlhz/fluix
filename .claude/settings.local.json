@@ -46,7 +46,8 @@
       "Bash(pnpm --filter @fluix-ui/react typecheck:*)",
       "Bash(ls -la \"C:\\\\Users\\\\ivanl\\\\develop\\\\2026\\\\fluix\\\\apps\"\" | grep -E \"^d \")",
       "Bash(npx sharp-cli:*)",
-      "Bash(npx sharp:*)"
+      "Bash(npx sharp:*)",
+      "Bash(tail:*)"
     ]
   }
 }
