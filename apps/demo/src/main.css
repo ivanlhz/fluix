@@ -118,12 +118,7 @@ body {
 .demo-content {
   min-height: 100vh;
   overflow: auto;
-  background:
-    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99, 102, 241, 0.22), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 75%, rgba(236, 72, 153, 0.16), transparent 70%),
-    radial-gradient(ellipse 45% 35% at 60% 10%, rgba(56, 189, 248, 0.2), transparent 70%),
-    radial-gradient(ellipse 40% 30% at 40% 85%, rgba(16, 185, 129, 0.18), transparent 70%),
-    var(--demo-content-bg);
+  background: var(--demo-content-bg);
   transform: translateX(100%);
   opacity: 0;
   transition: transform 760ms var(--fluix-spring-easing, cubic-bezier(0.2, 0.8, 0.2, 1)),
@@ -140,11 +135,7 @@ body {
 }
 
 .demo-shell.theme-light .demo-content {
-  background:
-    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(99, 102, 241, 0.2), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 75% 70%, rgba(244, 114, 182, 0.15), transparent 70%),
-    radial-gradient(ellipse 45% 35% at 55% 10%, rgba(56, 189, 248, 0.12), transparent 70%),
-    var(--demo-content-bg);
+  background: var(--demo-content-bg);
 }
 
 .demo-card {
