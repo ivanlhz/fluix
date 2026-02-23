@@ -169,6 +169,58 @@ function easeOutCubic(t: number): number {
 const EXIT_MS = 130;
 
 /**
+ * Enter-only animation: expands the tab from the right edge to the target position.
+ * Used for the initial appearance (invisible → visible).
+ */
+function animateTabEnter(
+	path: SVGPathElement,
+	from: IndicatorFrame,
+	to: IndicatorFrame,
+	cr: number,
+	spring: Required<SpringConfig>,
+): AnimationHandle {
+	const rightEdge = from.x + from.width;
+	const samples = simulateSpringValues(spring);
+	const count = samples.length;
+	const durationMs = (count / 120) * 1000;
+	const startTime = performance.now();
+	let cancelled = false;
+
+	const handle: AnimationHandle = {
+		onfinish: null,
+		cancel() { cancelled = true; },
+	};
+
+	function tick() {
+		if (cancelled) return;
+		const elapsed = performance.now() - startTime;
+		const progress = Math.min(elapsed / durationMs, 1);
+		const idx = Math.min(Math.floor(progress * (count - 1)), count - 1);
+		const t = samples[idx];
+
+		const frame: IndicatorFrame = {
+			x: lerp(rightEdge, to.x, t),
+			y: to.y,
+			width: lerp(0, to.width, t),
+			height: to.height,
+			radius: to.radius,
+			visible: true,
+		};
+
+		path.setAttribute("d", generateTabPath(frame, cr));
+
+		if (progress < 1) {
+			requestAnimationFrame(tick);
+		} else {
+			handle.onfinish?.();
+		}
+	}
+
+	requestAnimationFrame(tick);
+	return handle;
+}
+
+/**
  * Two-phase tab animation driven by requestAnimationFrame:
  *
  * Phase 1 (exit  ~130 ms):  Quick ease-out collapse to the right.
@@ -333,6 +385,42 @@ export function connectMenu(options: MenuConnectOptions): {
 			currentAnimation.cancel();
 			currentAnimation = null;
 			clearAnimState();
+		}
+
+		// For tab variant, first appearance (invisible→visible) plays the enter animation
+		if (variant === "tab" && !immediate && fallbackFrame.visible && !lastFrame.visible) {
+			const to = fallbackFrame;
+			lastFrame = to;
+			previousActiveId = activeId;
+
+			// Build a collapsed frame at the right edge to animate from
+			const rightEdge = to.x + to.width;
+			const collapsedFrom: IndicatorFrame = {
+				x: rightEdge,
+				y: to.y,
+				width: 0,
+				height: to.height,
+				radius: to.radius,
+				visible: true,
+			};
+
+			// First appearance — no old item to manage, let React handle data-state naturally
+			(options.indicator as SVGPathElement).setAttribute("opacity", "1");
+
+			const enterAnim = animateTabEnter(
+				options.indicator as SVGPathElement,
+				collapsedFrom,
+				to,
+				TAB_CURVE_RADIUS,
+				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
+			);
+
+			currentAnimation = enterAnim;
+			enterAnim.onfinish = () => {
+				currentAnimation = null;
+				applyFrame(options.indicator, to, variant);
+			};
+			return;
 		}
 
 		if (immediate || !fallbackFrame.visible || !lastFrame.visible) {

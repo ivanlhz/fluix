@@ -273,6 +273,7 @@ function Root({
 				className={className}
 				aria-label="Fluix menu"
 			>
+				<Indicator />
 				<div {...attrs.list}>{children}</div>
 			</nav>
 		</MenuContext.Provider>

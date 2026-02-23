@@ -50,6 +50,7 @@ export default function App() {
 		typeof window === "undefined" ? MENU_ITEMS[0].id : getMenuRouteFromHash(window.location.hash),
 	);
 	const [layoutEntered, setLayoutEntered] = useState(false);
+	const [menuReady, setMenuReady] = useState(false);
 	const toastTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
 	const toasterConfig = useMemo(
 		() => ({
@@ -73,8 +74,10 @@ export default function App() {
 		handleHashChange();
 
 		const raf = requestAnimationFrame(() => setLayoutEntered(true));
+		const menuTimer = setTimeout(() => setMenuReady(true), 700);
 		return () => {
 			cancelAnimationFrame(raf);
+			clearTimeout(menuTimer);
 			window.removeEventListener("hashchange", handleHashChange);
 		};
 	}, []);
@@ -115,11 +118,10 @@ export default function App() {
 					orientation="vertical"
 					variant="tab"
 					theme={theme}
-					activeId={route}
+					activeId={menuReady ? route : null}
 					onActiveChange={handleRouteChange}
 					className="demo-sidebar-menu"
 				>
-					<Menu.Indicator />
 					{MENU_ITEMS.map((item) => (
 						<Menu.Item key={item.id} id={item.id}>
 							{item.label}
