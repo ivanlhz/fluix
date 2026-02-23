@@ -10,6 +10,7 @@
     "./variables": "./dist/variables.css",
     "./animations": "./dist/animations.css",
     "./notch": "./dist/notch.css",
+    "./menu": "./dist/menu.css",
     "./themes/dark": "./dist/themes/dark.css"
   },
   "files": [

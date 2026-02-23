@@ -1,6 +1,6 @@
-import { type FluixPosition, Notch, Toaster, fluix } from "@fluix-ui/react";
+import { type FluixPosition, Menu, Notch, Toaster, fluix } from "@fluix-ui/react";
 import type { NotchTrigger } from "@fluix-ui/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const POSITIONS: FluixPosition[] = [
 	"top-left",
@@ -16,12 +16,40 @@ type LayoutMode = (typeof LAYOUTS)[number];
 
 const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
 
+const MENU_ITEMS = [
+	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
+	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
+	{
+		id: "calendar",
+		label: "Calendario",
+		hash: "#calendar",
+		subtitle: "Eventos, clases y entregas de la semana.",
+	},
+	{
+		id: "messages",
+		label: "Mensajes",
+		hash: "#messages",
+		subtitle: "Notificaciones y conversaciones recientes.",
+	},
+] as const;
+
+type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
+
+function getMenuRouteFromHash(hash: string): MenuRouteId {
+	const route = MENU_ITEMS.find((item) => item.hash === hash);
+	return route?.id ?? MENU_ITEMS[0].id;
+}
+
 export default function App() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [position, setPosition] = useState<FluixPosition>("top-right");
 	const [layout, setLayout] = useState<LayoutMode>("stack");
 	const [notchTrigger, setNotchTrigger] = useState<NotchTrigger>("hover");
 	const [notchOpen, setNotchOpen] = useState(false);
+	const [route, setRoute] = useState<MenuRouteId>(() =>
+		typeof window === "undefined" ? MENU_ITEMS[0].id : getMenuRouteFromHash(window.location.hash),
+	);
+	const [layoutEntered, setLayoutEntered] = useState(false);
 	const toastTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
 	const toasterConfig = useMemo(
 		() => ({
@@ -34,6 +62,30 @@ export default function App() {
 		}),
 		[position, layout, toastTheme],
 	);
+	const activeRoute = useMemo(
+		() => MENU_ITEMS.find((item) => item.id === route) ?? MENU_ITEMS[0],
+		[route],
+	);
+
+	useEffect(() => {
+		const handleHashChange = () => setRoute(getMenuRouteFromHash(window.location.hash));
+		window.addEventListener("hashchange", handleHashChange);
+		handleHashChange();
+
+		const raf = requestAnimationFrame(() => setLayoutEntered(true));
+		return () => {
+			cancelAnimationFrame(raf);
+			window.removeEventListener("hashchange", handleHashChange);
+		};
+	}, []);
+
+	const handleRouteChange = (id: string) => {
+		const nextRoute = MENU_ITEMS.find((item) => item.id === id);
+		if (!nextRoute) return;
+		setRoute(nextRoute.id);
+		window.history.replaceState(null, "", nextRoute.hash);
+	};
+
 	const createBookingPromise = () =>
 		new Promise<{
 			airline: string;
@@ -54,206 +106,241 @@ export default function App() {
 		});
 
 	return (
-		<main className={`demo-shell theme-${theme}`}>
-			<div className="demo-card">
-				<div className="demo-header">
-					<div>
-						<h1 className="demo-title">Fluix Playground</h1>
-						<p className="demo-subtitle">
-							Proba posiciones, tipos de toast, layout stack/notch y tema visual.
-						</p>
+		<main className={`demo-shell theme-${theme} ${layoutEntered ? "is-entered" : ""}`}>
+			<aside className="demo-sidebar">
+				<div className="demo-sidebar-brand">Fluix</div>
+				<div className="demo-sidebar-subtitle">Gooey Navigation</div>
+
+				<Menu.Root
+					orientation="vertical"
+					variant="tab"
+					theme={theme}
+					activeId={route}
+					onActiveChange={handleRouteChange}
+					className="demo-sidebar-menu"
+				>
+					<Menu.Indicator />
+					{MENU_ITEMS.map((item) => (
+						<Menu.Item key={item.id} id={item.id}>
+							{item.label}
+						</Menu.Item>
+					))}
+				</Menu.Root>
+			</aside>
+
+			<section className="demo-content">
+				<div className="demo-content-surface">
+					<div className="demo-card">
+						<div className="demo-header">
+							<div>
+								<h1 className="demo-title">{activeRoute.label}</h1>
+								<p className="demo-subtitle">{activeRoute.subtitle}</p>
+							</div>
+							<label className="theme-toggle" aria-label="Cambiar tema oscuro y claro">
+								<input
+									type="checkbox"
+									checked={theme === "dark"}
+									onChange={(event) => setTheme(event.target.checked ? "dark" : "light")}
+								/>
+								<span className="theme-toggle-track">
+									<span className="theme-toggle-thumb" />
+								</span>
+								<span className="theme-toggle-label">{theme === "dark" ? "Dark" : "Light"}</span>
+							</label>
+						</div>
 					</div>
-					<label className="theme-toggle" aria-label="Cambiar tema oscuro y claro">
-						<input
-							type="checkbox"
-							checked={theme === "dark"}
-							onChange={(event) => setTheme(event.target.checked ? "dark" : "light")}
-						/>
-						<span className="theme-toggle-track">
-							<span className="theme-toggle-thumb" />
-						</span>
-						<span className="theme-toggle-label">{theme === "dark" ? "Dark" : "Light"}</span>
-					</label>
-				</div>
 
-				<div className="demo-row">
-					{LAYOUTS.map((item) => (
-						<button
-							key={item}
-							type="button"
-							onClick={() => setLayout(item)}
-							className={`demo-pill ${layout === item ? "is-active" : ""}`}
-						>
-							Layout: {item}
-						</button>
-					))}
-				</div>
+					<div className="demo-card">
+						<div className="demo-header">
+							<div>
+								<h2 className="demo-title">Fluix Playground</h2>
+								<p className="demo-subtitle">
+									Proba posiciones, tipos de toast, layout stack/notch y tema visual.
+								</p>
+							</div>
+						</div>
+					</div>
 
-				<div className="demo-row">
-					{POSITIONS.map((item) => (
-						<button
-							key={item}
-							type="button"
-							onClick={() => setPosition(item)}
-							className={`demo-pill ${position === item ? "is-active" : ""}`}
-						>
-							{item}
-						</button>
-					))}
-				</div>
+					<div className="demo-card">
+						<div className="demo-row">
+							{LAYOUTS.map((item) => (
+								<button
+									key={item}
+									type="button"
+									onClick={() => setLayout(item)}
+									className={`demo-pill ${layout === item ? "is-active" : ""}`}
+								>
+									Layout: {item}
+								</button>
+							))}
+						</div>
 
-				<hr className="demo-divider" />
+						<div className="demo-row">
+							{POSITIONS.map((item) => (
+								<button
+									key={item}
+									type="button"
+									onClick={() => setPosition(item)}
+									className={`demo-pill ${position === item ? "is-active" : ""}`}
+								>
+									{item}
+								</button>
+							))}
+						</div>
 
-				<div className="demo-row">
-					<button
-						type="button"
-						onClick={() =>
-							fluix.success({ title: "Saved!", description: "Your changes have been saved." })
-						}
-						className="demo-pill"
-					>
-						Success
-					</button>
-					<button
-						type="button"
-						onClick={() => fluix.error({ title: "Error", description: "Something went wrong." })}
-						className="demo-pill"
-					>
-						Error
-					</button>
-					<button
-						type="button"
-						onClick={() => fluix.warning({ title: "Warning", description: "Please check this." })}
-						className="demo-pill"
-					>
-						Warning
-					</button>
-					<button
-						type="button"
-						onClick={() => fluix.info({ title: "Info", description: "Just so you know." })}
-						className="demo-pill"
-					>
-						Info
-					</button>
-					<button
-						type="button"
-						onClick={() =>
-							fluix.action({
-								title: "Action",
-								description: "Confirm or dismiss.",
-								button: { title: "Undo", onClick: () => fluix.info({ title: "Undone!" }) },
-							})
-						}
-						className="demo-pill"
-					>
-						Action
-					</button>
-					<button
-						type="button"
-						onClick={() =>
-							fluix.success({
-								title: "Custom Icon",
-								description: "You can pass your own icon.",
-								icon: "✨",
-							})
-						}
-						className="demo-pill"
-					>
-						Icon
-					</button>
-					<button
-						type="button"
-						onClick={() =>
-							fluix.promise(createBookingPromise(), {
-								loading: { title: "Confirming booking...", icon: "✈" },
-								success: (data) => ({
-									title: "Booking Confirmed",
-									state: "success",
-									roundness: 20,
-									description: (
-										<div className="flight-card">
-											<div className="flight-card-top">
-												<span className="flight-card-airline">{data.airline}</span>
-												<span className="flight-card-pnr">PNR {data.pnr}</span>
-											</div>
-											<div className="flight-card-route">
-												<span className="flight-card-code">{data.from}</span>
-												<span className="flight-card-arrow">↗</span>
-												<span className="flight-card-code">{data.to}</span>
-											</div>
-											<div className="flight-card-meta">Booking ID {data.bookingId}</div>
-										</div>
-									),
-									button: {
-										title: "View Details",
-										onClick: () =>
-											fluix.info({
-												title: "Trip details opened",
-												description: `Reservation ${data.bookingId} ready.`,
-											}),
-									},
-									styles: {
-										button: "flight-card-button",
-									},
-								}),
-								error: () => ({
-									title: "Booking failed",
-									description:
-										"We could not complete your reservation. Try again in a few minutes.",
-								}),
-							})
-						}
-						className="demo-pill"
-					>
-						Promise
-					</button>
-				</div>
+						<hr className="demo-divider" />
 
-				<div className="demo-row">
-					<button type="button" onClick={() => fluix.clear()} className="demo-pill">
-						Clear
-					</button>
+						<div className="demo-row">
+							<button
+								type="button"
+								onClick={() =>
+									fluix.success({ title: "Saved!", description: "Your changes have been saved." })
+								}
+								className="demo-pill"
+							>
+								Success
+							</button>
+							<button
+								type="button"
+								onClick={() => fluix.error({ title: "Error", description: "Something went wrong." })}
+								className="demo-pill"
+							>
+								Error
+							</button>
+							<button
+								type="button"
+								onClick={() => fluix.warning({ title: "Warning", description: "Please check this." })}
+								className="demo-pill"
+							>
+								Warning
+							</button>
+							<button
+								type="button"
+								onClick={() => fluix.info({ title: "Info", description: "Just so you know." })}
+								className="demo-pill"
+							>
+								Info
+							</button>
+							<button
+								type="button"
+								onClick={() =>
+									fluix.action({
+										title: "Action",
+										description: "Confirm or dismiss.",
+										button: { title: "Undo", onClick: () => fluix.info({ title: "Undone!" }) },
+									})
+								}
+								className="demo-pill"
+							>
+								Action
+							</button>
+							<button
+								type="button"
+								onClick={() =>
+									fluix.success({
+										title: "Custom Icon",
+										description: "You can pass your own icon.",
+										icon: "✨",
+									})
+								}
+								className="demo-pill"
+							>
+								Icon
+							</button>
+							<button
+								type="button"
+								onClick={() =>
+									fluix.promise(createBookingPromise(), {
+										loading: { title: "Confirming booking...", icon: "✈" },
+										success: (data) => ({
+											title: "Booking Confirmed",
+											state: "success",
+											roundness: 20,
+											description: (
+												<div className="flight-card">
+													<div className="flight-card-top">
+														<span className="flight-card-airline">{data.airline}</span>
+														<span className="flight-card-pnr">PNR {data.pnr}</span>
+													</div>
+													<div className="flight-card-route">
+														<span className="flight-card-code">{data.from}</span>
+														<span className="flight-card-arrow">↗</span>
+														<span className="flight-card-code">{data.to}</span>
+													</div>
+													<div className="flight-card-meta">Booking ID {data.bookingId}</div>
+												</div>
+											),
+											button: {
+												title: "View Details",
+												onClick: () =>
+													fluix.info({
+														title: "Trip details opened",
+														description: `Reservation ${data.bookingId} ready.`,
+													}),
+											},
+											styles: {
+												button: "flight-card-button",
+											},
+										}),
+										error: () => ({
+											title: "Booking failed",
+											description:
+												"We could not complete your reservation. Try again in a few minutes.",
+										}),
+									})
+								}
+								className="demo-pill"
+							>
+								Promise
+							</button>
+						</div>
+
+						<div className="demo-row">
+							<button type="button" onClick={() => fluix.clear()} className="demo-pill">
+								Clear
+							</button>
+						</div>
+					</div>
+
+					<div className="demo-card">
+						<div className="demo-header">
+							<div>
+								<h2 className="demo-title">Notch Menu</h2>
+								<p className="demo-subtitle">
+									Liquid expanding pill with gooey SVG morphing.
+								</p>
+							</div>
+						</div>
+
+						<div className="demo-row">
+							{NOTCH_TRIGGERS.map((t) => (
+								<button
+									key={t}
+									type="button"
+									onClick={() => { setNotchTrigger(t); setNotchOpen(false); }}
+									className={`demo-pill ${notchTrigger === t ? "is-active" : ""}`}
+								>
+									Trigger: {t}
+								</button>
+							))}
+						</div>
+
+						{notchTrigger === "manual" && (
+							<div className="demo-row">
+								<button
+									type="button"
+									onClick={() => setNotchOpen(!notchOpen)}
+									className="demo-pill"
+								>
+									{notchOpen ? "Close" : "Open"} Notch
+								</button>
+							</div>
+						)}
+					</div>
 				</div>
-			</div>
+			</section>
 
 			<Toaster config={toasterConfig} />
-
-			{/* Notch Demo */}
-			<div className="demo-card">
-				<div className="demo-header">
-					<div>
-						<h2 className="demo-title">Notch Menu</h2>
-						<p className="demo-subtitle">
-							Liquid expanding pill with gooey SVG morphing.
-						</p>
-					</div>
-				</div>
-
-				<div className="demo-row">
-					{NOTCH_TRIGGERS.map((t) => (
-						<button
-							key={t}
-							type="button"
-							onClick={() => { setNotchTrigger(t); setNotchOpen(false); }}
-							className={`demo-pill ${notchTrigger === t ? "is-active" : ""}`}
-						>
-							Trigger: {t}
-						</button>
-					))}
-				</div>
-
-				{notchTrigger === "manual" && (
-					<div className="demo-row">
-						<button
-							type="button"
-							onClick={() => setNotchOpen(!notchOpen)}
-							className="demo-pill"
-						>
-							{notchOpen ? "Close" : "Open"} Notch
-						</button>
-					</div>
-				)}
-			</div>
 
 			<Notch
 				key={notchTrigger}

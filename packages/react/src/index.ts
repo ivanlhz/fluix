@@ -26,3 +26,6 @@ export type { ToasterProps } from "./toast";
 export { Notch } from "./notch";
 export type { NotchProps } from "./notch";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
+export { Menu } from "./menu";
+export type { MenuRootProps, MenuItemProps, MenuIndicatorProps } from "./menu";
+export type { MenuConfig, MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";

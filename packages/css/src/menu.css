@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Fluix Menu Component Styles
+   Gooey active indicator for vertical and horizontal menus.
+   ========================================================================== */
+
+[data-fluix-menu] {
+	position: relative;
+	display: inline-flex;
+	border-radius: 22px;
+	padding: 0.35rem;
+	background: var(--fluix-menu-bg, oklch(0.26 0.11 277.7));
+	color: var(--fluix-menu-color, oklch(0.96 0.01 285));
+}
+
+[data-fluix-menu][data-theme="light"] {
+	--fluix-menu-bg: oklch(0.97 0.01 285);
+	--fluix-menu-color: oklch(0.27 0.06 274);
+	--fluix-menu-active-color: oklch(0.31 0.08 274);
+	--fluix-menu-indicator: oklch(0.84 0.06 286);
+}
+
+[data-fluix-menu-list] {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	gap: 0.3rem;
+}
+
+[data-fluix-menu][data-orientation="vertical"] [data-fluix-menu-list] {
+	flex-direction: column;
+}
+
+[data-fluix-menu][data-orientation="horizontal"] [data-fluix-menu-list] {
+	flex-direction: row;
+}
+
+[data-fluix-menu-item] {
+	position: relative;
+	z-index: 3;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 0.95rem;
+	font-weight: 500;
+	line-height: 1;
+	padding: 0.65rem 0.8rem;
+	border-radius: 999px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 180ms ease, opacity 180ms ease;
+}
+
+[data-fluix-menu-item][data-state="inactive"] {
+	opacity: 0.75;
+}
+
+[data-fluix-menu-item][data-state="active"] {
+	opacity: 1;
+	color: var(--fluix-menu-active-color, #fff);
+	font-weight: 650;
+}
+
+[data-fluix-menu-item][data-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+[data-fluix-menu-canvas] {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+}
+
+[data-fluix-menu-canvas] svg {
+	display: block;
+	overflow: visible;
+}
+
+[data-fluix-menu-indicator] {
+	fill: var(--fluix-menu-indicator, oklch(0.66 0.16 284));
+}
+
+/* ---------- Tab variant ---------- */
+
+[data-fluix-menu][data-variant="tab"] {
+	background: transparent;
+	border-radius: 0;
+	padding: 0;
+	overflow: visible;
+}
+
+[data-fluix-menu][data-variant="tab"] [data-fluix-menu-canvas] svg {
+	overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-fluix-menu-item] {
+		transition-duration: 0.01ms !important;
+	}
+}

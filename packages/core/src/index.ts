@@ -66,3 +66,17 @@ export type {
 	NotchTheme,
 	NotchSize,
 } from "./components/notch";
+
+// Menu component
+export { createMenuMachine, MENU_DEFAULTS, getMenuAttrs, connectMenu } from "./components/menu";
+
+export type {
+	MenuMachine,
+	MenuMachineState,
+	MenuAttrs,
+	MenuConnectOptions,
+	MenuConfig,
+	MenuOrientation,
+	MenuVariant,
+	MenuTheme,
+} from "./components/menu";
