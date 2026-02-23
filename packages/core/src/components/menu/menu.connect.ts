@@ -77,10 +77,11 @@ function readItemFrame(
  */
 function generateTabPath(frame: IndicatorFrame, cr: number): string {
 	const { x, y, width, height } = frame;
-	const r = Math.min(frame.radius, height / 2);
+	// Clamp radii so the shape stays valid even at very small widths
+	const r = Math.min(frame.radius, height / 2, width / 2);
 	const rw = x + width; // right edge
 
-	const concaveR = Math.min(cr, height / 2);
+	const concaveR = Math.min(cr, height / 2, Math.max(0, width / 2 - r));
 
 	return [
 		`M ${x + r} ${y}`,
@@ -160,12 +161,21 @@ function lerp(a: number, b: number, t: number): number {
 	return a + (b - a) * t;
 }
 
+/** Fast ease-out curve: 1 − (1−t)³ */
+function easeOutCubic(t: number): number {
+	return 1 - (1 - t) ** 3;
+}
+
+const EXIT_MS = 130;
+
 /**
- * Animate a tab-variant path indicator using requestAnimationFrame with
- * spring-interpolated `d` attribute values.
+ * Two-phase tab animation driven by requestAnimationFrame:
  *
- * WAAPI doesn't reliably support animating the SVG `d` attribute across
- * browsers, so we drive it manually via RAF.
+ * Phase 1 (exit  ~130 ms):  Quick ease-out collapse to the right.
+ * Phase 2 (enter ~280 ms):  Spring expansion from the right at the new Y.
+ *
+ * `onEnterStart` fires when phase 2 begins — used to flip `data-state`
+ * only after the indicator has left the old position.
  */
 function animateTabIndicator(
 	path: SVGPathElement,
@@ -173,43 +183,72 @@ function animateTabIndicator(
 	to: IndicatorFrame,
 	cr: number,
 	spring: Required<SpringConfig>,
+	onEnterStart?: () => void,
 ): AnimationHandle {
-	const samples = simulateSpringValues(spring);
-	const totalSamples = samples.length;
-	const durationMs = (totalSamples / 120) * 1000;
+	const rightEdge = from.x + from.width;
+
+	// Stiff spring for enter phase — fast with a subtle bounce
+	const enterSamples = simulateSpringValues({
+		stiffness: spring.stiffness * 3,
+		damping: spring.damping * 1.8,
+		mass: spring.mass,
+	});
+	const enterCount = enterSamples.length;
+	const enterMs = (enterCount / 120) * 1000;
+	const totalMs = EXIT_MS + enterMs;
+
 	const startTime = performance.now();
 	let cancelled = false;
+	let enteredPhase2 = false;
 
 	const handle: AnimationHandle = {
 		onfinish: null,
-		cancel() {
-			cancelled = true;
-		},
+		cancel() { cancelled = true; },
 	};
 
 	function tick() {
 		if (cancelled) return;
 
 		const elapsed = performance.now() - startTime;
-		const progress = Math.min(elapsed / durationMs, 1);
-		const sampleIndex = Math.min(
-			Math.floor(progress * (totalSamples - 1)),
-			totalSamples - 1,
-		);
-		const t = samples[sampleIndex];
+		let frame: IndicatorFrame;
 
-		const frame: IndicatorFrame = {
-			x: lerp(from.x, to.x, t),
-			y: lerp(from.y, to.y, t),
-			width: lerp(from.width, to.width, t),
-			height: lerp(from.height, to.height, t),
-			radius: lerp(from.radius, to.radius, t),
-			visible: true,
-		};
+		if (elapsed < EXIT_MS) {
+			// ── Phase 1: exit (collapse to the right) ──
+			const t = easeOutCubic(elapsed / EXIT_MS);
+			frame = {
+				x: lerp(from.x, rightEdge, t),
+				y: from.y,
+				width: lerp(from.width, 0, t),
+				height: from.height,
+				radius: from.radius,
+				visible: true,
+			};
+		} else {
+			if (!enteredPhase2) {
+				enteredPhase2 = true;
+				onEnterStart?.();
+			}
+			// ── Phase 2: enter (expand from the right at new Y) ──
+			const phaseElapsed = elapsed - EXIT_MS;
+			const phaseProgress = Math.min(phaseElapsed / enterMs, 1);
+			const idx = Math.min(
+				Math.floor(phaseProgress * (enterCount - 1)),
+				enterCount - 1,
+			);
+			const t = enterSamples[idx];
+			frame = {
+				x: lerp(rightEdge, to.x, t),
+				y: to.y,
+				width: lerp(0, to.width, t),
+				height: to.height,
+				radius: to.radius,
+				visible: true,
+			};
+		}
 
 		path.setAttribute("d", generateTabPath(frame, cr));
 
-		if (progress < 1) {
+		if (elapsed < totalMs) {
 			requestAnimationFrame(tick);
 		} else {
 			handle.onfinish?.();
@@ -234,6 +273,40 @@ export function connectMenu(options: MenuConnectOptions): {
 	let resizeObserver: ResizeObserver | null = null;
 	let mutationObserver: MutationObserver | null = null;
 
+	/** Track previous active ID so we can manage data-state during tab animation */
+	let previousActiveId: string | null = null;
+	/** IDs whose data-state we're controlling during tab animation */
+	let animOldId: string | null = null;
+	let animNewId: string | null = null;
+	let animPhase: "exit" | "enter" | null = null;
+
+	function setItemState(id: string, state: "active" | "inactive") {
+		const el = options.root.querySelector<HTMLElement>(
+			`${ITEM_SELECTOR}[data-menu-id="${CSS.escape(id)}"]`,
+		);
+		if (el && el.dataset.state !== state) {
+			el.dataset.state = state;
+		}
+	}
+
+	/** Re-enforce the correct data-state for managed items (fights React re-renders) */
+	function enforceAnimStates() {
+		if (!animPhase) return;
+		if (animPhase === "exit") {
+			if (animOldId) setItemState(animOldId, "active");
+			if (animNewId) setItemState(animNewId, "inactive");
+		} else {
+			if (animOldId) setItemState(animOldId, "inactive");
+			if (animNewId) setItemState(animNewId, "active");
+		}
+	}
+
+	function clearAnimState() {
+		animOldId = null;
+		animNewId = null;
+		animPhase = null;
+	}
+
 	const updateIndicator = (immediate = false) => {
 		const activeId = options.getActiveId();
 		const nextFrame = activeId ? readItemFrame(options.root, activeId, padding, variant) : null;
@@ -250,6 +323,7 @@ export function connectMenu(options: MenuConnectOptions): {
 
 		if (!lastFrame) {
 			lastFrame = fallbackFrame;
+			previousActiveId = activeId;
 			applyFrame(options.indicator, fallbackFrame, variant);
 			return;
 		}
@@ -258,27 +332,43 @@ export function connectMenu(options: MenuConnectOptions): {
 		if (currentAnimation) {
 			currentAnimation.cancel();
 			currentAnimation = null;
+			clearAnimState();
 		}
 
 		if (immediate || !fallbackFrame.visible || !lastFrame.visible) {
 			lastFrame = fallbackFrame;
+			previousActiveId = activeId;
 			applyFrame(options.indicator, fallbackFrame, variant);
 			return;
 		}
 
 		const from = lastFrame;
 		const to = fallbackFrame;
+		const oldActiveId = previousActiveId;
+		const newActiveId = activeId;
 		lastFrame = to;
+		previousActiveId = activeId;
 
 		let animation: AnimationHandle | null = null;
 
 		if (variant === "tab") {
+			// Start managing data-state: keep old active during exit
+			animOldId = oldActiveId;
+			animNewId = newActiveId;
+			animPhase = "exit";
+			enforceAnimStates();
+
 			animation = animateTabIndicator(
 				options.indicator as SVGPathElement,
 				from,
 				to,
 				TAB_CURVE_RADIUS,
 				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
+				() => {
+					// Enter phase started — flip data-state
+					animPhase = "enter";
+					enforceAnimStates();
+				},
 			);
 		} else {
 			const waapi = animateSpring(
@@ -312,6 +402,12 @@ export function connectMenu(options: MenuConnectOptions): {
 		animation.onfinish = () => {
 			currentAnimation = null;
 			applyFrame(options.indicator, to, variant);
+			// Ensure final data-state is correct and release control
+			if (variant === "tab") {
+				if (newActiveId) setItemState(newActiveId, "active");
+				if (oldActiveId && oldActiveId !== newActiveId) setItemState(oldActiveId, "inactive");
+				clearAnimState();
+			}
 		};
 	};
 
@@ -346,6 +442,11 @@ export function connectMenu(options: MenuConnectOptions): {
 	});
 
 	mutationObserver = new MutationObserver(() => {
+		// During tab animation, React may re-render and reset data-state — override it
+		if (animPhase) {
+			enforceAnimStates();
+			return;
+		}
 		if (!resizeObserver) return;
 		resizeObserver.disconnect();
 		resizeObserver.observe(options.root);
