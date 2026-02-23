@@ -1,6 +1,6 @@
 import { type FluixPosition, Menu, Notch, Toaster, fluix } from "@fluix-ui/react";
 import type { NotchTrigger } from "@fluix-ui/core";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 const POSITIONS: FluixPosition[] = [
 	"top-left",
@@ -40,6 +40,15 @@ function getMenuRouteFromHash(hash: string): MenuRouteId {
 	return route?.id ?? MENU_ITEMS[0].id;
 }
 
+const MOBILE_QUERY = "(max-width: 760px)";
+const mqlSubscribe = (cb: () => void) => {
+	const mql = window.matchMedia(MOBILE_QUERY);
+	mql.addEventListener("change", cb);
+	return () => mql.removeEventListener("change", cb);
+};
+const mqlSnapshot = () => window.matchMedia(MOBILE_QUERY).matches;
+const mqlServerSnapshot = () => false;
+
 export default function App() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [position, setPosition] = useState<FluixPosition>("top-right");
@@ -51,6 +60,7 @@ export default function App() {
 	);
 	const [layoutEntered, setLayoutEntered] = useState(false);
 	const [menuReady, setMenuReady] = useState(false);
+	const isMobile = useSyncExternalStore(mqlSubscribe, mqlSnapshot, mqlServerSnapshot);
 	const toastTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
 	const toasterConfig = useMemo(
 		() => ({
@@ -115,10 +125,10 @@ export default function App() {
 				<div className="demo-sidebar-subtitle">Gooey Navigation</div>
 
 				<Menu.Root
-					orientation="vertical"
-					variant="tab"
+					orientation={isMobile ? "horizontal" : "vertical"}
+					variant={isMobile ? "pill" : "tab"}
 					theme={theme}
-					activeId={menuReady ? route : null}
+					activeId={isMobile || menuReady ? route : null}
 					onActiveChange={handleRouteChange}
 					className="demo-sidebar-menu"
 				>

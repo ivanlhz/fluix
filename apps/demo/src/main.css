@@ -330,8 +330,13 @@ body {
     padding-bottom: 1rem;
   }
 
-  .demo-sidebar-menu[data-fluix-menu][data-orientation="vertical"] [data-fluix-menu-list] {
-    flex-direction: row;
+  .demo-sidebar-menu[data-fluix-menu] {
+    border-radius: 22px;
+    padding: 0.35rem;
+    --fluix-menu-bg: var(--demo-sidebar-bg);
+  }
+
+  .demo-sidebar-menu [data-fluix-menu-list] {
     overflow-x: auto;
   }
 

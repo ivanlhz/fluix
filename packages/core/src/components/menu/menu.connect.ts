@@ -1,4 +1,4 @@
-import { FLUIX_SPRING, animateSpring, type SpringConfig } from "../../primitives/spring";
+import { FLUIX_SPRING, type SpringConfig } from "../../primitives/spring";
 import type { MenuVariant } from "./menu.types";
 
 export interface MenuConnectOptions {
@@ -311,6 +311,88 @@ function animateTabIndicator(
 	return handle;
 }
 
+const STRETCH_MS = 150;
+
+/**
+ * Pill morph animation — single rect, two phases:
+ *
+ * Phase 1 (stretch ~150ms easeOut): rect expands to cover both old and new positions.
+ * Phase 2 (contract ~spring):       rect contracts from the stretched shape to the new position.
+ */
+function animatePillMorph(
+	rect: SVGRectElement,
+	from: IndicatorFrame,
+	to: IndicatorFrame,
+	spring: Required<SpringConfig>,
+): AnimationHandle {
+	const stretchedX = Math.min(from.x, to.x);
+	const stretchedRight = Math.max(from.x + from.width, to.x + to.width);
+	const stretchedWidth = stretchedRight - stretchedX;
+
+	const contractSamples = simulateSpringValues({
+		stiffness: spring.stiffness * 2.5,
+		damping: spring.damping * 1.6,
+		mass: spring.mass,
+	});
+	const contractCount = contractSamples.length;
+	const contractMs = (contractCount / 120) * 1000;
+	const totalMs = STRETCH_MS + contractMs;
+
+	const startTime = performance.now();
+	let cancelled = false;
+
+	const handle: AnimationHandle = {
+		onfinish: null,
+		cancel() { cancelled = true; },
+	};
+
+	function applyRect(x: number, y: number, w: number, h: number, r: number) {
+		rect.setAttribute("x", String(x));
+		rect.setAttribute("y", String(y));
+		rect.setAttribute("width", String(w));
+		rect.setAttribute("height", String(h));
+		rect.setAttribute("rx", String(r));
+		rect.setAttribute("ry", String(r));
+	}
+
+	function tick() {
+		if (cancelled) return;
+		const elapsed = performance.now() - startTime;
+
+		if (elapsed < STRETCH_MS) {
+			const t = easeOutCubic(elapsed / STRETCH_MS);
+			applyRect(
+				lerp(from.x, stretchedX, t),
+				lerp(from.y, to.y, t),
+				lerp(from.width, stretchedWidth, t),
+				lerp(from.height, to.height, t),
+				lerp(from.radius, to.radius, t),
+			);
+		} else {
+			const phaseElapsed = elapsed - STRETCH_MS;
+			const phaseProgress = Math.min(phaseElapsed / contractMs, 1);
+			const idx = Math.min(Math.floor(phaseProgress * (contractCount - 1)), contractCount - 1);
+			const t = contractSamples[idx];
+			applyRect(
+				lerp(stretchedX, to.x, t),
+				to.y,
+				lerp(stretchedWidth, to.width, t),
+				to.height,
+				to.radius,
+			);
+		}
+
+		if (elapsed < totalMs) {
+			requestAnimationFrame(tick);
+		} else {
+			handle.onfinish?.();
+		}
+	}
+
+	requestAnimationFrame(tick);
+	return handle;
+}
+
 export function connectMenu(options: MenuConnectOptions): {
 	sync(immediate?: boolean): void;
 	destroy(): void;
@@ -359,6 +441,10 @@ export function connectMenu(options: MenuConnectOptions): {
 		animPhase = null;
 	}
 
+	function apply(frame: IndicatorFrame) {
+		applyFrame(options.indicator, frame, variant);
+	}
+
 	const updateIndicator = (immediate = false) => {
 		const activeId = options.getActiveId();
 		const nextFrame = activeId ? readItemFrame(options.root, activeId, padding, variant) : null;
@@ -376,7 +462,7 @@ export function connectMenu(options: MenuConnectOptions): {
 		if (!lastFrame) {
 			lastFrame = fallbackFrame;
 			previousActiveId = activeId;
-			applyFrame(options.indicator, fallbackFrame, variant);
+			apply(fallbackFrame);
 			return;
 		}
 		if (frameEquals(lastFrame, fallbackFrame)) return;
@@ -418,7 +504,7 @@ export function connectMenu(options: MenuConnectOptions): {
 			currentAnimation = enterAnim;
 			enterAnim.onfinish = () => {
 				currentAnimation = null;
-				applyFrame(options.indicator, to, variant);
+				apply(to);
 			};
 			return;
 		}
@@ -426,7 +512,7 @@ export function connectMenu(options: MenuConnectOptions): {
 		if (immediate || !fallbackFrame.visible || !lastFrame.visible) {
 			lastFrame = fallbackFrame;
 			previousActiveId = activeId;
-			applyFrame(options.indicator, fallbackFrame, variant);
+			apply(fallbackFrame);
 			return;
 		}
 
@@ -459,37 +545,23 @@ export function connectMenu(options: MenuConnectOptions): {
 				},
 			);
 		} else {
-			const waapi = animateSpring(
-				options.indicator,
-				{
-					x: { from: from.x, to: to.x, unit: "px" },
-					y: { from: from.y, to: to.y, unit: "px" },
-					width: { from: from.width, to: to.width, unit: "px" },
-					height: { from: from.height, to: to.height, unit: "px" },
-					rx: { from: from.radius, to: to.radius, unit: "px" },
-					ry: { from: from.radius, to: to.radius, unit: "px" },
-				},
-				spring,
+			animation = animatePillMorph(
+				options.indicator as SVGRectElement,
+				from,
+				to,
+				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
 			);
-			if (waapi) {
-				const wrapped: AnimationHandle = {
-					onfinish: null,
-					cancel() { waapi.cancel(); },
-				};
-				waapi.onfinish = () => wrapped.onfinish?.();
-				animation = wrapped;
-			}
 		}
 
 		if (!animation) {
-			applyFrame(options.indicator, to, variant);
+			apply(to);
 			return;
 		}
 
 		currentAnimation = animation;
 		animation.onfinish = () => {
 			currentAnimation = null;
-			applyFrame(options.indicator, to, variant);
+			apply(to);
 			// Ensure final data-state is correct and release control
 			if (variant === "tab") {
 				if (newActiveId) setItemState(newActiveId, "active");
