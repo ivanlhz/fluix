@@ -23,6 +23,7 @@ import "@fluix-ui/css";
 import "@fluix-ui/css/variables";
 import "@fluix-ui/css/animations";
 import "@fluix-ui/css/toast";
+import "@fluix-ui/css/notch";
 import "@fluix-ui/css/themes/dark"; // dark theme only
 ```
 

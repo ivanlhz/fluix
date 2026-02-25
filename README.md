@@ -24,6 +24,7 @@ Source code: https://github.com/ivanlhz/fluix
 | Component | Description | Status |
 |---|---|---|
 | Toast | Physics-based notifications with gooey SVG morphing | ✅ Available |
+| Notch | Adaptive floating dock / island component | ✅ Available |
 | Tooltip | Positioned floating content | 📋 Planned |
 | Dialog | Modal with focus trap | 📋 Planned |
 | Drawer | Draggable sheet with snap points | 📋 Planned |

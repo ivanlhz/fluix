@@ -13,6 +13,7 @@ npm install @fluix-ui/core
 ## Highlights
 
 - Toast state machine and API
+- Notch machine and adapter-ready config types
 - Shared primitives (store, spring, dismiss)
 - Type-safe exports for adapters and consumers
 - **Theme plugin system** — `"light"`, `"dark"`, or any custom string

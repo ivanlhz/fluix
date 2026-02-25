@@ -115,10 +115,28 @@ import { FluixMenuComponent, FluixMenuItemComponent } from "@fluix-ui/angular";
 export class AppComponent {}
 ```
 
+## Notch
+
+Use `FluixNotchComponent` as a standalone adaptive island.
+
+```ts
+import { FluixNotchComponent } from "@fluix-ui/angular";
+
+@Component({
+  standalone: true,
+  imports: [FluixNotchComponent],
+  template: `
+    <fluix-notch [config]="{ position: 'top-center', title: 'Now playing', description: 'Fluix Theme' }" />
+  `,
+})
+export class AppComponent {}
+```
+
 ## API
 
 - **FluixToastService** (injectable): `success()`, `error()`, `warning()`, `info()`, `action()`, `promise()`, `dismiss(id)`, `clear(position?)`, `getMachine()`
 - **FluixToasterComponent**: standalone component; place once in your app.
+- **FluixNotchComponent**: standalone component for the adaptive notch UI.
 - **FluixMenuComponent** and **FluixMenuItemComponent**: standalone components for animated menu navigation.
 - **FluixDescriptionTemplate\<T\>**: `{ templateRef: TemplateRef<T>; context: T }` for custom description content.
 - **fluix**: imperative API re-exported from `@fluix-ui/core` (use the service for Angular apps).
