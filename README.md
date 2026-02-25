@@ -28,7 +28,7 @@ Source code: https://github.com/ivanlhz/fluix
 | Dialog | Modal with focus trap | 📋 Planned |
 | Drawer | Draggable sheet with snap points | 📋 Planned |
 | Command | Command palette with fuzzy search | 📋 Planned |
-| Menu | Dropdown with keyboard navigation | 📋 Planned |
+| Menu | Dropdown with keyboard navigation | ✅ Available |
 | Tabs | Accessible tabbed interface | 📋 Planned |
 
 ## Quick Start

@@ -94,10 +94,32 @@ Pass any theme name — themes are pure CSS. See `@fluix-ui/css` for details.
 this.fluix.success({ title: "Done", theme: "midnight" });
 ```
 
+## Menu (new)
+
+Use `FluixMenuComponent` with `FluixMenuItemComponent` for a keyboard-accessible menu indicator.
+
+```ts
+import { FluixMenuComponent, FluixMenuItemComponent } from "@fluix-ui/angular";
+
+@Component({
+  standalone: true,
+  imports: [FluixMenuComponent, FluixMenuItemComponent],
+  template: `
+    <fluix-menu [defaultActiveId]="'home'" variant="pill" theme="dark">
+      <fluix-menu-item menuId="home" label="Home" />
+      <fluix-menu-item menuId="projects" label="Projects" />
+      <fluix-menu-item menuId="settings" label="Settings" />
+    </fluix-menu>
+  `,
+})
+export class AppComponent {}
+```
+
 ## API
 
 - **FluixToastService** (injectable): `success()`, `error()`, `warning()`, `info()`, `action()`, `promise()`, `dismiss(id)`, `clear(position?)`, `getMachine()`
 - **FluixToasterComponent**: standalone component; place once in your app.
+- **FluixMenuComponent** and **FluixMenuItemComponent**: standalone components for animated menu navigation.
 - **FluixDescriptionTemplate\<T\>**: `{ templateRef: TemplateRef<T>; context: T }` for custom description content.
 - **fluix**: imperative API re-exported from `@fluix-ui/core` (use the service for Angular apps).
 

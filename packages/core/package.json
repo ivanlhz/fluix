@@ -1,6 +1,6 @@
 {
   "name": "@fluix-ui/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Core logic for Fluix UI components. Framework-agnostic state machines, primitives, and APIs.",
   "license": "MIT",
   "type": "module",
