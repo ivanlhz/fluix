@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { type FluixPosition, Notch, Toaster, fluix } from "@fluix-ui/vue";
+import { type FluixPosition, MenuRoot, MenuItem, Notch, Toaster, fluix } from "@fluix-ui/vue";
 import type { NotchTrigger } from "@fluix-ui/core";
-import { computed, h, ref } from "vue";
+import { computed, h, onMounted, onUnmounted, ref } from "vue";
 
 const POSITIONS: FluixPosition[] = [
 	"top-left",
@@ -17,11 +17,29 @@ type LayoutMode = (typeof LAYOUTS)[number];
 
 const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
 
+const MENU_ITEMS = [
+	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
+	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
+	{ id: "calendar", label: "Calendario", hash: "#calendar", subtitle: "Eventos, clases y entregas de la semana." },
+	{ id: "messages", label: "Mensajes", hash: "#messages", subtitle: "Notificaciones y conversaciones recientes." },
+] as const;
+
+type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
+
+function getMenuRouteFromHash(hash: string): MenuRouteId {
+	const route = MENU_ITEMS.find((item) => item.hash === hash);
+	return route?.id ?? MENU_ITEMS[0].id;
+}
+
 const theme = ref<"light" | "dark">("dark");
 const position = ref<FluixPosition>("top-right");
 const layout = ref<LayoutMode>("stack");
 const notchTrigger = ref<NotchTrigger>("hover");
 const notchOpen = ref(false);
+const route = ref<MenuRouteId>(getMenuRouteFromHash(window.location.hash));
+const layoutEntered = ref(false);
+const menuReady = ref(false);
+const isMobile = ref(window.matchMedia("(max-width: 760px)").matches);
 
 const toastTheme = computed<"light" | "dark">(() => (theme.value === "light" ? "dark" : "light"));
 
@@ -32,8 +50,37 @@ const toasterConfig = computed(() => ({
 	defaults: { theme: toastTheme.value },
 }));
 
-const toggleTheme = () => {
-	theme.value = theme.value === "dark" ? "light" : "dark";
+const activeRoute = computed(() =>
+	MENU_ITEMS.find((item) => item.id === route.value) ?? MENU_ITEMS[0],
+);
+
+let mql: MediaQueryList;
+let handleHashChange: () => void;
+
+onMounted(() => {
+	handleHashChange = () => {
+		route.value = getMenuRouteFromHash(window.location.hash);
+	};
+	window.addEventListener("hashchange", handleHashChange);
+	handleHashChange();
+
+	requestAnimationFrame(() => { layoutEntered.value = true; });
+	setTimeout(() => { menuReady.value = true; }, 700);
+
+	mql = window.matchMedia("(max-width: 760px)");
+	const onMqlChange = (e: MediaQueryListEvent) => { isMobile.value = e.matches; };
+	mql.addEventListener("change", onMqlChange);
+	onUnmounted(() => {
+		window.removeEventListener("hashchange", handleHashChange);
+		mql.removeEventListener("change", onMqlChange);
+	});
+});
+
+const handleRouteChange = (id: string) => {
+	const nextRoute = MENU_ITEMS.find((item) => item.id === id);
+	if (!nextRoute) return;
+	route.value = nextRoute.id;
+	window.history.replaceState(null, "", nextRoute.hash);
 };
 
 const createBookingPromise = () =>
@@ -117,96 +164,140 @@ const showPromise = () =>
 </script>
 
 <template>
-	<main :class="`demo-shell theme-${theme}`">
-		<div class="demo-card">
-			<div class="demo-header">
-				<div>
-					<h1 class="demo-title">Fluix Playground (Vue)</h1>
-					<p class="demo-subtitle">
-						Proba posiciones, tipos de toast, layout stack/notch y tema visual.
-					</p>
+	<main :class="`demo-shell theme-${theme} ${layoutEntered ? 'is-entered' : ''}`">
+		<aside class="demo-sidebar">
+			<div class="demo-sidebar-brand">Fluix</div>
+			<div class="demo-sidebar-subtitle">Gooey Navigation</div>
+
+			<MenuRoot
+				:orientation="isMobile ? 'horizontal' : 'vertical'"
+				variant="tab"
+				:theme="theme"
+				:active-id="menuReady ? route : null"
+				:on-active-change="handleRouteChange"
+				class-name="demo-sidebar-menu"
+			>
+				<MenuItem
+					v-for="item in MENU_ITEMS"
+					:key="item.id"
+					:id="item.id"
+				>
+					{{ item.label }}
+				</MenuItem>
+			</MenuRoot>
+		</aside>
+
+		<section class="demo-content">
+			<div class="demo-content-surface">
+				<div class="demo-card">
+					<div class="demo-header">
+						<div>
+							<h1 class="demo-title">{{ activeRoute.label }}</h1>
+							<p class="demo-subtitle">{{ activeRoute.subtitle }}</p>
+						</div>
+						<label class="theme-toggle" aria-label="Cambiar tema oscuro y claro">
+							<input
+								type="checkbox"
+								:checked="theme === 'dark'"
+								@change="(e: Event) => theme = (e.target as HTMLInputElement).checked ? 'dark' : 'light'"
+							/>
+							<span class="theme-toggle-track">
+								<span class="theme-toggle-thumb" />
+							</span>
+							<span class="theme-toggle-label">{{ theme === "dark" ? "Dark" : "Light" }}</span>
+						</label>
+					</div>
 				</div>
-				<button type="button" class="demo-pill" @click="toggleTheme">
-					{{ theme === "dark" ? "Dark" : "Light" }}
-				</button>
-			</div>
 
-			<div class="demo-row">
-				<button
-					v-for="item in LAYOUTS"
-					:key="item"
-					type="button"
-					:class="['demo-pill', { 'is-active': layout === item }]"
-					@click="layout = item"
-				>
-					Layout: {{ item }}
-				</button>
-			</div>
+				<div class="demo-card">
+					<div class="demo-header">
+						<div>
+							<h2 class="demo-title">Fluix Playground</h2>
+							<p class="demo-subtitle">
+								Proba posiciones, tipos de toast, layout stack/notch y tema visual.
+							</p>
+						</div>
+					</div>
+				</div>
 
-			<div class="demo-row">
-				<button
-					v-for="item in POSITIONS"
-					:key="item"
-					type="button"
-					:class="['demo-pill', { 'is-active': position === item }]"
-					@click="position = item"
-				>
-					{{ item }}
-				</button>
-			</div>
+				<div class="demo-card">
+					<div class="demo-row">
+						<button
+							v-for="item in LAYOUTS"
+							:key="item"
+							type="button"
+							:class="['demo-pill', { 'is-active': layout === item }]"
+							@click="layout = item"
+						>
+							Layout: {{ item }}
+						</button>
+					</div>
 
-			<hr class="demo-divider" />
+					<div class="demo-row">
+						<button
+							v-for="item in POSITIONS"
+							:key="item"
+							type="button"
+							:class="['demo-pill', { 'is-active': position === item }]"
+							@click="position = item"
+						>
+							{{ item }}
+						</button>
+					</div>
 
-			<div class="demo-row">
-				<button type="button" class="demo-pill" @click="showSuccess">Success</button>
-				<button type="button" class="demo-pill" @click="showError">Error</button>
-				<button type="button" class="demo-pill" @click="showWarning">Warning</button>
-				<button type="button" class="demo-pill" @click="showInfo">Info</button>
-				<button type="button" class="demo-pill" @click="showAction">Action</button>
-				<button type="button" class="demo-pill" @click="showIcon">Icon</button>
-				<button type="button" class="demo-pill" @click="showPromise">Promise</button>
-			</div>
+					<hr class="demo-divider" />
 
-			<div class="demo-row">
-				<button type="button" class="demo-pill" @click="fluix.clear()">Clear</button>
+					<div class="demo-row">
+						<button type="button" class="demo-pill" @click="showSuccess">Success</button>
+						<button type="button" class="demo-pill" @click="showError">Error</button>
+						<button type="button" class="demo-pill" @click="showWarning">Warning</button>
+						<button type="button" class="demo-pill" @click="showInfo">Info</button>
+						<button type="button" class="demo-pill" @click="showAction">Action</button>
+						<button type="button" class="demo-pill" @click="showIcon">Icon</button>
+						<button type="button" class="demo-pill" @click="showPromise">Promise</button>
+					</div>
+
+					<div class="demo-row">
+						<button type="button" class="demo-pill" @click="fluix.clear()">Clear</button>
+					</div>
+				</div>
+
+				<div class="demo-card">
+					<div class="demo-header">
+						<div>
+							<h2 class="demo-title">Notch Menu</h2>
+							<p class="demo-subtitle">
+								Liquid expanding pill with gooey SVG morphing.
+							</p>
+						</div>
+					</div>
+
+					<div class="demo-row">
+						<button
+							v-for="t in NOTCH_TRIGGERS"
+							:key="t"
+							type="button"
+							:class="['demo-pill', { 'is-active': notchTrigger === t }]"
+							@click="notchTrigger = t; notchOpen = false;"
+						>
+							Trigger: {{ t }}
+						</button>
+					</div>
+
+					<div v-if="notchTrigger === 'manual'" class="demo-row" style="margin-top:1rem;">
+						<button
+							type="button"
+							class="demo-pill"
+							@click="notchOpen = !notchOpen"
+						>
+							{{ notchOpen ? 'Close' : 'Open' }} Notch
+						</button>
+					</div>
+				</div>
 			</div>
-		</div>
+		</section>
 
 		<Toaster :config="toasterConfig" />
-
-		<!-- Notch Demo -->
-		<div class="demo-card" style="margin-top:2rem;">
-			<div class="demo-header">
-				<div>
-					<h2 class="demo-title">Notch Menu</h2>
-					<p class="demo-subtitle">
-						Liquid expanding pill with gooey SVG morphing.
-					</p>
-				</div>
-			</div>
-
-			<div class="demo-row">
-				<button
-					v-for="t in NOTCH_TRIGGERS"
-					:key="t"
-					type="button"
-					:class="['demo-pill', { 'is-active': notchTrigger === t }]"
-					@click="notchTrigger = t; notchOpen = false;"
-				>
-					Trigger: {{ t }}
-				</button>
-			</div>
-
-			<div v-if="notchTrigger === 'manual'" class="demo-row" style="margin-top:1rem;">
-				<button
-					type="button"
-					class="demo-pill"
-					@click="notchOpen = !notchOpen"
-				>
-					{{ notchOpen ? 'Close' : 'Open' }} Notch
-				</button>
-			</div>
-		</div>
 
 		<Notch
 			:key="notchTrigger"

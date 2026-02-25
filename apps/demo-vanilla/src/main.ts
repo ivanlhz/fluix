@@ -1,14 +1,7 @@
-import { type FluixPosition, createToaster, createNotch, fluix } from "@fluix-ui/vanilla";
+import { type FluixPosition, createToaster, createNotch, createMenu, fluix } from "@fluix-ui/vanilla";
 import type { NotchTrigger } from "@fluix-ui/core";
 import "@fluix-ui/css";
 import "./main.css";
-
-console.log(
-	"[demo-vanilla] script loaded, createToaster:",
-	typeof createToaster,
-	"fluix:",
-	typeof fluix,
-);
 
 /* ----------------------------- State ----------------------------- */
 
@@ -24,22 +17,35 @@ const POSITIONS: FluixPosition[] = [
 const LAYOUTS = ["stack", "notch"] as const;
 type LayoutMode = (typeof LAYOUTS)[number];
 
+const MENU_ITEMS = [
+	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
+	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
+	{ id: "calendar", label: "Calendario", hash: "#calendar", subtitle: "Eventos, clases y entregas de la semana." },
+	{ id: "messages", label: "Mensajes", hash: "#messages", subtitle: "Notificaciones y conversaciones recientes." },
+] as const;
+
+type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
+
+function getMenuRouteFromHash(hash: string): MenuRouteId {
+	const found = MENU_ITEMS.find((item) => item.hash === hash);
+	return found?.id ?? MENU_ITEMS[0].id;
+}
+
 let theme: "light" | "dark" = "dark";
 let position: FluixPosition = "top-right";
 let layout: LayoutMode = "stack";
+let route: MenuRouteId = getMenuRouteFromHash(window.location.hash);
 
 const toastTheme = () => (theme === "light" ? "dark" : "light");
 
 /* ----------------------------- Toaster ----------------------------- */
 
-console.log("[demo-vanilla] creating toaster...");
 const toaster = createToaster({
 	position,
 	layout,
 	offset: 24,
 	defaults: { theme: toastTheme() },
 });
-console.log("[demo-vanilla] toaster created:", toaster);
 
 function updateToaster() {
 	toaster.update({
@@ -91,28 +97,97 @@ function pill(label: string, onClick: () => void, active = false): HTMLButtonEle
 const app = document.getElementById("app")!;
 
 const shell = el("main", { className: `demo-shell theme-${theme}` });
-const card = el("div", { className: "demo-card" });
 
-// Header
-const header = el("div", { className: "demo-header" });
-const headerLeft = el("div");
-headerLeft.appendChild(el("h1", { className: "demo-title" }, ["Fluix Playground (Vanilla)"]));
-headerLeft.appendChild(
-	el("p", { className: "demo-subtitle" }, [
-		"Test positions, toast types, stack/notch layout, and theme toggle.",
-	]),
-);
+/* ---- Sidebar ---- */
+const sidebar = el("aside", { className: "demo-sidebar" });
+sidebar.appendChild(el("div", { className: "demo-sidebar-brand" }, ["Fluix"]));
+sidebar.appendChild(el("div", { className: "demo-sidebar-subtitle" }, ["Gooey Navigation"]));
 
-const themeBtn = pill(theme === "dark" ? "Dark" : "Light", () => {
-	theme = theme === "dark" ? "light" : "dark";
-	shell.className = `demo-shell theme-${theme}`;
-	themeBtn.textContent = theme === "dark" ? "Dark" : "Light";
-	updateToaster();
+const isMobile = window.matchMedia("(max-width: 760px)").matches;
+
+const menuInstance = createMenu(sidebar, {
+	orientation: isMobile ? "horizontal" : "vertical",
+	variant: "tab",
+	theme,
+	activeId: null, // delayed via menuReady
+	onActiveChange: (id) => {
+		const nextRoute = MENU_ITEMS.find((item) => item.id === id);
+		if (!nextRoute) return;
+		route = nextRoute.id;
+		window.history.replaceState(null, "", nextRoute.hash);
+		updateRouteDisplay();
+	},
+	items: MENU_ITEMS.map((item) => ({ id: item.id, label: item.label })),
 });
 
-header.appendChild(headerLeft);
-header.appendChild(themeBtn);
-card.appendChild(header);
+// Add className to the menu nav element
+const menuNav = sidebar.querySelector("nav[data-fluix-menu]") as HTMLElement | null;
+if (menuNav) menuNav.classList.add("demo-sidebar-menu");
+
+shell.appendChild(sidebar);
+
+/* ---- Content ---- */
+const contentSection = el("section", { className: "demo-content" });
+const contentSurface = el("div", { className: "demo-content-surface" });
+
+// Route card
+const routeCard = el("div", { className: "demo-card" });
+const routeHeader = el("div", { className: "demo-header" });
+const routeHeaderLeft = el("div");
+const routeTitle = el("h1", { className: "demo-title" });
+const routeSubtitle = el("p", { className: "demo-subtitle" });
+routeHeaderLeft.appendChild(routeTitle);
+routeHeaderLeft.appendChild(routeSubtitle);
+
+// Theme toggle (matching React's label+checkbox pattern)
+const themeToggle = el("label", { className: "theme-toggle" });
+themeToggle.setAttribute("aria-label", "Cambiar tema oscuro y claro");
+const themeCheckbox = el("input", { type: "checkbox" });
+themeCheckbox.checked = theme === "dark";
+const themeTrack = el("span", { className: "theme-toggle-track" }, [
+	el("span", { className: "theme-toggle-thumb" }),
+]);
+const themeLabel = el("span", { className: "theme-toggle-label" }, [theme === "dark" ? "Dark" : "Light"]);
+themeToggle.appendChild(themeCheckbox);
+themeToggle.appendChild(themeTrack);
+themeToggle.appendChild(themeLabel);
+
+themeCheckbox.addEventListener("change", () => {
+	theme = themeCheckbox.checked ? "dark" : "light";
+	shell.className = `demo-shell theme-${theme} is-entered`;
+	themeLabel.textContent = theme === "dark" ? "Dark" : "Light";
+	updateToaster();
+	menuInstance.update({ theme });
+});
+
+routeHeader.appendChild(routeHeaderLeft);
+routeHeader.appendChild(themeToggle);
+routeCard.appendChild(routeHeader);
+contentSurface.appendChild(routeCard);
+
+function updateRouteDisplay() {
+	const activeItem = MENU_ITEMS.find((item) => item.id === route) ?? MENU_ITEMS[0];
+	routeTitle.textContent = activeItem.label;
+	routeSubtitle.textContent = activeItem.subtitle;
+}
+updateRouteDisplay();
+
+// Playground card
+const playgroundCard = el("div", { className: "demo-card" });
+const playgroundHeader = el("div", { className: "demo-header" });
+const playgroundHeaderLeft = el("div");
+playgroundHeaderLeft.appendChild(el("h2", { className: "demo-title" }, ["Fluix Playground"]));
+playgroundHeaderLeft.appendChild(
+	el("p", { className: "demo-subtitle" }, [
+		"Proba posiciones, tipos de toast, layout stack/notch y tema visual.",
+	]),
+);
+playgroundHeader.appendChild(playgroundHeaderLeft);
+playgroundCard.appendChild(playgroundHeader);
+contentSurface.appendChild(playgroundCard);
+
+// Controls card
+const controlsCard = el("div", { className: "demo-card" });
 
 // Layout row
 const layoutRow = el("div", { className: "demo-row" });
@@ -134,7 +209,7 @@ for (const l of LAYOUTS) {
 	layoutBtns.push(btn);
 	layoutRow.appendChild(btn);
 }
-card.appendChild(layoutRow);
+controlsCard.appendChild(layoutRow);
 
 // Position row
 const posRow = el("div", { className: "demo-row" });
@@ -156,10 +231,10 @@ for (const p of POSITIONS) {
 	posBtns.push(btn);
 	posRow.appendChild(btn);
 }
-card.appendChild(posRow);
+controlsCard.appendChild(posRow);
 
 // Divider
-card.appendChild(el("hr", { className: "demo-divider" }));
+controlsCard.appendChild(el("hr", { className: "demo-divider" }));
 
 // Toast type buttons
 const toastRow = el("div", { className: "demo-row" });
@@ -231,7 +306,6 @@ toastRow.appendChild(
 		fluix.promise(bookingPromise, {
 			loading: { title: "Confirming booking...", icon: "\u2708" },
 			success: (data) => {
-				// Build flight card with plain DOM
 				const flightCard = el("div", { className: "flight-card" }, [
 					el("div", { className: "flight-card-top" }, [
 						el("span", { className: "flight-card-airline" }, [data.airline]),
@@ -271,18 +345,17 @@ toastRow.appendChild(
 	}),
 );
 
-card.appendChild(toastRow);
+controlsCard.appendChild(toastRow);
 
 // Clear row
 const clearRow = el("div", { className: "demo-row" });
 clearRow.appendChild(pill("Clear", () => fluix.clear()));
-card.appendChild(clearRow);
+controlsCard.appendChild(clearRow);
 
-shell.appendChild(card);
+contentSurface.appendChild(controlsCard);
 
 // --- Notch Demo ---
 const notchCard = el("div", { className: "demo-card" });
-notchCard.style.marginTop = "2rem";
 
 const notchHeader = el("div", { className: "demo-header" });
 const notchHeaderLeft = el("div");
@@ -337,7 +410,6 @@ function createPillIcon(): HTMLElement {
 		line.setAttribute("y2", y);
 		svg.appendChild(line);
 	}
-	// Wrap in div since createNotch expects HTMLElement
 	const wrapper = document.createElement("div");
 	wrapper.style.cssText = "display:flex;align-items:center;justify-content:center;";
 	wrapper.appendChild(svg);
@@ -413,8 +485,31 @@ for (const t of NOTCH_TRIGGERS) {
 notchCard.appendChild(triggerRow);
 notchCard.appendChild(manualRow);
 
-shell.appendChild(notchCard);
+contentSurface.appendChild(notchCard);
 
-console.log("[demo-vanilla] appending shell to #app, app=", app);
+contentSection.appendChild(contentSurface);
+shell.appendChild(contentSection);
+
 app.appendChild(shell);
-console.log("[demo-vanilla] DOM mounted, shell children:", shell.childElementCount);
+
+// --- Entrance animation + delayed menu active ---
+requestAnimationFrame(() => {
+	shell.classList.add("is-entered");
+});
+
+setTimeout(() => {
+	menuInstance.setActive(route);
+}, 700);
+
+// --- Hash change listener ---
+window.addEventListener("hashchange", () => {
+	route = getMenuRouteFromHash(window.location.hash);
+	menuInstance.setActive(route);
+	updateRouteDisplay();
+});
+
+// --- Mobile media query ---
+const mql = window.matchMedia("(max-width: 760px)");
+mql.addEventListener("change", (e) => {
+	menuInstance.update({ orientation: e.matches ? "horizontal" : "vertical" });
+});

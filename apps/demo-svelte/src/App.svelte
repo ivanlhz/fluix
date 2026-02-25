@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type FluixPosition, type NotchTrigger, fluix, Notch, Toaster } from "@fluix-ui/svelte";
+import { type FluixPosition, type NotchTrigger, fluix, Menu, MenuItem, Notch, Toaster } from "@fluix-ui/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [
@@ -14,9 +14,27 @@ const POSITIONS: FluixPosition[] = [
 const LAYOUTS = ["stack", "notch"] as const;
 type LayoutMode = (typeof LAYOUTS)[number];
 
+const MENU_ITEMS = [
+	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
+	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
+	{ id: "calendar", label: "Calendario", hash: "#calendar", subtitle: "Eventos, clases y entregas de la semana." },
+	{ id: "messages", label: "Mensajes", hash: "#messages", subtitle: "Notificaciones y conversaciones recientes." },
+] as const;
+
+type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
+
+function getMenuRouteFromHash(hash: string): MenuRouteId {
+	const route = MENU_ITEMS.find((item) => item.hash === hash);
+	return route?.id ?? MENU_ITEMS[0].id;
+}
+
 let theme = $state<"light" | "dark">("dark");
 let position = $state<FluixPosition>("top-right");
 let layout = $state<LayoutMode>("stack");
+let route = $state<MenuRouteId>(getMenuRouteFromHash(window.location.hash));
+let layoutEntered = $state(false);
+let menuReady = $state(false);
+let isMobile = $state(window.matchMedia("(max-width: 760px)").matches);
 
 const toastTheme = $derived<"light" | "dark">(theme === "light" ? "dark" : "light");
 const toasterConfig = $derived({
@@ -26,8 +44,35 @@ const toasterConfig = $derived({
 	defaults: { theme: toastTheme },
 });
 
-const toggleTheme = () => {
-	theme = theme === "dark" ? "light" : "dark";
+const activeRoute = $derived(MENU_ITEMS.find((item) => item.id === route) ?? MENU_ITEMS[0]);
+
+$effect(() => {
+	const handleHashChange = () => {
+		route = getMenuRouteFromHash(window.location.hash);
+	};
+	window.addEventListener("hashchange", handleHashChange);
+	handleHashChange();
+
+	const raf = requestAnimationFrame(() => { layoutEntered = true; });
+	const menuTimer = setTimeout(() => { menuReady = true; }, 700);
+
+	const mql = window.matchMedia("(max-width: 760px)");
+	const onMqlChange = (e: MediaQueryListEvent) => { isMobile = e.matches; };
+	mql.addEventListener("change", onMqlChange);
+
+	return () => {
+		cancelAnimationFrame(raf);
+		clearTimeout(menuTimer);
+		window.removeEventListener("hashchange", handleHashChange);
+		mql.removeEventListener("change", onMqlChange);
+	};
+});
+
+const handleRouteChange = (id: string) => {
+	const nextRoute = MENU_ITEMS.find((item) => item.id === id);
+	if (!nextRoute) return;
+	route = nextRoute.id;
+	window.history.replaceState(null, "", nextRoute.hash);
 };
 
 const createBookingPromise = () =>
@@ -110,149 +155,191 @@ const showPromise = () =>
 	{/if}
 {/snippet}
 
-<main class="demo-shell theme-{theme}">
-	<div class="demo-card">
-		<div class="demo-header">
-			<div>
-				<h1 class="demo-title">Fluix Playground (Svelte)</h1>
-				<p class="demo-subtitle">
-					Proba posiciones, tipos de toast, layout stack/notch y tema visual.
-				</p>
+<main class="demo-shell theme-{theme} {layoutEntered ? 'is-entered' : ''}">
+	<aside class="demo-sidebar">
+		<div class="demo-sidebar-brand">Fluix</div>
+		<div class="demo-sidebar-subtitle">Gooey Navigation</div>
+
+		<Menu
+			orientation={isMobile ? "horizontal" : "vertical"}
+			variant="tab"
+			{theme}
+			activeId={menuReady ? route : null}
+			onActiveChange={handleRouteChange}
+			className="demo-sidebar-menu"
+		>
+			{#each MENU_ITEMS as item (item.id)}
+				<MenuItem id={item.id}>
+					{item.label}
+				</MenuItem>
+			{/each}
+		</Menu>
+	</aside>
+
+	<section class="demo-content">
+		<div class="demo-content-surface">
+			<div class="demo-card">
+				<div class="demo-header">
+					<div>
+						<h1 class="demo-title">{activeRoute.label}</h1>
+						<p class="demo-subtitle">{activeRoute.subtitle}</p>
+					</div>
+					<label class="theme-toggle" aria-label="Cambiar tema oscuro y claro">
+						<input
+							type="checkbox"
+							checked={theme === "dark"}
+							onchange={(e) => { theme = (e.target as HTMLInputElement).checked ? "dark" : "light"; }}
+						/>
+						<span class="theme-toggle-track">
+							<span class="theme-toggle-thumb"></span>
+						</span>
+						<span class="theme-toggle-label">{theme === "dark" ? "Dark" : "Light"}</span>
+					</label>
+				</div>
 			</div>
-			<button type="button" class="demo-pill" onclick={toggleTheme}>
-				{theme === "dark" ? "Dark" : "Light"}
-			</button>
-		</div>
 
-		<div class="demo-row">
-			{#each LAYOUTS as item}
-				<button
-					type="button"
-					class="demo-pill"
-					class:is-active={layout === item}
-					onclick={() => (layout = item)}
-				>
-					Layout: {item}
-				</button>
-			{/each}
-		</div>
+			<div class="demo-card">
+				<div class="demo-header">
+					<div>
+						<h2 class="demo-title">Fluix Playground</h2>
+						<p class="demo-subtitle">
+							Proba posiciones, tipos de toast, layout stack/notch y tema visual.
+						</p>
+					</div>
+				</div>
+			</div>
 
-		<div class="demo-row">
-			{#each POSITIONS as item}
-				<button
-					type="button"
-					class="demo-pill"
-					class:is-active={position === item}
-					onclick={() => (position = item)}
-				>
-					{item}
-				</button>
-			{/each}
-		</div>
+			<div class="demo-card">
+				<div class="demo-row">
+					{#each LAYOUTS as item}
+						<button
+							type="button"
+							class="demo-pill"
+							class:is-active={layout === item}
+							onclick={() => (layout = item)}
+						>
+							Layout: {item}
+						</button>
+					{/each}
+				</div>
 
-		<hr class="demo-divider" />
+				<div class="demo-row">
+					{#each POSITIONS as item}
+						<button
+							type="button"
+							class="demo-pill"
+							class:is-active={position === item}
+							onclick={() => (position = item)}
+						>
+							{item}
+						</button>
+					{/each}
+				</div>
 
-		<div class="demo-row">
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.success({ title: "Saved!", description: "Your changes have been saved." })}
-			>
-				Success
-			</button>
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.error({ title: "Error", description: "Something went wrong." })}
-			>
-				Error
-			</button>
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.warning({ title: "Warning", description: "Please check this." })}
-			>
-				Warning
-			</button>
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.info({ title: "Info", description: "Just so you know." })}
-			>
-				Info
-			</button>
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.action({
-					title: "Action",
-					description: "Confirm or dismiss.",
-					button: { title: "Undo", onClick: () => fluix.info({ title: "Undone!" }) },
-				})}
-			>
-				Action
-			</button>
-			<button
-				type="button"
-				class="demo-pill"
-				onclick={() => fluix.success({
-					title: "Custom Icon",
-					description: "You can pass your own icon.",
-					icon: "*",
-				})}
-			>
-				Icon
-			</button>
-			<button type="button" class="demo-pill" onclick={showPromise}>
-				Promise
-			</button>
-		</div>
+				<hr class="demo-divider" />
 
-		<div class="demo-row">
-			<button type="button" class="demo-pill" onclick={() => fluix.clear()}>
-				Clear
-			</button>
+				<div class="demo-row">
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.success({ title: "Saved!", description: "Your changes have been saved." })}
+					>
+						Success
+					</button>
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.error({ title: "Error", description: "Something went wrong." })}
+					>
+						Error
+					</button>
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.warning({ title: "Warning", description: "Please check this." })}
+					>
+						Warning
+					</button>
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.info({ title: "Info", description: "Just so you know." })}
+					>
+						Info
+					</button>
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.action({
+							title: "Action",
+							description: "Confirm or dismiss.",
+							button: { title: "Undo", onClick: () => fluix.info({ title: "Undone!" }) },
+						})}
+					>
+						Action
+					</button>
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => fluix.success({
+							title: "Custom Icon",
+							description: "You can pass your own icon.",
+							icon: "*",
+						})}
+					>
+						Icon
+					</button>
+					<button type="button" class="demo-pill" onclick={showPromise}>
+						Promise
+					</button>
+				</div>
+
+				<div class="demo-row">
+					<button type="button" class="demo-pill" onclick={() => fluix.clear()}>
+						Clear
+					</button>
+				</div>
+			</div>
+
+			<div class="demo-card">
+				<div class="demo-header">
+					<div>
+						<h2 class="demo-title">Notch Menu</h2>
+						<p class="demo-subtitle">
+							Liquid expanding pill with gooey SVG morphing.
+						</p>
+					</div>
+				</div>
+
+				<div class="demo-row">
+					{#each NOTCH_TRIGGERS as t}
+						<button
+							type="button"
+							class="demo-pill"
+							class:is-active={notchTrigger === t}
+							onclick={() => { notchTrigger = t; notchOpen = false; }}
+						>
+							Trigger: {t}
+						</button>
+					{/each}
+				</div>
+
+				{#if notchTrigger === "manual"}
+					<div class="demo-row" style="margin-top:1rem;">
+						<button
+							type="button"
+							class="demo-pill"
+							onclick={() => (notchOpen = !notchOpen)}
+						>
+							{notchOpen ? "Close" : "Open"} Notch
+						</button>
+					</div>
+				{/if}
+			</div>
 		</div>
-	</div>
+	</section>
 
 	<Toaster config={toasterConfig} />
-
-	<!-- Notch Demo -->
-	<div class="demo-card" style="margin-top:2rem;">
-		<div class="demo-header">
-			<div>
-				<h2 class="demo-title">Notch Menu</h2>
-				<p class="demo-subtitle">
-					Liquid expanding pill with gooey SVG morphing.
-				</p>
-			</div>
-		</div>
-
-		<div class="demo-row">
-			{#each NOTCH_TRIGGERS as t}
-				<button
-					type="button"
-					class="demo-pill"
-					class:is-active={notchTrigger === t}
-					onclick={() => { notchTrigger = t; notchOpen = false; }}
-				>
-					Trigger: {t}
-				</button>
-			{/each}
-		</div>
-
-		{#if notchTrigger === "manual"}
-			<div class="demo-row" style="margin-top:1rem;">
-				<button
-					type="button"
-					class="demo-pill"
-					onclick={() => (notchOpen = !notchOpen)}
-				>
-					{notchOpen ? "Close" : "Open"} Notch
-				</button>
-			</div>
-		{/if}
-	</div>
 
 	{#key notchTrigger}
 		<Notch

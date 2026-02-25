@@ -1,7 +1,9 @@
 import {
 	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	EventEmitter,
+	inject,
 	Input,
 	Output,
 } from "@angular/core";
@@ -12,6 +14,7 @@ import { FluixAttrsDirective } from "./attrs.directive";
 	selector: "fluix-menu-item",
 	standalone: true,
 	imports: [CommonModule, FluixAttrsDirective],
+	styles: [`:host { display: contents; }`],
 	template: `
 		<button
 			type="button"
@@ -28,8 +31,18 @@ export class FluixMenuItemComponent {
 	@Input({ required: true }) menuId!: string;
 	@Input() disabled = false;
 	@Input() active = false;
-	@Input() itemAttrs: Record<string, string> = {};
+	@Input() set itemAttrs(value: Record<string, string>) {
+		this._itemAttrs = value ?? {};
+		this.cdr.markForCheck();
+	}
+	get itemAttrs(): Record<string, string> {
+		return this._itemAttrs;
+	}
+	_itemAttrs: Record<string, string> = {};
+
 	@Output() select = new EventEmitter<string>();
+
+	private cdr = inject(ChangeDetectorRef);
 
 	handleClick(): void {
 		if (this.disabled) return;

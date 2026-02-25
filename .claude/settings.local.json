@@ -47,7 +47,8 @@
       "Bash(ls -la \"C:\\\\Users\\\\ivanl\\\\develop\\\\2026\\\\fluix\\\\apps\"\" | grep -E \"^d \")",
       "Bash(npx sharp-cli:*)",
       "Bash(npx sharp:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(head:*)"
     ]
   }
 }

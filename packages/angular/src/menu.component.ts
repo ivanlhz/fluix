@@ -10,6 +10,7 @@ import {
 	NgZone,
 	OnChanges,
 	OnDestroy,
+	OnInit,
 	Output,
 	QueryList,
 	SimpleChanges,
@@ -39,7 +40,8 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 @Component({
 	selector: "fluix-menu",
 	standalone: true,
-	imports: [CommonModule, FluixAttrsDirective, FluixMenuItemComponent],
+	imports: [CommonModule, FluixAttrsDirective],
+	styles: [`:host { display: contents; }`],
 	template: `
 		<nav
 			#rootEl
@@ -48,10 +50,11 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 		>
 			<div [fluixAttrs]="attrs().canvas">
 				<svg
+					#svgEl
 					xmlns="http://www.w3.org/2000/svg"
-					[attr.width]="svgWidth()"
-					[attr.height]="svgHeight()"
-					[attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
+					width="1"
+					height="1"
+					viewBox="0 0 1 1"
 					aria-hidden="true"
 				>
 					@if (!isTab()) {
@@ -104,7 +107,7 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 	`,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy, OnInit {
 	@Input() orientation: MenuOrientation = MENU_DEFAULTS.orientation;
 	@Input() variant: MenuVariant = "pill";
 	@Input() theme: MenuTheme = "dark";
@@ -117,6 +120,7 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 	@Output() activeIdChange = new EventEmitter<string>();
 
 	@ViewChild("rootEl") rootElRef!: ElementRef<HTMLElement>;
+	@ViewChild("svgEl") svgElRef!: ElementRef<SVGSVGElement>;
 	@ViewChild("indicatorEl") indicatorElRef!: ElementRef<SVGRectElement | SVGPathElement>;
 	@ContentChildren(FluixMenuItemComponent) menuItems!: QueryList<FluixMenuItemComponent>;
 
@@ -129,19 +133,17 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 	private resizeObs?: ResizeObserver;
 	private measureRaf = 0;
 	private lastActiveNotified: string | null = null;
+	private size = { width: 0, height: 0 };
 
 	readonly gooMatrix = GOO_MATRIX;
 	readonly filterId = `fluix-menu-goo-${Math.random().toString(36).slice(2, 8)}`;
 
 	readonly attrs = signal(getMenuAttrs({ orientation: MENU_DEFAULTS.orientation, theme: "dark", variant: "pill" }));
-	readonly size = signal({ width: 0, height: 0 });
 	readonly snapshot = signal<MenuMachineState>({ activeId: null, config: {} });
 
 	readonly isTab = () => this.variant === "tab";
 	readonly resolvedBlur = () => this.blur ?? Math.min(10, Math.max(6, this.roundness * 0.45));
 	readonly effectiveFill = () => this.fill ?? "var(--fluix-menu-indicator)";
-	readonly svgWidth = () => Math.max(1, this.size().width);
-	readonly svgHeight = () => Math.max(1, this.size().height);
 
 	constructor() {
 		this.machine = createMenuMachine({
@@ -153,6 +155,11 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 			fill: this.fill,
 			initialActiveId: this.activeId ?? this.defaultActiveId ?? null,
 		});
+	}
+
+	ngOnInit(): void {
+		// Sync initial activeId (constructor runs before inputs are set)
+		this.machine.setActive(this.activeId ?? this.defaultActiveId ?? null);
 	}
 
 	ngAfterViewInit(): void {
@@ -178,8 +185,9 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 			});
 		});
 
-		// Setup items
+		// Setup items (attrs set on content children); run CD so they render with correct data-* on first paint
 		this.setupItems();
+		this.cdr.detectChanges();
 		this.menuItems.changes.subscribe(() => this.setupItems());
 
 		// ResizeObserver
@@ -188,11 +196,10 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 			const rect = root.getBoundingClientRect();
 			const w = Math.ceil(rect.width);
 			const h = Math.ceil(rect.height);
-			const prev = this.size();
-			if (prev.width !== w || prev.height !== h) {
-				this.size.set({ width: w, height: h });
+			if (this.size.width !== w || this.size.height !== h) {
+				this.size = { width: w, height: h };
+				this.updateSvgSize();
 				this.connection?.sync(false);
-				this.cdr.markForCheck();
 			}
 		};
 
@@ -204,7 +211,7 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 		});
 		this.resizeObs.observe(root);
 
-		// Connect menu
+		// Connect menu after first measure so SVG viewBox matches root size.
 		requestAnimationFrame(() => {
 			measure();
 			this.connectIndicator();
@@ -290,7 +297,7 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 		this.connection = connectMenu({
 			root,
 			indicator,
-			getActiveId: () => this.snapshot().activeId,
+			getActiveId: () => this.machine.store.getSnapshot().activeId,
 			onSelect: (id) => {
 				if (this.activeId === undefined) {
 					this.machine.setActive(id);
@@ -310,5 +317,15 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy {
 		if (!this.rootElRef?.nativeElement) return;
 		this.connection?.destroy();
 		this.connectIndicator();
+	}
+
+	private updateSvgSize(): void {
+		const svg = this.svgElRef?.nativeElement;
+		if (!svg) return;
+		const w = Math.max(1, this.size.width);
+		const h = Math.max(1, this.size.height);
+		svg.setAttribute("width", String(w));
+		svg.setAttribute("height", String(h));
+		svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
 	}
 }

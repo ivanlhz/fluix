@@ -611,8 +611,8 @@ export function connectMenu(options: MenuConnectOptions): {
 		const el = options.root.querySelector<HTMLElement>(
 			`${ITEM_SELECTOR}[data-menu-id="${CSS.escape(id)}"]`,
 		);
-		if (el && el.dataset.state !== state) {
-			el.dataset.state = state;
+		if (el && el.dataset["state"] !== state) {
+			el.dataset["state"] = state;
 		}
 	}
 
@@ -822,8 +822,8 @@ export function connectMenu(options: MenuConnectOptions): {
 		const target = event.target as HTMLElement | null;
 		if (!target) return;
 		const item = target.closest<HTMLElement>(ITEM_SELECTOR);
-		if (!item || item.dataset.disabled === "true") return;
-		const id = item.dataset.menuId;
+		if (!item || item.dataset["disabled"] === "true") return;
+		const id = item.dataset["menuId"];
 		if (!id) return;
 		options.onSelect(id);
 	};
