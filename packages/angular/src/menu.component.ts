@@ -80,7 +80,7 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 							[attr.data-fluix-menu-indicator]="''"
 							d=""
 							opacity="0"
-							[attr.fill]="effectiveFill()"
+							[style.fill]="effectiveFill()"
 						/>
 					} @else {
 						<g [attr.filter]="'url(#' + filterId + ')'">
@@ -94,7 +94,7 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 								rx="0"
 								ry="0"
 								opacity="0"
-								[attr.fill]="effectiveFill()"
+								[style.fill]="effectiveFill()"
 							/>
 						</g>
 					}

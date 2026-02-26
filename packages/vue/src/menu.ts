@@ -330,7 +330,7 @@ export const MenuRoot = defineComponent({
 						...a.indicator,
 						d: "",
 						opacity: 0,
-						fill: effectiveFill,
+						style: { fill: effectiveFill },
 					}),
 				);
 			} else {
@@ -346,7 +346,7 @@ export const MenuRoot = defineComponent({
 							rx: 0,
 							ry: 0,
 							opacity: 0,
-							fill: effectiveFill,
+							style: { fill: effectiveFill },
 						}),
 					]),
 				);

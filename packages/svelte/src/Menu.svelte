@@ -229,7 +229,7 @@ setContext("fluix-menu", {
 					{...attrs.indicator}
 					d=""
 					opacity={0}
-					fill={effectiveFill}
+					style:fill={effectiveFill}
 				/>
 			{:else}
 				<g filter="url(#{filterId})">
@@ -243,7 +243,7 @@ setContext("fluix-menu", {
 						rx={0}
 						ry={0}
 						opacity={0}
-						fill={effectiveFill}
+						style:fill={effectiveFill}
 					/>
 				</g>
 			{/if}

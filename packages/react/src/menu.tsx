@@ -15,6 +15,7 @@ import {
 	type MouseEventHandler,
 	type ReactNode,
 	createContext,
+	memo,
 	useCallback,
 	useContext,
 	useEffect,
@@ -154,13 +155,12 @@ function Root({
 		const nextActiveId = snapshot.activeId;
 		if (
 			nextActiveId &&
-			lastActiveNotifiedRef.current !== nextActiveId &&
-			onActiveChange
+			lastActiveNotifiedRef.current !== nextActiveId
 		) {
-			onActiveChange(nextActiveId);
+			onActiveChangeRef.current?.(nextActiveId);
 		}
 		lastActiveNotifiedRef.current = nextActiveId;
-	}, [snapshot.activeId, onActiveChange]);
+	}, [snapshot.activeId]);
 
 	useLayoutEffect(() => {
 		const root = rootRef.current;
@@ -227,13 +227,13 @@ function Root({
 
 	const setActive = useCallback(
 		(id: string) => {
-			if (controlledActiveId === undefined) {
+			if (controlledActiveIdRef.current === undefined) {
 				machine.setActive(id);
 			} else {
-				onActiveChange?.(id);
+				onActiveChangeRef.current?.(id);
 			}
 		},
-		[machine, controlledActiveId, onActiveChange],
+		[machine],
 	);
 
 	const registerIndicator = useCallback((node: SVGRectElement | SVGPathElement | null) => {
@@ -281,19 +281,19 @@ function Root({
 	);
 }
 
-function Item({ id, disabled = false, className, children, onClick }: MenuItemProps) {
-	const context = useMenuContext();
-	const active = context.activeId === id;
-	const itemAttrs = context.attrs.item({ id, active, disabled });
+const Item = memo(function Item({ id, disabled = false, className, children, onClick }: MenuItemProps) {
+	const { activeId, setActive, attrs } = useMenuContext();
+	const active = activeId === id;
+	const itemAttrs = attrs.item({ id, active, disabled });
 
 	const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
 		(event) => {
 			if (disabled) return;
 			onClick?.(event);
 			if (event.defaultPrevented) return;
-			context.setActive(id);
+			setActive(id);
 		},
-		[context, id, disabled, onClick],
+		[setActive, id, disabled, onClick],
 	);
 
 	return (
@@ -307,9 +307,9 @@ function Item({ id, disabled = false, className, children, onClick }: MenuItemPr
 			{children}
 		</button>
 	);
-}
+});
 
-function Indicator({ fill, blur, className }: MenuIndicatorProps) {
+const Indicator = memo(function Indicator({ fill, blur, className }: MenuIndicatorProps) {
 	const context = useMenuContext();
 	const width = Math.max(1, context.size.width);
 	const height = Math.max(1, context.size.height);
@@ -348,7 +348,7 @@ function Indicator({ fill, blur, className }: MenuIndicatorProps) {
 						{...context.attrs.indicator}
 						d=""
 						opacity={0}
-						fill={effectiveFill}
+						style={{ fill: effectiveFill }}
 					/>
 				) : (
 					<g filter={`url(#${context.filterId})`}>
@@ -362,14 +362,14 @@ function Indicator({ fill, blur, className }: MenuIndicatorProps) {
 							rx={0}
 							ry={0}
 							opacity={0}
-							fill={effectiveFill}
+							style={{ fill: effectiveFill }}
 						/>
 					</g>
 				)}
 			</svg>
 		</div>
 	);
-}
+});
 
 export const Menu = {
 	Root,

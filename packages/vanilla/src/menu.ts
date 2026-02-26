@@ -123,7 +123,7 @@ export function createMenu(
 		applyAttrs(indicatorEl, attrs.indicator);
 		indicatorEl.setAttribute("d", "");
 		indicatorEl.setAttribute("opacity", "0");
-		indicatorEl.setAttribute("fill", fill ?? "var(--fluix-menu-indicator)");
+		indicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
 		svg.appendChild(indicatorEl);
 	} else {
 		// Defs + gooey filter
@@ -170,7 +170,7 @@ export function createMenu(
 		indicatorEl.setAttribute("rx", "0");
 		indicatorEl.setAttribute("ry", "0");
 		indicatorEl.setAttribute("opacity", "0");
-		indicatorEl.setAttribute("fill", fill ?? "var(--fluix-menu-indicator)");
+		indicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
 
 		gGroup.appendChild(indicatorEl);
 		svg.appendChild(gGroup);

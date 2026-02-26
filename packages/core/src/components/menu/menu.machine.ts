@@ -32,7 +32,12 @@ export function createMenuMachine(initialConfig?: MenuConfig): MenuMachine {
 	}
 
 	function configure(config: MenuConfig) {
-		store.update((prev) => ({ ...prev, config: { ...prev.config, ...config } }));
+		store.update((prev) => {
+			const merged = { ...prev.config, ...config };
+			const keys = Object.keys(merged) as (keyof MenuConfig)[];
+			if (keys.every((k) => prev.config[k] === merged[k])) return prev;
+			return { ...prev, config: merged };
+		});
 	}
 
 	function destroy() {
