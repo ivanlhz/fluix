@@ -97,6 +97,7 @@ const menu = createMenu(container, {
   orientation: "horizontal",
   variant: "pill",
   theme: "dark",
+  fill: "#6366f1", // custom indicator color
   items: [
     { id: "home", label: "Home" },
     { id: "projects", label: "Projects" },

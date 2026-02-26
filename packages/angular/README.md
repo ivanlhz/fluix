@@ -115,6 +115,16 @@ import { FluixMenuComponent, FluixMenuItemComponent } from "@fluix-ui/angular";
 export class AppComponent {}
 ```
 
+### Custom indicator fill
+
+Override the indicator color with the `fill` input:
+
+```html
+<fluix-menu [defaultActiveId]="'home'" fill="#6366f1">
+  <fluix-menu-item menuId="home" label="Home" />
+</fluix-menu>
+```
+
 ## Notch
 
 Use `FluixNotchComponent` as a standalone adaptive island.

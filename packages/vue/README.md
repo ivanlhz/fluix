@@ -100,6 +100,18 @@ import { MenuRoot, MenuItem } from "@fluix-ui/vue";
 </template>
 ```
 
+### Custom indicator fill
+
+Override the indicator color with the `fill` prop:
+
+```vue
+<template>
+  <MenuRoot defaultActiveId="home" fill="#6366f1">
+    <MenuItem id="home">Home</MenuItem>
+  </MenuRoot>
+</template>
+```
+
 ## Theming
 
 Pass any theme name — themes are pure CSS. See `@fluix-ui/css` for details.

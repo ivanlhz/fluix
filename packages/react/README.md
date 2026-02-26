@@ -12,7 +12,7 @@ npm install @fluix-ui/react @fluix-ui/css
 
 - `Toaster` + `fluix` imperative API for toast notifications.
 - `Notch` for adaptive floating island interactions.
-- `Menu` (`Menu.Root` + `Menu.Item`) for animated navigation.
+- `Menu` (`Menu.Root` + `Menu.Item` + `Menu.Indicator`) for animated navigation.
 
 ## Quick start (Toasts)
 
@@ -100,6 +100,21 @@ export function AppMenu() {
 }
 ```
 
+### Custom indicator fill
+
+Override the indicator color via `fill` on `Menu.Root` or with `Menu.Indicator`:
+
+```tsx
+{/* Via Root prop */}
+<Menu.Root defaultActiveId="home" fill="#6366f1">…</Menu.Root>
+
+{/* Or via Indicator for granular control */}
+<Menu.Root defaultActiveId="home">
+  <Menu.Indicator fill="#6366f1" />
+  <Menu.Item id="home">Home</Menu.Item>
+</Menu.Root>
+```
+
 ## Theming
 
 Pass any theme name to Fluix components. Themes are pure CSS (see `@fluix-ui/css`).
@@ -117,6 +132,7 @@ import type {
   NotchProps,
   MenuRootProps,
   MenuItemProps,
+  MenuIndicatorProps,
   MenuOrientation,
   MenuVariant,
   MenuTheme,

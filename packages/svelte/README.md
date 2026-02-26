@@ -93,6 +93,16 @@ Use `Menu` with `MenuItem` in uncontrolled mode (`defaultActiveId`) or controlle
 </Menu>
 ```
 
+### Custom indicator fill
+
+Override the indicator color with the `fill` prop:
+
+```svelte
+<Menu defaultActiveId="home" fill="#6366f1">
+  <MenuItem id="home">Home</MenuItem>
+</Menu>
+```
+
 ## Theming
 
 Pass any theme name — themes are pure CSS. See `@fluix-ui/css` for details.
