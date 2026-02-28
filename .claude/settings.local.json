@@ -52,7 +52,8 @@
       "Bash(npx:*)",
       "Bash(mkdir:*)",
       "Bash(git mv:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(wc:*)"
     ]
   }
 }

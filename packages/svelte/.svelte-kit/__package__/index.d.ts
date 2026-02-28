@@ -7,16 +7,13 @@
  * - fluix: re-exported imperative API from @fluix-ui/core
  */
 export { fluix } from "@fluix-ui/core";
-export { default as Toaster } from "./Toaster.svelte";
-export { createFluixToasts } from "./toast.svelte.js";
+export { Toaster, createFluixToasts } from "./toast";
+export type { ToasterProps } from "./toast";
 export type { FluixToastOptions, FluixToastPromiseOptions, FluixPosition, FluixTheme, FluixToastState, FluixToasterConfig, } from "@fluix-ui/core";
-export type { ToasterProps } from "./Toaster.svelte";
-export { default as Notch } from "./Notch.svelte";
-export type { NotchProps } from "./Notch.svelte";
+export { Notch } from "./notch";
+export type { NotchProps } from "./notch";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
-export { default as Menu } from "./Menu.svelte";
-export { default as MenuItem } from "./MenuItem.svelte";
-export type { MenuProps } from "./Menu.svelte";
-export type { MenuItemProps } from "./MenuItem.svelte";
+export { Menu, MenuItem } from "./menu";
+export type { MenuProps, MenuItemProps } from "./menu";
 export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";
 //# sourceMappingURL=index.d.ts.map

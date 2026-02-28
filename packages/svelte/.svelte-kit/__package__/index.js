@@ -7,10 +7,8 @@
  * - fluix: re-exported imperative API from @fluix-ui/core
  */
 export { fluix } from "@fluix-ui/core";
-export { default as Toaster } from "./Toaster.svelte";
-export { createFluixToasts } from "./toast.svelte.js";
+export { Toaster, createFluixToasts } from "./toast";
 // Notch
-export { default as Notch } from "./Notch.svelte";
+export { Notch } from "./notch";
 // Menu
-export { default as Menu } from "./Menu.svelte";
-export { default as MenuItem } from "./MenuItem.svelte";
+export { Menu, MenuItem } from "./menu";
