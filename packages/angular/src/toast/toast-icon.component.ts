@@ -1,11 +1,11 @@
-import { Component, Input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 import type { FluixToastItem } from "@fluix-ui/core";
 
 @Component({
 	selector: "fluix-toast-icon",
 	standalone: true,
 	template: `
-		@switch (state) {
+		@switch (state()) {
 			@case ('success') {
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden>
 					<polyline points="20 6 9 17 4 12" />
@@ -41,14 +41,15 @@ import type { FluixToastItem } from "@fluix-ui/core";
 				</svg>
 			}
 			@default {
-				@if (icon != null) {
-					<span aria-hidden>{{ icon }}</span>
+				@if (icon() != null) {
+					<span aria-hidden>{{ icon() }}</span>
 				}
 			}
 		}
 	`,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FluixToastIconComponent {
-	@Input() state!: FluixToastItem["state"];
-	@Input() icon: unknown;
+	readonly state = input.required<FluixToastItem["state"]>();
+	readonly icon = input<unknown>();
 }
