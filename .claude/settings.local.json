@@ -53,7 +53,8 @@
       "Bash(mkdir:*)",
       "Bash(git mv:*)",
       "Bash(mv:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
