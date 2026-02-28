@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, TemplateRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { FluixMenuComponent, FluixMenuItemComponent, FluixNotchComponent, FluixToasterComponent, FluixToastService } from '@fluix-ui/angular';
-import type { FluixPosition, FluixToasterConfig, NotchTrigger, MenuOrientation } from '@fluix-ui/core';
+import type { FluixPosition, FluixToasterConfig, NotchTrigger, MenuOrientation, MenuVariant } from '@fluix-ui/core';
 
 export interface FlightBookingData {
   airline: string;
@@ -54,6 +54,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   readonly route = signal<MenuRouteId>(getMenuRouteFromHash(window.location.hash));
   readonly layoutEntered = signal(false);
   readonly menuReady = signal(false);
+  readonly menuVariant = signal<MenuVariant>('tab');
   readonly isMobile = signal(window.matchMedia('(max-width: 760px)').matches);
 
   readonly toastTheme = computed<'light' | 'dark'>(() =>
@@ -221,6 +222,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   clear(): void {
     this.fluix.clear();
+  }
+
+  toggleMenuVariant(): void {
+    this.menuVariant.set(this.menuVariant() === 'tab' ? 'pill' : 'tab');
   }
 
   setNotchTrigger(t: NotchTrigger): void {

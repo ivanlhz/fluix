@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type FluixPosition, type NotchTrigger, fluix, Menu, MenuItem, Notch, Toaster } from "@fluix-ui/svelte";
+import { type FluixPosition, type NotchTrigger, type MenuVariant, fluix, Menu, MenuItem, Notch, Toaster } from "@fluix-ui/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [
@@ -31,6 +31,7 @@ function getMenuRouteFromHash(hash: string): MenuRouteId {
 let theme = $state<"light" | "dark">("dark");
 let position = $state<FluixPosition>("top-right");
 let layout = $state<LayoutMode>("stack");
+let menuVariant = $state<MenuVariant>("tab");
 let route = $state<MenuRouteId>(getMenuRouteFromHash(window.location.hash));
 let layoutEntered = $state(false);
 let menuReady = $state(false);
@@ -160,9 +161,17 @@ const showPromise = () =>
 		<div class="demo-sidebar-brand">Fluix</div>
 		<div class="demo-sidebar-subtitle">Gooey Navigation</div>
 
+		<button
+			type="button"
+			class="demo-pill demo-variant-toggle"
+			onclick={() => (menuVariant = menuVariant === "tab" ? "pill" : "tab")}
+		>
+			{menuVariant === "tab" ? "Tab" : "Pill"}
+		</button>
+
 		<Menu
 			orientation={isMobile ? "horizontal" : "vertical"}
-			variant="tab"
+			variant={menuVariant}
 			{theme}
 			activeId={menuReady ? route : null}
 			onActiveChange={handleRouteChange}

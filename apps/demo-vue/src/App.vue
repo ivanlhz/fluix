@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type FluixPosition, MenuRoot, MenuItem, Notch, Toaster, fluix } from "@fluix-ui/vue";
-import type { NotchTrigger } from "@fluix-ui/core";
+import type { MenuVariant, NotchTrigger } from "@fluix-ui/core";
 import { computed, h, onMounted, onUnmounted, ref } from "vue";
 
 const POSITIONS: FluixPosition[] = [
@@ -34,6 +34,7 @@ function getMenuRouteFromHash(hash: string): MenuRouteId {
 const theme = ref<"light" | "dark">("dark");
 const position = ref<FluixPosition>("top-right");
 const layout = ref<LayoutMode>("stack");
+const menuVariant = ref<MenuVariant>("tab");
 const notchTrigger = ref<NotchTrigger>("hover");
 const notchOpen = ref(false);
 const route = ref<MenuRouteId>(getMenuRouteFromHash(window.location.hash));
@@ -169,9 +170,17 @@ const showPromise = () =>
 			<div class="demo-sidebar-brand">Fluix</div>
 			<div class="demo-sidebar-subtitle">Gooey Navigation</div>
 
+			<button
+				type="button"
+				class="demo-pill demo-variant-toggle"
+				@click="menuVariant = menuVariant === 'tab' ? 'pill' : 'tab'"
+			>
+				{{ menuVariant === 'tab' ? 'Tab' : 'Pill' }}
+			</button>
+
 			<MenuRoot
 				:orientation="isMobile ? 'horizontal' : 'vertical'"
-				variant="tab"
+				:variant="menuVariant"
 				:theme="theme"
 				:active-id="menuReady ? route : null"
 				:on-active-change="handleRouteChange"

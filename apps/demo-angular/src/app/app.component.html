@@ -3,9 +3,17 @@
     <div class="demo-sidebar-brand">Fluix</div>
     <div class="demo-sidebar-subtitle">Gooey Navigation</div>
 
+    <button
+      type="button"
+      class="demo-pill demo-variant-toggle"
+      (click)="toggleMenuVariant()"
+    >
+      {{ menuVariant() === 'tab' ? 'Tab' : 'Pill' }}
+    </button>
+
     <fluix-menu
       [orientation]="menuOrientation()"
-      variant="tab"
+      [variant]="menuVariant()"
       [theme]="theme()"
       [activeId]="menuActiveId()"
       (activeIdChange)="handleRouteChange($event)"

@@ -1,5 +1,5 @@
 import { type FluixPosition, createToaster, createNotch, createMenu, fluix } from "@fluix-ui/vanilla";
-import type { NotchTrigger } from "@fluix-ui/core";
+import type { MenuVariant, NotchTrigger } from "@fluix-ui/core";
 import "@fluix-ui/css";
 import "./main.css";
 
@@ -34,6 +34,7 @@ function getMenuRouteFromHash(hash: string): MenuRouteId {
 let theme: "light" | "dark" = "dark";
 let position: FluixPosition = "top-right";
 let layout: LayoutMode = "stack";
+let menuVariant: MenuVariant = "tab";
 let route: MenuRouteId = getMenuRouteFromHash(window.location.hash);
 
 const toastTheme = () => (theme === "light" ? "dark" : "light");
@@ -103,11 +104,19 @@ const sidebar = el("aside", { className: "demo-sidebar" });
 sidebar.appendChild(el("div", { className: "demo-sidebar-brand" }, ["Fluix"]));
 sidebar.appendChild(el("div", { className: "demo-sidebar-subtitle" }, ["Gooey Navigation"]));
 
+const variantToggle = pill(menuVariant === "tab" ? "Tab" : "Pill", () => {
+	menuVariant = menuVariant === "tab" ? "pill" : "tab";
+	variantToggle.textContent = menuVariant === "tab" ? "Tab" : "Pill";
+	menuInstance.update({ variant: menuVariant });
+});
+variantToggle.classList.add("demo-variant-toggle");
+sidebar.appendChild(variantToggle);
+
 const isMobile = window.matchMedia("(max-width: 760px)").matches;
 
 const menuInstance = createMenu(sidebar, {
 	orientation: isMobile ? "horizontal" : "vertical",
-	variant: "tab",
+	variant: menuVariant,
 	theme,
 	activeId: null, // delayed via menuReady
 	onActiveChange: (id) => {
