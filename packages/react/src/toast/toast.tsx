@@ -392,9 +392,11 @@ export function Toaster({ config }: ToasterProps = {}) {
 		getServerSnapshot,
 	);
 
-	useEffect(() => {
-		if (config) machine.configure(config);
-	}, [machine, config]);
+	const prevConfigRef = useRef(config);
+	if (config && config !== prevConfigRef.current) {
+		prevConfigRef.current = config;
+		machine.configure(config);
+	}
 
 	const [localState, setLocalState] = useState<ToastLocalState>(() => ({}));
 

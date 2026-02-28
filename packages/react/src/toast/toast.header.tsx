@@ -1,6 +1,6 @@
 import { Toaster as CoreToaster } from "@fluix-ui/core";
 import { memo } from "react";
-import { renderToastIcon } from "./toast.icon";
+import { ToastIcon } from "./toast.icon";
 import type { HeaderLayerState } from "./toast.types";
 
 export const ToastHeader = memo(function ToastHeader({
@@ -28,7 +28,7 @@ export const ToastHeader = memo(function ToastHeader({
 						data-state={headerLayer.current.view.state}
 						className={headerLayer.current.view.styles?.badge}
 					>
-						{renderToastIcon(headerLayer.current.view.icon, headerLayer.current.view.state)}
+						<ToastIcon icon={headerLayer.current.view.icon} state={headerLayer.current.view.state} />
 					</div>
 					<span
 						{...attrs.title}
@@ -50,7 +50,7 @@ export const ToastHeader = memo(function ToastHeader({
 							data-state={headerLayer.prev.view.state}
 							className={headerLayer.prev.view.styles?.badge}
 						>
-							{renderToastIcon(headerLayer.prev.view.icon, headerLayer.prev.view.state)}
+							<ToastIcon icon={headerLayer.prev.view.icon} state={headerLayer.prev.view.state} />
 						</div>
 						<span
 							data-fluix-title

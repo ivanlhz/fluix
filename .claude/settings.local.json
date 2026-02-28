@@ -48,7 +48,11 @@
       "Bash(npx sharp-cli:*)",
       "Bash(npx sharp:*)",
       "Bash(tail:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(npx:*)",
+      "Bash(mkdir:*)",
+      "Bash(git mv:*)",
+      "Bash(mv:*)"
     ]
   }
 }

@@ -118,7 +118,7 @@ function DefaultIcon({ state }: { state: FluixToastItem["state"] }) {
 	}
 }
 
-export function renderToastIcon(icon: unknown, state: FluixToastItem["state"]): ReactNode {
+export function ToastIcon({ icon, state }: { icon: unknown; state: FluixToastItem["state"] }) {
 	if (icon != null) {
 		if (typeof icon === "object" && icon !== null && "type" in icon) {
 			return icon as ReactElement;

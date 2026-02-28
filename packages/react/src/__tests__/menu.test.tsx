@@ -3,7 +3,7 @@
  */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { Menu } from "../menu";
+import { Menu } from "../menu/menu";
 
 beforeAll(() => {
 	if (typeof globalThis.ResizeObserver === "undefined") {
