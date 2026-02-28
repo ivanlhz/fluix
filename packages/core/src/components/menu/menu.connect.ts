@@ -727,9 +727,9 @@ export function connectMenu(options: MenuConnectOptions): {
 	destroy(): void;
 } {
 	const spring = options.spring ?? FLUIX_SPRING;
-	const padding = options.padding ?? 6;
 	const variant = options.variant;
 	const orientation = options.orientation;
+	const padding = options.padding ?? (variant === "pill" ? 0 : 6);
 	const cleanups: Array<() => void> = [];
 	let currentAnimation: AnimationHandle | null = null;
 	let lastFrame: IndicatorFrame | null = null;

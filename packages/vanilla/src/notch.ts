@@ -140,6 +140,7 @@ export function createNotch(
 	/* ---- Create DOM: SVG canvas ---- */
 	const canvasDiv = document.createElement("div");
 	applyAttrs(canvasDiv, attrs.canvas);
+	canvasDiv.style.cssText = "position:absolute;inset:0;pointer-events:none;overflow:visible;";
 
 	const svg = document.createElementNS(SVG_NS, "svg");
 	svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -216,14 +217,14 @@ export function createNotch(
 	/* ---- Create DOM: Pill div ---- */
 	const pillDiv = document.createElement("div");
 	applyAttrs(pillDiv, attrs.pill);
-	pillDiv.style.width = `${dotSize}px`;
-	pillDiv.style.height = `${dotSize}px`;
+	pillDiv.style.cssText = `position:absolute;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;pointer-events:none;width:${dotSize}px;height:${dotSize}px;color:var(--fluix-notch-color);`;
 	pillDiv.appendChild(resolveContent(options.pill));
 	rootEl.appendChild(pillDiv);
 
 	/* ---- Create DOM: Content div ---- */
 	const contentDiv = document.createElement("div");
 	applyAttrs(contentDiv, attrs.content);
+	contentDiv.style.cssText = "position:absolute;z-index:10;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;color:var(--fluix-notch-color);";
 	contentDiv.appendChild(resolveContent(options.content));
 	rootEl.appendChild(contentDiv);
 
@@ -502,8 +503,13 @@ export function createNotch(
 		svgRectEl.setAttribute("fill", fill ?? "var(--fluix-notch-bg)");
 		hoverBlobEl.setAttribute("fill", fill ?? "var(--fluix-notch-bg)");
 
-		// Update content attrs
+		// Update content attrs + inline visibility
 		applyAttrs(contentDiv, newAttrs.content);
+		contentDiv.style.opacity = isOpen ? "1" : "0";
+		contentDiv.style.pointerEvents = isOpen ? "auto" : "none";
+
+		// Update pill visibility
+		pillDiv.style.opacity = isOpen ? "0" : "1";
 
 		// Animate the SVG rect
 		animateRect();

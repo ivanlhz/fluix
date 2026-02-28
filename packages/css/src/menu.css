@@ -94,6 +94,17 @@
 	fill: var(--fluix-menu-indicator, oklch(0.66 0.16 284));
 }
 
+/* ---------- Pill variant ---------- */
+
+[data-fluix-menu][data-variant="pill"] {
+	background: transparent;
+	padding: 0;
+}
+
+[data-fluix-menu][data-variant="pill"] [data-fluix-menu-item] {
+	width: fit-content;
+}
+
 /* ---------- Tab variant ---------- */
 
 [data-fluix-menu][data-variant="tab"] {

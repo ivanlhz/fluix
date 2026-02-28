@@ -95,11 +95,18 @@ body {
 
 fluix-menu[data-fluix-menu],
 fluix-menu [data-fluix-menu] {
-  width: 100%;
   overflow: visible;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   --fluix-menu-color: var(--demo-sidebar-color);
   --fluix-menu-active-color: #22253b;
   --fluix-menu-indicator: var(--demo-sidebar-active-bg);
+}
+
+fluix-menu[data-fluix-menu][data-variant="tab"],
+fluix-menu [data-fluix-menu][data-variant="tab"] {
+  width: 100%;
 }
 
 .demo-shell.theme-light fluix-menu[data-fluix-menu],
@@ -107,16 +114,21 @@ fluix-menu [data-fluix-menu] {
   --fluix-menu-active-color: #252843;
 }
 
-fluix-menu [data-fluix-menu-list] {
+fluix-menu [data-variant="tab"] [data-fluix-menu-list],
+fluix-menu[data-variant="tab"] [data-fluix-menu-list] {
   width: 100%;
 }
 
 fluix-menu [data-fluix-menu-item] {
   position: relative;
-  width: 100%;
   justify-content: flex-start;
   padding: 0.75rem 0.85rem;
   overflow: visible;
+}
+
+fluix-menu [data-variant="tab"] [data-fluix-menu-item],
+fluix-menu[data-variant="tab"] [data-fluix-menu-item] {
+  width: 100%;
 }
 
 .demo-content {

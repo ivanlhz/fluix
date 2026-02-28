@@ -329,7 +329,10 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy, 
 	private reconnectIndicator(): void {
 		if (!this.rootElRef?.nativeElement) return;
 		this.connection?.destroy();
-		this.connectIndicator();
+		// Defer so Angular finishes re-rendering the @if blocks
+		// (e.g. swapping <path> ↔ <rect> on variant change)
+		// before we read the new @ViewChild refs.
+		requestAnimationFrame(() => this.connectIndicator());
 	}
 
 	private updateSvgSize(): void {

@@ -59,6 +59,91 @@ function applyAttrs(el: Element, attrs: Record<string, string>) {
 	}
 }
 
+interface SvgIndicatorRefs {
+	indicatorEl: SVGRectElement | SVGPathElement;
+	ghostIndicatorEl: SVGRectElement | null;
+}
+
+function buildSvgIndicator(
+	svg: SVGSVGElement,
+	isTab: boolean,
+	filterId: string,
+	resolvedBlur: number,
+	fill: string | undefined,
+	indicatorAttrs: Record<string, string>,
+): SvgIndicatorRefs {
+	// Clear existing SVG children
+	svg.innerHTML = "";
+
+	const effectiveFill = fill ?? "var(--fluix-menu-indicator)";
+
+	if (isTab) {
+		const indicatorEl = document.createElementNS(SVG_NS, "path") as SVGPathElement;
+		applyAttrs(indicatorEl, indicatorAttrs);
+		indicatorEl.setAttribute("d", "");
+		indicatorEl.setAttribute("opacity", "0");
+		indicatorEl.style.fill = effectiveFill;
+		svg.appendChild(indicatorEl);
+		return { indicatorEl, ghostIndicatorEl: null };
+	}
+
+	// Defs + gooey filter
+	const defs = document.createElementNS(SVG_NS, "defs");
+	const filter = document.createElementNS(SVG_NS, "filter");
+	filter.setAttribute("id", filterId);
+	filter.setAttribute("x", "-20%");
+	filter.setAttribute("y", "-20%");
+	filter.setAttribute("width", "140%");
+	filter.setAttribute("height", "140%");
+	filter.setAttribute("color-interpolation-filters", "sRGB");
+
+	const feBlur = document.createElementNS(SVG_NS, "feGaussianBlur");
+	feBlur.setAttribute("in", "SourceGraphic");
+	feBlur.setAttribute("stdDeviation", String(resolvedBlur));
+	feBlur.setAttribute("result", "blur");
+
+	const feCM = document.createElementNS(SVG_NS, "feColorMatrix");
+	feCM.setAttribute("in", "blur");
+	feCM.setAttribute("type", "matrix");
+	feCM.setAttribute("values", GOO_MATRIX);
+	feCM.setAttribute("result", "goo");
+
+	const feComp = document.createElementNS(SVG_NS, "feComposite");
+	feComp.setAttribute("in", "SourceGraphic");
+	feComp.setAttribute("in2", "goo");
+	feComp.setAttribute("operator", "atop");
+
+	filter.appendChild(feBlur);
+	filter.appendChild(feCM);
+	filter.appendChild(feComp);
+	defs.appendChild(filter);
+	svg.appendChild(defs);
+
+	const gGroup = document.createElementNS(SVG_NS, "g");
+	gGroup.setAttribute("filter", `url(#${filterId})`);
+
+	const ghostIndicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
+	for (const attr of ["x", "y", "width", "height", "rx", "ry"]) {
+		ghostIndicatorEl.setAttribute(attr, "0");
+	}
+	ghostIndicatorEl.setAttribute("opacity", "0");
+	ghostIndicatorEl.style.fill = effectiveFill;
+
+	const indicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
+	applyAttrs(indicatorEl, indicatorAttrs);
+	for (const attr of ["x", "y", "width", "height", "rx", "ry"]) {
+		indicatorEl.setAttribute(attr, "0");
+	}
+	indicatorEl.setAttribute("opacity", "0");
+	indicatorEl.style.fill = effectiveFill;
+
+	gGroup.appendChild(ghostIndicatorEl);
+	gGroup.appendChild(indicatorEl);
+	svg.appendChild(gGroup);
+
+	return { indicatorEl, ghostIndicatorEl };
+}
+
 /* ----------------------------- createMenu ----------------------------- */
 
 export function createMenu(
@@ -96,9 +181,8 @@ export function createMenu(
 	let lastActiveNotified: string | null = snapshot.activeId;
 
 	/* ---- Create DOM ---- */
-	const attrs = getMenuAttrs({ orientation, theme, variant });
+	let attrs = getMenuAttrs({ orientation, theme, variant });
 	const filterId = `fluix-menu-goo-${Math.random().toString(36).slice(2, 8)}`;
-	const isTab = variant === "tab";
 
 	// Nav root
 	const navEl = document.createElement("nav");
@@ -116,77 +200,14 @@ export function createMenu(
 	svg.setAttribute("viewBox", "0 0 1 1");
 	svg.setAttribute("aria-hidden", "true");
 
-	let indicatorEl: SVGRectElement | SVGPathElement;
-	let ghostIndicatorEl: SVGRectElement | null = null;
-
-	if (isTab) {
-		indicatorEl = document.createElementNS(SVG_NS, "path") as SVGPathElement;
-		applyAttrs(indicatorEl, attrs.indicator);
-		indicatorEl.setAttribute("d", "");
-		indicatorEl.setAttribute("opacity", "0");
-		indicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
-		svg.appendChild(indicatorEl);
-	} else {
-		// Defs + gooey filter
-		const defs = document.createElementNS(SVG_NS, "defs");
-		const filter = document.createElementNS(SVG_NS, "filter");
-		filter.setAttribute("id", filterId);
-		filter.setAttribute("x", "-20%");
-		filter.setAttribute("y", "-20%");
-		filter.setAttribute("width", "140%");
-		filter.setAttribute("height", "140%");
-		filter.setAttribute("color-interpolation-filters", "sRGB");
-
-		const feBlur = document.createElementNS(SVG_NS, "feGaussianBlur");
-		feBlur.setAttribute("in", "SourceGraphic");
-		feBlur.setAttribute("stdDeviation", String(resolvedBlur()));
-		feBlur.setAttribute("result", "blur");
-
-		const feCM = document.createElementNS(SVG_NS, "feColorMatrix");
-		feCM.setAttribute("in", "blur");
-		feCM.setAttribute("type", "matrix");
-		feCM.setAttribute("values", GOO_MATRIX);
-		feCM.setAttribute("result", "goo");
-
-		const feComp = document.createElementNS(SVG_NS, "feComposite");
-		feComp.setAttribute("in", "SourceGraphic");
-		feComp.setAttribute("in2", "goo");
-		feComp.setAttribute("operator", "atop");
-
-		filter.appendChild(feBlur);
-		filter.appendChild(feCM);
-		filter.appendChild(feComp);
-		defs.appendChild(filter);
-		svg.appendChild(defs);
-
-		const gGroup = document.createElementNS(SVG_NS, "g");
-		gGroup.setAttribute("filter", `url(#${filterId})`);
-
-		ghostIndicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
-		ghostIndicatorEl.setAttribute("x", "0");
-		ghostIndicatorEl.setAttribute("y", "0");
-		ghostIndicatorEl.setAttribute("width", "0");
-		ghostIndicatorEl.setAttribute("height", "0");
-		ghostIndicatorEl.setAttribute("rx", "0");
-		ghostIndicatorEl.setAttribute("ry", "0");
-		ghostIndicatorEl.setAttribute("opacity", "0");
-		ghostIndicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
-
-		indicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
-		applyAttrs(indicatorEl, attrs.indicator);
-		indicatorEl.setAttribute("x", "0");
-		indicatorEl.setAttribute("y", "0");
-		indicatorEl.setAttribute("width", "0");
-		indicatorEl.setAttribute("height", "0");
-		indicatorEl.setAttribute("rx", "0");
-		indicatorEl.setAttribute("ry", "0");
-		indicatorEl.setAttribute("opacity", "0");
-		indicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
-
-		gGroup.appendChild(ghostIndicatorEl);
-		gGroup.appendChild(indicatorEl);
-		svg.appendChild(gGroup);
-	}
+	let { indicatorEl, ghostIndicatorEl } = buildSvgIndicator(
+		svg,
+		variant === "tab",
+		filterId,
+		resolvedBlur(),
+		fill,
+		attrs.indicator,
+	);
 
 	canvasDiv.appendChild(svg);
 	navEl.appendChild(canvasDiv);
@@ -254,22 +275,26 @@ export function createMenu(
 	}
 
 	/* ---- connectMenu ---- */
-	let connection = connectMenu({
-		root: navEl,
-		indicator: indicatorEl,
-		ghostIndicator: ghostIndicatorEl,
-		getActiveId: () => snapshot.activeId,
-		onSelect(id) {
-			if (controlledActiveId === undefined) {
-				machine.setActive(id);
-			} else {
-				onActiveChange?.(id);
-			}
-		},
-		spring: springConfig(),
-		variant,
-		orientation,
-	});
+	function makeConnection() {
+		return connectMenu({
+			root: navEl,
+			indicator: indicatorEl,
+			ghostIndicator: ghostIndicatorEl,
+			getActiveId: () => snapshot.activeId,
+			onSelect(id) {
+				if (controlledActiveId === undefined) {
+					machine.setActive(id);
+				} else {
+					onActiveChange?.(id);
+				}
+			},
+			spring: springConfig(),
+			variant,
+			orientation,
+		});
+	}
+
+	let connection = makeConnection();
 
 	// Initial measure
 	requestAnimationFrame(() => {
@@ -308,6 +333,8 @@ export function createMenu(
 		},
 
 		update(opts: Partial<MenuOptions>) {
+			const prevVariant = variant;
+
 			if (opts.orientation !== undefined) orientation = opts.orientation;
 			if (opts.variant !== undefined) variant = opts.variant;
 			if (opts.theme !== undefined) theme = opts.theme;
@@ -324,9 +351,24 @@ export function createMenu(
 				machine.setActive(controlledActiveId ?? null);
 			}
 
-			// Update root attrs
-			const newAttrs = getMenuAttrs({ orientation, theme, variant });
-			applyAttrs(navEl, newAttrs.root);
+			// Update attrs
+			attrs = getMenuAttrs({ orientation, theme, variant });
+			applyAttrs(navEl, attrs.root);
+
+			// Rebuild SVG indicator if variant changed (tab ↔ pill)
+			const variantChanged = prevVariant !== variant;
+			if (variantChanged) {
+				const refs = buildSvgIndicator(
+					svg,
+					variant === "tab",
+					filterId,
+					resolvedBlur(),
+					fill,
+					attrs.indicator,
+				);
+				indicatorEl = refs.indicatorEl;
+				ghostIndicatorEl = refs.ghostIndicatorEl;
+			}
 
 			// Rebuild items if provided
 			if (opts.items !== undefined) {
@@ -340,22 +382,7 @@ export function createMenu(
 
 			// Reconnect
 			connection.destroy();
-			connection = connectMenu({
-				root: navEl,
-				indicator: indicatorEl,
-				ghostIndicator: ghostIndicatorEl,
-				getActiveId: () => snapshot.activeId,
-				onSelect(id) {
-					if (controlledActiveId === undefined) {
-						machine.setActive(id);
-					} else {
-						onActiveChange?.(id);
-					}
-				},
-				spring: springConfig(),
-				variant,
-				orientation,
-			});
+			connection = makeConnection();
 
 			requestAnimationFrame(() => {
 				measure();

@@ -124,6 +124,7 @@ const menuInstance = createMenu(sidebar, {
 		if (!nextRoute) return;
 		route = nextRoute.id;
 		window.history.replaceState(null, "", nextRoute.hash);
+		menuInstance.setActive(id);
 		updateRouteDisplay();
 	},
 	items: MENU_ITEMS.map((item) => ({ id: item.id, label: item.label })),
