@@ -71,6 +71,7 @@ interface MenuContextValue {
 	activeId: string | null;
 	setActive(id: string): void;
 	registerIndicator(node: SVGRectElement | SVGPathElement | null): void;
+	registerGhostIndicator(node: SVGRectElement | null): void;
 	rootRef: React.RefObject<HTMLElement | null>;
 	attrs: ReturnType<typeof getMenuAttrs>;
 	filterId: string;
@@ -124,6 +125,7 @@ function Root({
 
 	const rootRef = useRef<HTMLElement | null>(null);
 	const [indicatorNode, setIndicatorNode] = useState<SVGRectElement | SVGPathElement | null>(null);
+	const [ghostNode, setGhostNode] = useState<SVGRectElement | null>(null);
 	const [size, setSize] = useState({ width: 0, height: 0 });
 	const activeIdRef = useRef<string | null>(snapshot.activeId);
 	activeIdRef.current = snapshot.activeId;
@@ -197,6 +199,7 @@ function Root({
 		const connection = connectMenu({
 			root,
 			indicator: indicatorNode,
+			ghostIndicator: ghostNode,
 			getActiveId: () => activeIdRef.current,
 			onSelect(id) {
 				if (controlledActiveIdRef.current === undefined) {
@@ -215,7 +218,7 @@ function Root({
 			connection.destroy();
 			connectionRef.current = null;
 		};
-	}, [indicatorNode, machine, springConfig, variant, orientation]);
+	}, [indicatorNode, ghostNode, machine, springConfig, variant, orientation]);
 
 	useEffect(() => {
 		connectionRef.current?.sync(false);
@@ -240,11 +243,16 @@ function Root({
 		setIndicatorNode(node);
 	}, []);
 
+	const registerGhostIndicator = useCallback((node: SVGRectElement | null) => {
+		setGhostNode(node);
+	}, []);
+
 	const contextValue = useMemo<MenuContextValue>(
 		() => ({
 			activeId: snapshot.activeId,
 			setActive,
 			registerIndicator,
+			registerGhostIndicator,
 			rootRef,
 			attrs,
 			filterId,
@@ -257,6 +265,7 @@ function Root({
 			snapshot.activeId,
 			setActive,
 			registerIndicator,
+			registerGhostIndicator,
 			attrs,
 			filterId,
 			fill,
@@ -352,6 +361,17 @@ const Indicator = memo(function Indicator({ fill, blur, className }: MenuIndicat
 					/>
 				) : (
 					<g filter={`url(#${context.filterId})`}>
+						<rect
+							ref={context.registerGhostIndicator}
+							x={0}
+							y={0}
+							width={0}
+							height={0}
+							rx={0}
+							ry={0}
+							opacity={0}
+							style={{ fill: effectiveFill }}
+						/>
 						<rect
 							ref={context.registerIndicator}
 							{...context.attrs.indicator}

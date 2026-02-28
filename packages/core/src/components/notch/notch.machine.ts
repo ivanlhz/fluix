@@ -74,7 +74,12 @@ export function createNotchMachine(initialConfig?: NotchConfig): NotchMachine {
 	}
 
 	function configure(config: NotchConfig) {
-		store.update((prev) => ({ ...prev, config: { ...prev.config, ...config } }));
+		store.update((prev) => {
+			const merged = { ...prev.config, ...config };
+			const keys = Object.keys(merged) as (keyof NotchConfig)[];
+			if (keys.every((k) => prev.config[k] === merged[k])) return prev;
+			return { ...prev, config: merged };
+		});
 	}
 
 	function destroy() {

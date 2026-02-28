@@ -1,5 +1,5 @@
 import { type FluixPosition, Menu, Notch, Toaster, fluix } from "@fluix-ui/react";
-import type { NotchTrigger } from "@fluix-ui/core";
+import type { MenuVariant, NotchTrigger } from "@fluix-ui/core";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 const POSITIONS: FluixPosition[] = [
@@ -53,6 +53,7 @@ export default function App() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [position, setPosition] = useState<FluixPosition>("top-right");
 	const [layout, setLayout] = useState<LayoutMode>("stack");
+	const [menuVariant, setMenuVariant] = useState<MenuVariant>("tab");
 	const [notchTrigger, setNotchTrigger] = useState<NotchTrigger>("hover");
 	const [notchOpen, setNotchOpen] = useState(false);
 	const [route, setRoute] = useState<MenuRouteId>(() =>
@@ -124,9 +125,17 @@ export default function App() {
 				<div className="demo-sidebar-brand">Fluix</div>
 				<div className="demo-sidebar-subtitle">Gooey Navigation</div>
 
+				<button
+					type="button"
+					onClick={() => setMenuVariant((v) => (v === "tab" ? "pill" : "tab"))}
+					className="demo-pill demo-variant-toggle"
+				>
+					{menuVariant === "tab" ? "Tab" : "Pill"}
+				</button>
+
 				<Menu.Root
 					orientation={isMobile ? "horizontal" : "vertical"}
-					variant="tab"
+					variant={menuVariant}
 					theme={theme}
 					activeId={menuReady ? route : null}
 					onActiveChange={handleRouteChange}

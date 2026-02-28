@@ -28,6 +28,15 @@
 
 [data-fluix-menu][data-orientation="vertical"] [data-fluix-menu-list] {
 	flex-direction: column;
+	align-items: flex-start;
+}
+
+[data-fluix-menu][data-orientation="vertical"][data-variant="tab"] [data-fluix-menu-list] {
+	align-items: stretch;
+}
+
+[data-fluix-menu][data-orientation="vertical"] [data-fluix-menu-item] {
+	text-align: start;
 }
 
 [data-fluix-menu][data-orientation="horizontal"] [data-fluix-menu-list] {

@@ -4,6 +4,7 @@ import type { MenuOrientation, MenuVariant } from "./menu.types";
 export interface MenuConnectOptions {
 	root: HTMLElement;
 	indicator: SVGRectElement | SVGPathElement;
+	ghostIndicator?: SVGRectElement | null;
 	getActiveId(): string | null;
 	onSelect?(id: string): void;
 	spring?: SpringConfig;
@@ -182,8 +183,15 @@ function frameEquals(a: IndicatorFrame | null, b: IndicatorFrame | null): boolea
 
 /**
  * Simulate a spring from 0→1 and return normalized sample values.
+ * Results are cached by config to avoid recomputing on every animation.
  */
+const springCache = new Map<string, number[]>();
+
 function simulateSpringValues(config: Required<SpringConfig>): number[] {
+	const key = `${config.stiffness}-${config.damping}-${config.mass}`;
+	const cached = springCache.get(key);
+	if (cached) return cached;
+
 	const { stiffness, damping, mass } = config;
 	const dt = 1 / 120;
 	const maxDuration = 3;
@@ -208,6 +216,7 @@ function simulateSpringValues(config: Required<SpringConfig>): number[] {
 	}
 
 	samples.push(1);
+	springCache.set(key, samples);
 	return samples;
 }
 
@@ -503,85 +512,213 @@ function animateHorizontalTabIndicator(
 	return handle;
 }
 
-const STRETCH_MS = 150;
+function setRectAttrs(el: SVGRectElement, x: number, y: number, w: number, h: number, r: number) {
+	el.setAttribute("x", String(x));
+	el.setAttribute("y", String(y));
+	el.setAttribute("width", String(Math.max(0, w)));
+	el.setAttribute("height", String(Math.max(0, h)));
+	el.setAttribute("rx", String(Math.max(0, r)));
+	el.setAttribute("ry", String(Math.max(0, r)));
+}
 
 /**
- * Pill morph animation — single rect, two phases:
+ * Pill morph animation with gooey two-rect technique:
  *
- * Phase 1 (stretch ~150ms easeOut): rect expands to cover both old and new positions.
- * Phase 2 (contract ~spring):       rect contracts from the stretched shape to the new position.
+ * Main rect:  springs from `from` → `to` position.
+ * Ghost rect: stays at `from` and shrinks to nothing.
+ *
+ * Both rects live inside the gooey SVG filter group, so the blur + color-matrix
+ * merges them into a single organic blob that stretches, deforms when items have
+ * different widths, and "snaps" free from the origin with a satisfying gooey tail.
  */
 function animatePillMorph(
 	rect: SVGRectElement,
+	ghost: SVGRectElement | null | undefined,
 	from: IndicatorFrame,
 	to: IndicatorFrame,
 	spring: Required<SpringConfig>,
+	_orientation?: MenuOrientation,
 ): AnimationHandle {
-	const stretchedX = Math.min(from.x, to.x);
-	const stretchedRight = Math.max(from.x + from.width, to.x + to.width);
-	const stretchedWidth = stretchedRight - stretchedX;
-
-	const contractSamples = simulateSpringValues({
-		stiffness: spring.stiffness * 2.5,
-		damping: spring.damping * 1.6,
+	// Spring for the main rect growing at the target
+	const growSamples = simulateSpringValues({
+		stiffness: spring.stiffness * 1.4,
+		damping: spring.damping * 1.2,
 		mass: spring.mass,
 	});
-	const contractCount = contractSamples.length;
-	const contractMs = (contractCount / 120) * 1000;
-	const totalMs = STRETCH_MS + contractMs;
+	const growCount = growSamples.length;
+	const growMs = (growCount / 120) * 1000;
+
+	// Total animation = grow phase (ghost shrinks in parallel)
+	const totalMs = growMs;
+	// Ghost persists for 80% of the animation to keep the bridge alive
+	const ghostDuration = totalMs * 0.8;
 
 	const startTime = performance.now();
 	let cancelled = false;
 
 	const handle: AnimationHandle = {
 		onfinish: null,
-		cancel() { cancelled = true; },
+		cancel() {
+			cancelled = true;
+			if (ghost) ghost.setAttribute("opacity", "0");
+		},
 	};
 
-	function applyRect(x: number, y: number, w: number, h: number, r: number) {
-		rect.setAttribute("x", String(x));
-		rect.setAttribute("y", String(y));
-		rect.setAttribute("width", String(w));
-		rect.setAttribute("height", String(h));
-		rect.setAttribute("rx", String(r));
-		rect.setAttribute("ry", String(r));
+	// Ghost starts at full FROM position (the "origin" blob)
+	if (ghost) {
+		setRectAttrs(ghost, from.x, from.y, from.width, from.height, from.radius);
+		ghost.setAttribute("opacity", "1");
 	}
+
+	// Main rect starts at zero size centered on TO position
+	const toCx = to.x + to.width / 2;
+	const toCy = to.y + to.height / 2;
+	setRectAttrs(rect, toCx, toCy, 0, 0, 0);
 
 	function tick() {
 		if (cancelled) return;
 		const elapsed = performance.now() - startTime;
+		const progress = Math.min(elapsed / totalMs, 1);
 
-		if (elapsed < STRETCH_MS) {
-			const t = easeOutCubic(elapsed / STRETCH_MS);
-			applyRect(
-				lerp(from.x, stretchedX, t),
-				lerp(from.y, to.y, t),
-				lerp(from.width, stretchedWidth, t),
-				lerp(from.height, to.height, t),
-				lerp(from.radius, to.radius, t),
-			);
-		} else {
-			const phaseElapsed = elapsed - STRETCH_MS;
-			const phaseProgress = Math.min(phaseElapsed / contractMs, 1);
-			const idx = Math.min(Math.floor(phaseProgress * (contractCount - 1)), contractCount - 1);
-			const t = contractSamples[idx];
-			applyRect(
-				lerp(stretchedX, to.x, t),
-				to.y,
-				lerp(stretchedWidth, to.width, t),
-				to.height,
-				to.radius,
-			);
+		// ── Main rect: grows at the TARGET position (spring) ──
+		const idx = Math.min(Math.floor(progress * (growCount - 1)), growCount - 1);
+		const gt = growSamples[idx];
+		setRectAttrs(rect,
+			lerp(toCx, to.x, gt),
+			lerp(toCy, to.y, gt),
+			lerp(0, to.width, gt),
+			lerp(0, to.height, gt),
+			lerp(0, to.radius, gt),
+		);
+
+		// ── Ghost rect: stays at FROM, shrinks slowly + drifts toward target ──
+		if (ghost) {
+			if (elapsed < ghostDuration) {
+				const raw = elapsed / ghostDuration;
+				// Ease-in: starts full, slow shrink, accelerates toward the end
+				const shrink = raw * raw;
+				const scale = 1 - shrink;
+				// Drift ~25% toward target to keep gooey bridge connected
+				const drift = easeOutCubic(raw) * 0.25;
+				const cx = lerp(from.x + from.width / 2, to.x + to.width / 2, drift);
+				const cy = lerp(from.y + from.height / 2, to.y + to.height / 2, drift);
+				const w = from.width * scale;
+				const h = from.height * scale;
+				setRectAttrs(ghost,
+					cx - w / 2,
+					cy - h / 2,
+					w,
+					h,
+					from.radius * scale,
+				);
+			} else {
+				ghost.setAttribute("opacity", "0");
+			}
 		}
 
-		if (elapsed < totalMs) {
+		if (progress < 1) {
 			requestAnimationFrame(tick);
 		} else {
+			if (ghost) ghost.setAttribute("opacity", "0");
 			handle.onfinish?.();
 		}
 	}
 
 	requestAnimationFrame(tick);
+	return handle;
+}
+
+/**
+ * Collect ordered waypoint frames between oldId and newId (inclusive).
+ * For adjacent items returns [from, to]. For items with gaps: [from, …intermediates, to].
+ */
+function buildPillWaypoints(
+	root: HTMLElement,
+	oldId: string | null,
+	newId: string | null,
+	padding: number,
+	variant: MenuVariant | undefined,
+	orientation: MenuOrientation | undefined,
+	from: IndicatorFrame,
+	to: IndicatorFrame,
+): IndicatorFrame[] {
+	if (!oldId || !newId) return [from, to];
+
+	const items = Array.from(root.querySelectorAll<HTMLElement>(ITEM_SELECTOR));
+	const ids = items.map((el) => el.dataset["menuId"] ?? "");
+	const oldIdx = ids.indexOf(oldId);
+	const newIdx = ids.indexOf(newId);
+
+	if (oldIdx === -1 || newIdx === -1 || Math.abs(newIdx - oldIdx) <= 1) {
+		return [from, to];
+	}
+
+	const step = newIdx > oldIdx ? 1 : -1;
+	const waypoints: IndicatorFrame[] = [from];
+
+	// Read frames for each intermediate item (skip first=old, include last=new)
+	for (let i = oldIdx + step; i !== newIdx; i += step) {
+		const id = ids[i];
+		const frame = readItemFrame(root, id, padding, variant, orientation);
+		if (frame) waypoints.push(frame);
+	}
+
+	waypoints.push(to);
+	return waypoints;
+}
+
+/**
+ * Chain multiple pill morph animations sequentially through waypoints.
+ * Each step is faster so the total feels cohesive, not sluggish.
+ */
+function chainPillMorphs(
+	rect: SVGRectElement,
+	ghost: SVGRectElement | null,
+	waypoints: IndicatorFrame[],
+	spring: Required<SpringConfig>,
+	orientation?: MenuOrientation,
+): AnimationHandle {
+	if (waypoints.length <= 2) {
+		return animatePillMorph(rect, ghost, waypoints[0], waypoints[waypoints.length - 1], spring, orientation);
+	}
+
+	const steps = waypoints.length - 1;
+	let currentStep = 0;
+	let activeAnim: AnimationHandle | null = null;
+
+	// Make each step snappier so the cascade feels fast — stiffer spring per step
+	const stepSpring: Required<SpringConfig> = {
+		stiffness: spring.stiffness * (1 + steps * 0.6),
+		damping: spring.damping * (1 + steps * 0.3),
+		mass: spring.mass,
+	};
+
+	const handle: AnimationHandle = {
+		onfinish: null,
+		cancel() {
+			activeAnim?.cancel();
+			activeAnim = null;
+		},
+	};
+
+	function runStep() {
+		if (currentStep >= steps) {
+			handle.onfinish?.();
+			return;
+		}
+
+		const from = waypoints[currentStep];
+		const to = waypoints[currentStep + 1];
+		activeAnim = animatePillMorph(rect, ghost, from, to, stepSpring, orientation);
+		activeAnim.onfinish = () => {
+			currentStep++;
+			// Apply the completed step so the rect is exactly at the waypoint
+			setRectAttrs(rect, to.x, to.y, to.width, to.height, to.radius);
+			runStep();
+		};
+	}
+
+	runStep();
 	return handle;
 }
 
@@ -636,6 +773,10 @@ export function connectMenu(options: MenuConnectOptions): {
 
 	function apply(frame: IndicatorFrame) {
 		applyFrame(options.indicator, frame, variant, orientation);
+		// Ensure ghost is hidden when not animating
+		if (options.ghostIndicator) {
+			(options.ghostIndicator as SVGRectElement).setAttribute("opacity", "0");
+		}
 	}
 
 	const updateIndicator = (immediate = false) => {
@@ -776,11 +917,29 @@ export function connectMenu(options: MenuConnectOptions): {
 					onEnterStart,
 				);
 		} else {
-			animation = animatePillMorph(
-				options.indicator as SVGRectElement,
+			// Build the sequence of waypoints between old and new items.
+			// For adjacent items this is just [from, to].
+			// For distant items: from → intermediate1 → intermediate2 → … → to
+			const waypoints = buildPillWaypoints(
+				options.root,
+				oldActiveId,
+				newActiveId,
+				padding,
+				variant,
+				orientation,
 				from,
 				to,
-				{ stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 },
+			);
+
+			const springConfig = { stiffness: spring.stiffness ?? 170, damping: spring.damping ?? 18, mass: spring.mass ?? 1 };
+			const ghost = (options.ghostIndicator as SVGRectElement | null) ?? null;
+
+			animation = chainPillMorphs(
+				options.indicator as SVGRectElement,
+				ghost,
+				waypoints,
+				springConfig,
+				orientation,
 			);
 		}
 
@@ -848,17 +1007,27 @@ export function connectMenu(options: MenuConnectOptions): {
 		resizeObserver = null;
 	});
 
-	mutationObserver = new MutationObserver(() => {
-		// During tab animation, React may re-render and reset data-state — override it
-		if (animPhase) {
-			enforceAnimStates();
-			return;
-		}
+	function rebuildResizeObserver() {
 		if (!resizeObserver) return;
 		resizeObserver.disconnect();
 		resizeObserver.observe(options.root);
 		for (const item of options.root.querySelectorAll<HTMLElement>(ITEM_SELECTOR)) {
 			resizeObserver.observe(item);
+		}
+	}
+
+	mutationObserver = new MutationObserver((mutations) => {
+		// During tab animation, React may re-render and reset data-state — override it
+		if (animPhase) {
+			enforceAnimStates();
+			return;
+		}
+
+		// Only rebuild ResizeObserver when DOM structure changes (items added/removed).
+		// Attribute-only mutations (data-state) just need a sync, not a full rebuild.
+		const hasStructuralChange = mutations.some((m) => m.type === "childList");
+		if (hasStructuralChange) {
+			rebuildResizeObserver();
 		}
 		sync(false);
 	});

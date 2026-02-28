@@ -196,15 +196,20 @@ export function createToastMachine(): ToastMachine {
 	}
 
 	function dismiss(id: string): void {
-		const { toasts } = store.getSnapshot();
-		const item = toasts.find((t) => t.id === id);
-		if (!item || item.exiting) return;
+		let shouldScheduleRemoval = false;
 
 		// Mark as exiting
-		store.update((prev) => ({
-			...prev,
-			toasts: prev.toasts.map((t) => (t.id === id ? { ...t, exiting: true } : t)),
-		}));
+		store.update((prev) => {
+			const item = prev.toasts.find((t) => t.id === id);
+			if (!item || item.exiting) return prev;
+			shouldScheduleRemoval = true;
+			return {
+				...prev,
+				toasts: prev.toasts.map((t) => (t.id === id ? { ...t, exiting: true } : t)),
+			};
+		});
+
+		if (!shouldScheduleRemoval) return;
 
 		// Remove after exit animation
 		const timer = setTimeout(() => {
@@ -219,17 +224,21 @@ export function createToastMachine(): ToastMachine {
 	}
 
 	function clear(position?: FluixPosition): void {
-		store.update((prev) => ({
-			...prev,
-			toasts: position ? prev.toasts.filter((t) => t.position !== position) : [],
-		}));
+		store.update((prev) => {
+			if (prev.toasts.length === 0) return prev;
+			const filtered = position ? prev.toasts.filter((t) => t.position !== position) : [];
+			if (filtered.length === prev.toasts.length) return prev;
+			return { ...prev, toasts: filtered };
+		});
 	}
 
 	function configure(config: FluixToasterConfig): void {
-		store.update((prev) => ({
-			...prev,
-			config: { ...prev.config, ...config },
-		}));
+		store.update((prev) => {
+			const merged = { ...prev.config, ...config };
+			const keys = Object.keys(merged) as (keyof FluixToasterConfig)[];
+			if (keys.every((k) => prev.config[k] === merged[k])) return prev;
+			return { ...prev, config: merged };
+		});
 	}
 
 	function destroy(): void {
