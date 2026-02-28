@@ -38,6 +38,7 @@ interface MenuContextValue {
 	blur: () => number;
 	size: () => { width: number; height: number };
 	registerIndicator: (node: SVGRectElement | SVGPathElement | null) => void;
+	registerGhostIndicator: (node: SVGRectElement | null) => void;
 	rootEl: () => HTMLElement | null;
 }
 
@@ -114,6 +115,7 @@ export const MenuRoot = defineComponent({
 
 		const rootEl = ref<HTMLElement | null>(null);
 		const indicatorNode = ref<SVGRectElement | SVGPathElement | null>(null);
+		const ghostIndicatorNode = ref<SVGRectElement | null>(null);
 		const size = ref({ width: 0, height: 0 });
 
 		const activeIdRef = { current: snapshot.value.activeId };
@@ -217,6 +219,7 @@ export const MenuRoot = defineComponent({
 			const connection = connectMenu({
 				root,
 				indicator,
+				ghostIndicator: ghostIndicatorNode.value,
 				getActiveId: () => activeIdRef.current,
 				onSelect(id) {
 					if (props.activeId === undefined) {
@@ -264,6 +267,10 @@ export const MenuRoot = defineComponent({
 			indicatorNode.value = node;
 		};
 
+		const registerGhostIndicator = (node: SVGRectElement | null) => {
+			ghostIndicatorNode.value = node;
+		};
+
 		provide(MENU_CONTEXT_KEY, {
 			activeId: () => snapshot.value.activeId,
 			setActive,
@@ -274,6 +281,7 @@ export const MenuRoot = defineComponent({
 			blur: () => resolvedBlur.value,
 			size: () => size.value,
 			registerIndicator,
+			registerGhostIndicator,
 			rootEl: () => rootEl.value,
 		});
 
@@ -336,6 +344,17 @@ export const MenuRoot = defineComponent({
 			} else {
 				svgChildren.push(
 					h("g", { filter: `url(#${filterId})` }, [
+						h("rect", {
+							ref: (el: any) => registerGhostIndicator(el),
+							x: 0,
+							y: 0,
+							width: 0,
+							height: 0,
+							rx: 0,
+							ry: 0,
+							opacity: 0,
+							style: { fill: effectiveFill },
+						}),
 						h("rect", {
 							ref: (el: any) => registerIndicator(el),
 							...a.indicator,

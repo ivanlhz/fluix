@@ -85,6 +85,17 @@ const GOO_MATRIX = "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10";
 					} @else {
 						<g [attr.filter]="'url(#' + filterId + ')'">
 							<rect
+								#ghostIndicatorEl
+								x="0"
+								y="0"
+								width="0"
+								height="0"
+								rx="0"
+								ry="0"
+								opacity="0"
+								[style.fill]="effectiveFill()"
+							/>
+							<rect
 								#indicatorEl
 								[attr.data-fluix-menu-indicator]="''"
 								x="0"
@@ -122,6 +133,7 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy, 
 	@ViewChild("rootEl") rootElRef!: ElementRef<HTMLElement>;
 	@ViewChild("svgEl") svgElRef!: ElementRef<SVGSVGElement>;
 	@ViewChild("indicatorEl") indicatorElRef!: ElementRef<SVGRectElement | SVGPathElement>;
+	@ViewChild("ghostIndicatorEl") ghostIndicatorElRef?: ElementRef<SVGRectElement>;
 	@ContentChildren(FluixMenuItemComponent) menuItems!: QueryList<FluixMenuItemComponent>;
 
 	private ngZone = inject(NgZone);
@@ -297,6 +309,7 @@ export class FluixMenuComponent implements AfterViewInit, OnChanges, OnDestroy, 
 		this.connection = connectMenu({
 			root,
 			indicator,
+			ghostIndicator: this.ghostIndicatorElRef?.nativeElement ?? null,
 			getActiveId: () => this.machine.store.getSnapshot().activeId,
 			onSelect: (id) => {
 				if (this.activeId === undefined) {

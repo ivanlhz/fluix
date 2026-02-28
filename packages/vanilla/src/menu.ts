@@ -117,6 +117,7 @@ export function createMenu(
 	svg.setAttribute("aria-hidden", "true");
 
 	let indicatorEl: SVGRectElement | SVGPathElement;
+	let ghostIndicatorEl: SVGRectElement | null = null;
 
 	if (isTab) {
 		indicatorEl = document.createElementNS(SVG_NS, "path") as SVGPathElement;
@@ -161,6 +162,16 @@ export function createMenu(
 		const gGroup = document.createElementNS(SVG_NS, "g");
 		gGroup.setAttribute("filter", `url(#${filterId})`);
 
+		ghostIndicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
+		ghostIndicatorEl.setAttribute("x", "0");
+		ghostIndicatorEl.setAttribute("y", "0");
+		ghostIndicatorEl.setAttribute("width", "0");
+		ghostIndicatorEl.setAttribute("height", "0");
+		ghostIndicatorEl.setAttribute("rx", "0");
+		ghostIndicatorEl.setAttribute("ry", "0");
+		ghostIndicatorEl.setAttribute("opacity", "0");
+		ghostIndicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
+
 		indicatorEl = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
 		applyAttrs(indicatorEl, attrs.indicator);
 		indicatorEl.setAttribute("x", "0");
@@ -172,6 +183,7 @@ export function createMenu(
 		indicatorEl.setAttribute("opacity", "0");
 		indicatorEl.style.fill = fill ?? "var(--fluix-menu-indicator)";
 
+		gGroup.appendChild(ghostIndicatorEl);
 		gGroup.appendChild(indicatorEl);
 		svg.appendChild(gGroup);
 	}
@@ -245,6 +257,7 @@ export function createMenu(
 	let connection = connectMenu({
 		root: navEl,
 		indicator: indicatorEl,
+		ghostIndicator: ghostIndicatorEl,
 		getActiveId: () => snapshot.activeId,
 		onSelect(id) {
 			if (controlledActiveId === undefined) {
@@ -330,6 +343,7 @@ export function createMenu(
 			connection = connectMenu({
 				root: navEl,
 				indicator: indicatorEl,
+				ghostIndicator: ghostIndicatorEl,
 				getActiveId: () => snapshot.activeId,
 				onSelect(id) {
 					if (controlledActiveId === undefined) {

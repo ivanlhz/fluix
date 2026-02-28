@@ -87,6 +87,7 @@ $effect(() => {
 // Refs
 let rootEl: HTMLElement | null = $state(null);
 let indicatorEl: SVGRectElement | SVGPathElement | null = $state(null);
+let ghostIndicatorEl: SVGRectElement | null = $state(null);
 let size = $state({ width: 0, height: 0 });
 
 const attrs = $derived(getMenuAttrs({ orientation, theme, variant }));
@@ -143,6 +144,7 @@ $effect(() => {
 	connection = connectMenu({
 		root,
 		indicator,
+		ghostIndicator: ghostIndicatorEl,
 		getActiveId: () => activeIdRef,
 		onSelect(id) {
 			if (controlledActiveId === undefined) {
@@ -233,6 +235,17 @@ setContext("fluix-menu", {
 				/>
 			{:else}
 				<g filter="url(#{filterId})">
+					<rect
+						bind:this={ghostIndicatorEl}
+						x={0}
+						y={0}
+						width={0}
+						height={0}
+						rx={0}
+						ry={0}
+						opacity={0}
+						style:fill={effectiveFill}
+					/>
 					<rect
 						bind:this={indicatorEl}
 						{...attrs.indicator}
