@@ -33,10 +33,10 @@ export const NotchSvg = memo(function NotchSvg({
 			<defs>
 				<filter
 					id="fluix-notch-goo"
-					x="-20%"
-					y="-20%"
-					width="140%"
-					height="140%"
+					x="-50%"
+					y="-50%"
+					width="200%"
+					height="200%"
 					colorInterpolationFilters="sRGB"
 				>
 					<feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />

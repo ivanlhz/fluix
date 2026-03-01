@@ -18,13 +18,13 @@ export type {
 	FluixToasterConfig,
 } from "@fluix-ui/core";
 
-export { createToaster } from "./toast";
+export { createToaster } from "./toast/index";
 
-export { createNotch } from "./notch";
-export type { NotchOptions } from "./notch";
+export { createNotch } from "./notch/index";
+export type { NotchOptions } from "./notch/index";
 export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@fluix-ui/core";
 
 // Menu
-export { createMenu } from "./menu";
-export type { MenuOptions, MenuInstance, MenuItemConfig } from "./menu";
+export { createMenu } from "./menu/index";
+export type { MenuOptions, MenuInstance, MenuItemConfig } from "./menu/index";
 export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";

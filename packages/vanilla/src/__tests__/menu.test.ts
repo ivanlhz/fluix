@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { createMenu } from "../menu";
+import { createMenu } from "../menu/index";
 
 beforeAll(() => {
 	// jsdom doesn't include ResizeObserver or MutationObserver fully

@@ -54,7 +54,10 @@
       "Bash(git mv:*)",
       "Bash(mv:*)",
       "Bash(wc:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(ls:*)"
     ]
   }
 }
