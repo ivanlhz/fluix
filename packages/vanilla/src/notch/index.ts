@@ -87,13 +87,20 @@ function springCfg(ctx: NotchCtx): SpringConfig { return ctx.spring ?? FLUIX_SPR
 
 function animateRect(ctx: NotchCtx) {
 	const d = dims(ctx);
-	if (d.tW === ctx.prev.w && d.tH === ctx.prev.h) return;
+	const toX = (d.rW - d.tW) / 2, toY = (d.rH - d.tH) / 2;
+
+	if (d.tW === ctx.prev.w && d.tH === ctx.prev.h) {
+		// Target size unchanged but reserve area may have shifted — reposition without animation
+		const el = ctx.dom.svgRectEl;
+		const rx = (d.tW === d.collW && d.tH === d.collH) ? d.collW / 2 : ctx.roundness;
+		for (const [k, v] of Object.entries({ x: toX, y: toY, width: d.tW, height: d.tH, rx, ry: rx })) el.setAttribute(k, String(v));
+		return;
+	}
 
 	if (ctx.currentAnim) { ctx.currentAnim.cancel(); ctx.currentAnim = null; }
 
 	const fromW = ctx.prev.w, fromH = ctx.prev.h;
 	const fromX = (d.rW - fromW) / 2, fromY = (d.rH - fromH) / 2;
-	const toX = (d.rW - d.tW) / 2, toY = (d.rH - d.tH) / 2;
 	ctx.prev.w = d.tW; ctx.prev.h = d.tH;
 
 	const wasCollapsed = fromW === d.collW && fromH === d.collH;
