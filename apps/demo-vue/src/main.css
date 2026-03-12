@@ -100,10 +100,6 @@ body {
 	--fluix-menu-indicator: var(--demo-sidebar-active-bg);
 }
 
-.demo-sidebar-menu[data-fluix-menu][data-variant="tab"] {
-	width: 100%;
-}
-
 .demo-shell.theme-light .demo-sidebar-menu[data-fluix-menu] {
 	--fluix-menu-active-color: #252843;
 }
@@ -327,6 +323,58 @@ body {
 
 .flight-card-button {
 	width: 100%;
+}
+
+/* ---------- Tooltip demo ---------- */
+
+.demo-label {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--demo-muted);
+}
+
+.demo-tooltip-trigger {
+  position: relative;
+  display: inline-flex;
+}
+
+.demo-tooltip-group {
+  gap: 0.4rem;
+}
+
+.demo-pill-icon {
+  min-width: 46px;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.demo-tooltip-rich-content {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.demo-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  border-radius: 5px;
+  background: var(--demo-pill-bg);
+  border: 1px solid var(--demo-card-border);
+  color: var(--demo-text);
 }
 
 @media (max-width: 760px) {

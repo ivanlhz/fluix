@@ -1,6 +1,6 @@
-import { type FluixPosition, Menu, Notch, Toaster, fluix } from "@fluix-ui/react";
-import type { MenuVariant, NotchTrigger } from "@fluix-ui/core";
-import { useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react";
+import type { MenuVariant, NotchTrigger, TooltipPosition } from "@fluix-ui/core";
+import { type FluixPosition, Menu, Notch, Toaster, Tooltip, fluix } from "@fluix-ui/react";
+import { useEffect, useMemo, useReducer, useSyncExternalStore } from "react";
 
 const POSITIONS: FluixPosition[] = [
 	"top-left",
@@ -16,9 +16,16 @@ type LayoutMode = (typeof LAYOUTS)[number];
 
 const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
 
+const TOOLTIP_POSITIONS: TooltipPosition[] = ["top", "bottom", "left", "right"];
+
 const MENU_ITEMS = [
 	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
-	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
+	{
+		id: "courses",
+		label: "Mis cursos",
+		hash: "#courses",
+		subtitle: "Cursos activos, completados y progreso.",
+	},
 	{
 		id: "calendar",
 		label: "Calendario",
@@ -58,6 +65,7 @@ interface DemoState {
 	menuVariant: MenuVariant;
 	notchTrigger: NotchTrigger;
 	notchOpen: boolean;
+	tooltipPosition: TooltipPosition;
 	route: MenuRouteId;
 	layoutEntered: boolean;
 	menuReady: boolean;
@@ -70,6 +78,7 @@ type DemoAction =
 	| { type: "TOGGLE_MENU_VARIANT" }
 	| { type: "SET_NOTCH_TRIGGER"; value: NotchTrigger }
 	| { type: "SET_NOTCH_OPEN"; value: boolean }
+	| { type: "SET_TOOLTIP_POSITION"; value: TooltipPosition }
 	| { type: "SET_ROUTE"; value: MenuRouteId }
 	| { type: "INIT" };
 
@@ -87,6 +96,8 @@ function demoReducer(state: DemoState, action: DemoAction): DemoState {
 			return { ...state, notchTrigger: action.value, notchOpen: false };
 		case "SET_NOTCH_OPEN":
 			return { ...state, notchOpen: action.value };
+		case "SET_TOOLTIP_POSITION":
+			return { ...state, tooltipPosition: action.value };
 		case "SET_ROUTE":
 			return { ...state, route: action.value };
 		case "INIT":
@@ -104,7 +115,9 @@ function getInitialState(): DemoState {
 		menuVariant: "tab",
 		notchTrigger: "hover",
 		notchOpen: false,
-		route: typeof window === "undefined" ? MENU_ITEMS[0].id : getMenuRouteFromHash(window.location.hash),
+		tooltipPosition: "top" as TooltipPosition,
+		route:
+			typeof window === "undefined" ? MENU_ITEMS[0].id : getMenuRouteFromHash(window.location.hash),
 		layoutEntered: false,
 		menuReady: false,
 	};
@@ -212,7 +225,9 @@ function DemoPlayground({
 							<span className="theme-toggle-track">
 								<span className="theme-toggle-thumb" />
 							</span>
-							<span className="theme-toggle-label">{state.theme === "dark" ? "Dark" : "Light"}</span>
+							<span className="theme-toggle-label">
+								{state.theme === "dark" ? "Dark" : "Light"}
+							</span>
 						</label>
 					</div>
 				</div>
@@ -373,9 +388,7 @@ function DemoPlayground({
 					<div className="demo-header">
 						<div>
 							<h2 className="demo-title">Notch Menu</h2>
-							<p className="demo-subtitle">
-								Liquid expanding pill with gooey SVG morphing.
-							</p>
+							<p className="demo-subtitle">Liquid expanding pill with gooey SVG morphing.</p>
 						</div>
 					</div>
 
@@ -403,6 +416,150 @@ function DemoPlayground({
 							</button>
 						</div>
 					)}
+				</div>
+
+				<div className="demo-card">
+					<div className="demo-header">
+						<div>
+							<h2 className="demo-title">Tooltip</h2>
+							<p className="demo-subtitle">
+								Spring entrance with gooey morph between grouped triggers.
+							</p>
+						</div>
+					</div>
+
+					<div className="demo-row">
+						{TOOLTIP_POSITIONS.map((pos) => (
+							<button
+								key={pos}
+								type="button"
+								onClick={() => dispatch({ type: "SET_TOOLTIP_POSITION", value: pos })}
+								className={`demo-pill ${state.tooltipPosition === pos ? "is-active" : ""}`}
+							>
+								{pos}
+							</button>
+						))}
+					</div>
+
+					<hr className="demo-divider" />
+
+					<p className="demo-label">Individual</p>
+					<div className="demo-row">
+						<Tooltip.Root position={state.tooltipPosition}>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Save
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Save your progress</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root position={state.tooltipPosition}>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Delete
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Remove this item permanently</Tooltip.Content>
+						</Tooltip.Root>
+					</div>
+
+					<hr className="demo-divider" />
+
+					<p className="demo-label">Grouped (gooey morph)</p>
+					<div className="demo-tooltip-group demo-row">
+						<Tooltip.Root position={state.tooltipPosition} group="formatting">
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill demo-pill-icon">
+									<strong>B</strong>
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Bold</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root position={state.tooltipPosition} group="formatting">
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill demo-pill-icon">
+									<em>I</em>
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Italic</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root position={state.tooltipPosition} group="formatting">
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill demo-pill-icon">
+									<u>U</u>
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Underline</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root position={state.tooltipPosition} group="formatting">
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill demo-pill-icon">
+									<s>S</s>
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Strikethrough</Tooltip.Content>
+						</Tooltip.Root>
+					</div>
+
+					<hr className="demo-divider" />
+
+					<p className="demo-label">Custom colors</p>
+					<div className="demo-row">
+						<Tooltip.Root
+							position={state.tooltipPosition}
+							bgColor="oklch(0.55 0.25 270)"
+							textColor="#fff"
+						>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Purple
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Violet vibes</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root
+							position={state.tooltipPosition}
+							bgColor="oklch(0.65 0.2 145)"
+							textColor="#fff"
+						>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Green
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Earthy tones</Tooltip.Content>
+						</Tooltip.Root>
+						<Tooltip.Root
+							position={state.tooltipPosition}
+							bgColor="oklch(0.7 0.18 50)"
+							textColor="#1a1a1a"
+						>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Amber
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>Warm warning</Tooltip.Content>
+						</Tooltip.Root>
+					</div>
+
+					<hr className="demo-divider" />
+
+					<p className="demo-label">Rich content</p>
+					<div className="demo-row">
+						<Tooltip.Root position={state.tooltipPosition}>
+							<Tooltip.Trigger>
+								<button type="button" className="demo-pill">
+									Keyboard shortcut
+								</button>
+							</Tooltip.Trigger>
+							<Tooltip.Content>
+								<span className="demo-tooltip-rich-content" style={{ display: "flex" }}>
+									Copy <kbd className="demo-kbd">Ctrl</kbd> + <kbd className="demo-kbd">C</kbd>
+								</span>
+							</Tooltip.Content>
+						</Tooltip.Root>
+					</div>
 				</div>
 			</div>
 		</section>
@@ -461,18 +618,43 @@ export default function App() {
 						: undefined
 				}
 				pill={
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
 						<line x1="3" y1="6" x2="21" y2="6" />
 						<line x1="3" y1="12" x2="21" y2="12" />
 						<line x1="3" y1="18" x2="21" y2="18" />
 					</svg>
 				}
 				content={
-					<nav style={{ display: "flex", gap: "1rem", padding: "0.25rem 1.75rem", fontSize: "0.85rem", fontWeight: 500 }}>
-						<a href="#home" style={{ color: "inherit", textDecoration: "none" }}>Home</a>
-						<a href="#about" style={{ color: "inherit", textDecoration: "none" }}>About</a>
-						<a href="#work" style={{ color: "inherit", textDecoration: "none" }}>Work</a>
-						<a href="#contact" style={{ color: "inherit", textDecoration: "none" }}>Contact</a>
+					<nav
+						style={{
+							display: "flex",
+							gap: "1rem",
+							padding: "0.25rem 1.75rem",
+							fontSize: "0.85rem",
+							fontWeight: 500,
+						}}
+					>
+						<a href="#home" style={{ color: "inherit", textDecoration: "none" }}>
+							Home
+						</a>
+						<a href="#about" style={{ color: "inherit", textDecoration: "none" }}>
+							About
+						</a>
+						<a href="#work" style={{ color: "inherit", textDecoration: "none" }}>
+							Work
+						</a>
+						<a href="#contact" style={{ color: "inherit", textDecoration: "none" }}>
+							Contact
+						</a>
 					</nav>
 				}
 			/>

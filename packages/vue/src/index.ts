@@ -27,3 +27,7 @@ export type { ToasterProps } from "./toast";
 // Menu
 export { MenuRoot, MenuItem } from "./menu";
 export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";
+
+// Tooltip
+export { TooltipRoot, TooltipTrigger, TooltipContent } from "./tooltip";
+export type { TooltipConfig, TooltipPosition, TooltipTheme } from "@fluix-ui/core";

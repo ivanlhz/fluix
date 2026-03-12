@@ -80,3 +80,30 @@ export type {
 	MenuVariant,
 	MenuTheme,
 } from "./components/menu";
+
+// Tooltip component
+export {
+	createTooltipMachine,
+	TOOLTIP_DEFAULTS,
+	getTooltipAttrs,
+	connectTooltip,
+	createTooltipGooey,
+	shouldShowInstantly,
+	getActiveInGroup,
+	setActiveInGroup,
+	clearActiveInGroup,
+	resetGroups,
+} from "./components/tooltip";
+
+export type {
+	TooltipMachine,
+	TooltipMachineState,
+	TooltipAttrs,
+	TooltipConnectOptions,
+	TooltipConnection,
+	TooltipGooey,
+	TooltipGooeyOptions,
+	TooltipConfig,
+	TooltipPosition,
+	TooltipTheme,
+} from "./components/tooltip";

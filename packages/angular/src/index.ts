@@ -13,7 +13,13 @@
  */
 
 export { fluix } from "@fluix-ui/core";
-export { FluixToastService, FluixToasterComponent, FluixToastItemComponent, FluixToastIconComponent, getToastState$ } from "./toast";
+export {
+	FluixToastService,
+	FluixToasterComponent,
+	FluixToastItemComponent,
+	FluixToastIconComponent,
+	getToastState$,
+} from "./toast";
 export { FluixAttrsDirective } from "./attrs.directive";
 
 export type {
@@ -33,3 +39,6 @@ export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@flui
 
 export { FluixMenuComponent, FluixMenuItemComponent } from "./menu";
 export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";
+
+export { FluixTooltipComponent } from "./tooltip";
+export type { TooltipConfig, TooltipPosition, TooltipTheme } from "@fluix-ui/core";

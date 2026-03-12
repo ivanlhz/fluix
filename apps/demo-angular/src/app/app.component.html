@@ -151,6 +151,84 @@
           </div>
         }
       </div>
+
+      <div class="demo-card">
+        <div class="demo-header">
+          <div>
+            <h2 class="demo-title">Tooltip</h2>
+            <p class="demo-subtitle">
+              Spring entrance with gooey morph between grouped triggers.
+            </p>
+          </div>
+        </div>
+
+        <div class="demo-row">
+          @for (pos of tooltipPositions; track pos) {
+            <button
+              type="button"
+              class="demo-pill"
+              [class.is-active]="tooltipPosition() === pos"
+              (click)="setTooltipPosition(pos)"
+            >
+              {{ pos }}
+            </button>
+          }
+        </div>
+
+        <hr class="demo-divider" />
+
+        <p class="demo-label">Individual</p>
+        <div class="demo-row">
+          <fluix-tooltip [position]="tooltipPosition()" text="Save your progress">
+            <button type="button" class="demo-pill">Save</button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" text="Remove this item permanently">
+            <button type="button" class="demo-pill">Delete</button>
+          </fluix-tooltip>
+        </div>
+
+        <hr class="demo-divider" />
+
+        <p class="demo-label">Grouped (gooey morph)</p>
+        <div class="demo-tooltip-group demo-row">
+          <fluix-tooltip [position]="tooltipPosition()" group="formatting" text="Bold">
+            <button type="button" class="demo-pill demo-pill-icon"><strong>B</strong></button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" group="formatting" text="Italic">
+            <button type="button" class="demo-pill demo-pill-icon"><em>I</em></button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" group="formatting" text="Underline">
+            <button type="button" class="demo-pill demo-pill-icon"><u>U</u></button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" group="formatting" text="Strikethrough">
+            <button type="button" class="demo-pill demo-pill-icon"><s>S</s></button>
+          </fluix-tooltip>
+        </div>
+
+        <hr class="demo-divider" />
+
+        <p class="demo-label">Custom colors</p>
+        <div class="demo-row">
+          <fluix-tooltip [position]="tooltipPosition()" [bgColor]="'oklch(0.55 0.25 270)'" [textColor]="'#fff'" text="Violet vibes">
+            <button type="button" class="demo-pill">Purple</button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" [bgColor]="'oklch(0.65 0.2 145)'" [textColor]="'#fff'" text="Earthy tones">
+            <button type="button" class="demo-pill">Green</button>
+          </fluix-tooltip>
+          <fluix-tooltip [position]="tooltipPosition()" [bgColor]="'oklch(0.7 0.18 50)'" [textColor]="'#1a1a1a'" text="Warm warning">
+            <button type="button" class="demo-pill">Amber</button>
+          </fluix-tooltip>
+        </div>
+
+        <hr class="demo-divider" />
+
+        <p class="demo-label">Rich content</p>
+        <div class="demo-row">
+          <fluix-tooltip [position]="tooltipPosition()" text="Copy Ctrl + C">
+            <button type="button" class="demo-pill">Keyboard shortcut</button>
+          </fluix-tooltip>
+        </div>
+      </div>
     </div>
   </section>
 

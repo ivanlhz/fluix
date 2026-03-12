@@ -1,5 +1,13 @@
-import { type FluixPosition, createToaster, createNotch, createMenu, fluix } from "@fluix-ui/vanilla";
-import type { MenuVariant, NotchTrigger } from "@fluix-ui/core";
+import type { MenuVariant, NotchTrigger, TooltipPosition } from "@fluix-ui/core";
+import {
+	type FluixPosition,
+	type TooltipInstance,
+	createMenu,
+	createNotch,
+	createToaster,
+	createTooltip,
+	fluix,
+} from "@fluix-ui/vanilla";
 import "@fluix-ui/css";
 import "./main.css";
 
@@ -19,9 +27,24 @@ type LayoutMode = (typeof LAYOUTS)[number];
 
 const MENU_ITEMS = [
 	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
-	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
-	{ id: "calendar", label: "Calendario", hash: "#calendar", subtitle: "Eventos, clases y entregas de la semana." },
-	{ id: "messages", label: "Mensajes", hash: "#messages", subtitle: "Notificaciones y conversaciones recientes." },
+	{
+		id: "courses",
+		label: "Mis cursos",
+		hash: "#courses",
+		subtitle: "Cursos activos, completados y progreso.",
+	},
+	{
+		id: "calendar",
+		label: "Calendario",
+		hash: "#calendar",
+		subtitle: "Eventos, clases y entregas de la semana.",
+	},
+	{
+		id: "messages",
+		label: "Mensajes",
+		hash: "#messages",
+		subtitle: "Notificaciones y conversaciones recientes.",
+	},
 ] as const;
 
 type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
@@ -31,11 +54,15 @@ function getMenuRouteFromHash(hash: string): MenuRouteId {
 	return found?.id ?? MENU_ITEMS[0].id;
 }
 
+const TOOLTIP_POSITIONS: TooltipPosition[] = ["top", "bottom", "left", "right"];
+
 let theme: "light" | "dark" = "dark";
 let position: FluixPosition = "top-right";
 let layout: LayoutMode = "stack";
 let menuVariant: MenuVariant = "tab";
 let route: MenuRouteId = getMenuRouteFromHash(window.location.hash);
+let tooltipPosition: TooltipPosition = "top";
+const tooltipInstances: TooltipInstance[] = [];
 
 const toastTheme = () => (theme === "light" ? "dark" : "light");
 
@@ -157,7 +184,9 @@ themeCheckbox.checked = theme === "dark";
 const themeTrack = el("span", { className: "theme-toggle-track" }, [
 	el("span", { className: "theme-toggle-thumb" }),
 ]);
-const themeLabel = el("span", { className: "theme-toggle-label" }, [theme === "dark" ? "Dark" : "Light"]);
+const themeLabel = el("span", { className: "theme-toggle-label" }, [
+	theme === "dark" ? "Dark" : "Light",
+]);
 themeToggle.appendChild(themeCheckbox);
 themeToggle.appendChild(themeTrack);
 themeToggle.appendChild(themeLabel);
@@ -371,9 +400,7 @@ const notchHeader = el("div", { className: "demo-header" });
 const notchHeaderLeft = el("div");
 notchHeaderLeft.appendChild(el("h2", { className: "demo-title" }, ["Notch Menu"]));
 notchHeaderLeft.appendChild(
-	el("p", { className: "demo-subtitle" }, [
-		"Liquid expanding pill with gooey SVG morphing.",
-	]),
+	el("p", { className: "demo-subtitle" }, ["Liquid expanding pill with gooey SVG morphing."]),
 );
 notchHeader.appendChild(notchHeaderLeft);
 notchCard.appendChild(notchHeader);
@@ -389,7 +416,8 @@ const triggerBtns: HTMLButtonElement[] = [];
 // Create nav content for the notch
 function createNavContent(): HTMLElement {
 	const nav = document.createElement("nav");
-	nav.style.cssText = "display:flex;gap:1rem;padding:0.25rem 1.75rem;font-size:0.85rem;font-weight:500;";
+	nav.style.cssText =
+		"display:flex;gap:1rem;padding:0.25rem 1.75rem;font-size:0.85rem;font-weight:500;";
 	for (const label of ["Home", "About", "Work", "Contact"]) {
 		const a = document.createElement("a");
 		a.href = `#${label.toLowerCase()}`;
@@ -496,6 +524,121 @@ notchCard.appendChild(triggerRow);
 notchCard.appendChild(manualRow);
 
 contentSurface.appendChild(notchCard);
+
+// --- Tooltip Demo ---
+const tooltipCard = el("div", { className: "demo-card" });
+
+const tooltipHeader = el("div", { className: "demo-header" });
+const tooltipHeaderLeft = el("div");
+tooltipHeaderLeft.appendChild(el("h2", { className: "demo-title" }, ["Tooltip"]));
+tooltipHeaderLeft.appendChild(
+	el("p", { className: "demo-subtitle" }, [
+		"Spring entrance with gooey morph between grouped triggers.",
+	]),
+);
+tooltipHeader.appendChild(tooltipHeaderLeft);
+tooltipCard.appendChild(tooltipHeader);
+
+// Position row
+const tooltipPosRow = el("div", { className: "demo-row" });
+const tooltipPosBtns: HTMLButtonElement[] = [];
+
+function updateTooltipPositions() {
+	for (const inst of tooltipInstances) {
+		inst.update({ position: tooltipPosition });
+	}
+}
+
+for (const pos of TOOLTIP_POSITIONS) {
+	const btn = pill(
+		pos,
+		() => {
+			tooltipPosition = pos;
+			for (const b of tooltipPosBtns) {
+				b.className = `demo-pill${b.dataset.tooltipPos === tooltipPosition ? " is-active" : ""}`;
+			}
+			updateTooltipPositions();
+		},
+		pos === tooltipPosition,
+	);
+	btn.dataset.tooltipPos = pos;
+	tooltipPosBtns.push(btn);
+	tooltipPosRow.appendChild(btn);
+}
+tooltipCard.appendChild(tooltipPosRow);
+tooltipCard.appendChild(el("hr", { className: "demo-divider" }));
+
+// Individual tooltips
+tooltipCard.appendChild(el("p", { className: "demo-label" }, ["Individual"]));
+const tooltipIndivRow = el("div", { className: "demo-row" });
+
+for (const { label, tip } of [
+	{ label: "Save", tip: "Save your progress" },
+	{ label: "Delete", tip: "Remove this item permanently" },
+]) {
+	const btn = pill(label, () => {});
+	tooltipIndivRow.appendChild(btn);
+	tooltipInstances.push(createTooltip(btn, { content: tip, position: tooltipPosition }));
+}
+tooltipCard.appendChild(tooltipIndivRow);
+tooltipCard.appendChild(el("hr", { className: "demo-divider" }));
+
+// Grouped tooltips (gooey morph)
+tooltipCard.appendChild(el("p", { className: "demo-label" }, ["Grouped (gooey morph)"]));
+const tooltipGroupRow = el("div", { className: "demo-tooltip-group demo-row" });
+
+for (const { label, tip, tag } of [
+	{ label: "B", tip: "Bold", tag: "strong" },
+	{ label: "I", tip: "Italic", tag: "em" },
+	{ label: "U", tip: "Underline", tag: "u" },
+	{ label: "S", tip: "Strikethrough", tag: "s" },
+] as const) {
+	const btn = el("button", { type: "button", className: "demo-pill demo-pill-icon" });
+	const inner = document.createElement(tag);
+	inner.textContent = label;
+	btn.appendChild(inner);
+	tooltipGroupRow.appendChild(btn);
+	tooltipInstances.push(
+		createTooltip(btn, { content: tip, position: tooltipPosition, group: "formatting" }),
+	);
+}
+tooltipCard.appendChild(tooltipGroupRow);
+tooltipCard.appendChild(el("hr", { className: "demo-divider" }));
+
+// Custom colors tooltips
+tooltipCard.appendChild(el("p", { className: "demo-label" }, ["Custom colors"]));
+const tooltipColorRow = el("div", { className: "demo-row" });
+
+for (const { label, tip, bg, text } of [
+	{ label: "Purple", tip: "Violet vibes", bg: "oklch(0.55 0.25 270)", text: "#fff" },
+	{ label: "Green", tip: "Earthy tones", bg: "oklch(0.65 0.2 145)", text: "#fff" },
+	{ label: "Amber", tip: "Warm warning", bg: "oklch(0.7 0.18 50)", text: "#1a1a1a" },
+]) {
+	const btn = pill(label, () => {});
+	tooltipColorRow.appendChild(btn);
+	tooltipInstances.push(
+		createTooltip(btn, {
+			content: tip,
+			position: tooltipPosition,
+			bgColor: bg,
+			textColor: text,
+		}),
+	);
+}
+tooltipCard.appendChild(tooltipColorRow);
+tooltipCard.appendChild(el("hr", { className: "demo-divider" }));
+
+// Rich content tooltip
+tooltipCard.appendChild(el("p", { className: "demo-label" }, ["Rich content"]));
+const tooltipRichRow = el("div", { className: "demo-row" });
+const richBtn = pill("Keyboard shortcut", () => {});
+tooltipRichRow.appendChild(richBtn);
+tooltipInstances.push(
+	createTooltip(richBtn, { content: "Copy Ctrl + C", position: tooltipPosition }),
+);
+tooltipCard.appendChild(tooltipRichRow);
+
+contentSurface.appendChild(tooltipCard);
 
 contentSection.appendChild(contentSurface);
 shell.appendChild(contentSection);

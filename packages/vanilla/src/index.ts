@@ -28,3 +28,8 @@ export type { NotchConfig, NotchPosition, NotchTrigger, NotchTheme } from "@flui
 export { createMenu } from "./menu/index";
 export type { MenuOptions, MenuInstance, MenuItemConfig } from "./menu/index";
 export type { MenuOrientation, MenuVariant, MenuTheme } from "@fluix-ui/core";
+
+// Tooltip
+export { createTooltip } from "./tooltip/index";
+export type { TooltipOptions, TooltipInstance } from "./tooltip/index";
+export type { TooltipConfig, TooltipPosition, TooltipTheme } from "@fluix-ui/core";

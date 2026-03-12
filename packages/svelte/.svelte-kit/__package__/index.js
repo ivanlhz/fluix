@@ -12,3 +12,5 @@ export { Toaster, createFluixToasts } from "./toast";
 export { Notch } from "./notch";
 // Menu
 export { Menu, MenuItem } from "./menu";
+// Tooltip
+export { Tooltip, TooltipTrigger, TooltipContent } from "./tooltip";

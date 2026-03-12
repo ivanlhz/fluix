@@ -110,9 +110,13 @@
 [data-fluix-menu][data-variant="tab"] {
 	background: transparent;
 	border-radius: 0;
-	padding-inline: 0;
-	padding-block-start: 0;
+	padding: 0;	
 	overflow: visible;
+}
+
+[data-fluix-menu][data-orientation="vertical"] {
+	display: flex;
+	width: 100%;
 }
 
 [data-fluix-menu][data-variant="tab"] [data-fluix-menu-canvas] svg {

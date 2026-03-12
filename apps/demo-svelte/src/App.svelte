@@ -1,5 +1,18 @@
 <script lang="ts">
-import { type FluixPosition, type NotchTrigger, type MenuVariant, fluix, Menu, MenuItem, Notch, Toaster } from "@fluix-ui/svelte";
+import {
+	type FluixPosition,
+	Menu,
+	MenuItem,
+	type MenuVariant,
+	Notch,
+	type NotchTrigger,
+	Toaster,
+	Tooltip,
+	TooltipContent,
+	type TooltipPosition,
+	TooltipTrigger,
+	fluix,
+} from "@fluix-ui/svelte";
 import type { Snippet } from "svelte";
 
 const POSITIONS: FluixPosition[] = [
@@ -16,9 +29,24 @@ type LayoutMode = (typeof LAYOUTS)[number];
 
 const MENU_ITEMS = [
 	{ id: "profile", label: "Perfil", hash: "#profile", subtitle: "Resumen de usuario y actividad." },
-	{ id: "courses", label: "Mis cursos", hash: "#courses", subtitle: "Cursos activos, completados y progreso." },
-	{ id: "calendar", label: "Calendario", hash: "#calendar", subtitle: "Eventos, clases y entregas de la semana." },
-	{ id: "messages", label: "Mensajes", hash: "#messages", subtitle: "Notificaciones y conversaciones recientes." },
+	{
+		id: "courses",
+		label: "Mis cursos",
+		hash: "#courses",
+		subtitle: "Cursos activos, completados y progreso.",
+	},
+	{
+		id: "calendar",
+		label: "Calendario",
+		hash: "#calendar",
+		subtitle: "Eventos, clases y entregas de la semana.",
+	},
+	{
+		id: "messages",
+		label: "Mensajes",
+		hash: "#messages",
+		subtitle: "Notificaciones y conversaciones recientes.",
+	},
 ] as const;
 
 type MenuRouteId = (typeof MENU_ITEMS)[number]["id"];
@@ -54,11 +82,17 @@ $effect(() => {
 	window.addEventListener("hashchange", handleHashChange);
 	handleHashChange();
 
-	const raf = requestAnimationFrame(() => { layoutEntered = true; });
-	const menuTimer = setTimeout(() => { menuReady = true; }, 700);
+	const raf = requestAnimationFrame(() => {
+		layoutEntered = true;
+	});
+	const menuTimer = setTimeout(() => {
+		menuReady = true;
+	}, 700);
 
 	const mql = window.matchMedia("(max-width: 760px)");
-	const onMqlChange = (e: MediaQueryListEvent) => { isMobile = e.matches; };
+	const onMqlChange = (e: MediaQueryListEvent) => {
+		isMobile = e.matches;
+	};
 	mql.addEventListener("change", onMqlChange);
 
 	return () => {
@@ -108,6 +142,10 @@ let flightData = $state<{
 const NOTCH_TRIGGERS: NotchTrigger[] = ["hover", "click", "manual"];
 let notchTrigger = $state<NotchTrigger>("hover");
 let notchOpen = $state(false);
+
+// Tooltip demo state
+const TOOLTIP_POSITIONS: TooltipPosition[] = ["top", "bottom", "left", "right"];
+let tooltipPosition = $state<TooltipPosition>("top");
 
 const showPromise = () =>
 	fluix.promise(createBookingPromise(), {
@@ -333,20 +371,130 @@ const showPromise = () =>
 					{/each}
 				</div>
 
-				{#if notchTrigger === "manual"}
-					<div class="demo-row" style="margin-top:1rem;">
-						<button
-							type="button"
-							class="demo-pill"
-							onclick={() => (notchOpen = !notchOpen)}
-						>
-							{notchOpen ? "Close" : "Open"} Notch
-						</button>
-					</div>
-				{/if}
+			{#if notchTrigger === "manual"}
+				<div class="demo-row" style="margin-top:1rem;">
+					<button
+						type="button"
+						class="demo-pill"
+						onclick={() => (notchOpen = !notchOpen)}
+					>
+						{notchOpen ? "Close" : "Open"} Notch
+					</button>
+				</div>
+			{/if}
+		</div>
+
+		<div class="demo-card">
+			<div class="demo-header">
+				<div>
+					<h2 class="demo-title">Tooltip</h2>
+					<p class="demo-subtitle">
+						Spring entrance with gooey morph between grouped triggers.
+					</p>
+				</div>
+			</div>
+
+			<div class="demo-row">
+				{#each TOOLTIP_POSITIONS as pos}
+					<button
+						type="button"
+						class="demo-pill"
+						class:is-active={tooltipPosition === pos}
+						onclick={() => (tooltipPosition = pos)}
+					>
+						{pos}
+					</button>
+				{/each}
+			</div>
+
+			<hr class="demo-divider" />
+
+			<p class="demo-label">Individual</p>
+			<div class="demo-row">
+				<Tooltip position={tooltipPosition}>
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Save</button>
+					</TooltipTrigger>
+					<TooltipContent>Save your progress</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition}>
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Delete</button>
+					</TooltipTrigger>
+					<TooltipContent>Remove this item permanently</TooltipContent>
+				</Tooltip>
+			</div>
+
+			<hr class="demo-divider" />
+
+			<p class="demo-label">Grouped (gooey morph)</p>
+			<div class="demo-tooltip-group demo-row">
+				<Tooltip position={tooltipPosition} group="formatting">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill demo-pill-icon"><strong>B</strong></button>
+					</TooltipTrigger>
+					<TooltipContent>Bold</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition} group="formatting">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill demo-pill-icon"><em>I</em></button>
+					</TooltipTrigger>
+					<TooltipContent>Italic</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition} group="formatting">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill demo-pill-icon"><u>U</u></button>
+					</TooltipTrigger>
+					<TooltipContent>Underline</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition} group="formatting">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill demo-pill-icon"><s>S</s></button>
+					</TooltipTrigger>
+					<TooltipContent>Strikethrough</TooltipContent>
+				</Tooltip>
+			</div>
+
+			<hr class="demo-divider" />
+
+			<p class="demo-label">Custom colors</p>
+			<div class="demo-row">
+				<Tooltip position={tooltipPosition} bgColor="oklch(0.55 0.25 270)" textColor="#fff">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Purple</button>
+					</TooltipTrigger>
+					<TooltipContent>Violet vibes</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition} bgColor="oklch(0.65 0.2 145)" textColor="#fff">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Green</button>
+					</TooltipTrigger>
+					<TooltipContent>Earthy tones</TooltipContent>
+				</Tooltip>
+				<Tooltip position={tooltipPosition} bgColor="oklch(0.7 0.18 50)" textColor="#1a1a1a">
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Amber</button>
+					</TooltipTrigger>
+					<TooltipContent>Warm warning</TooltipContent>
+				</Tooltip>
+			</div>
+
+			<hr class="demo-divider" />
+
+			<p class="demo-label">Rich content</p>
+			<div class="demo-row">
+				<Tooltip position={tooltipPosition}>
+					<TooltipTrigger>
+						<button type="button" class="demo-pill">Keyboard shortcut</button>
+					</TooltipTrigger>
+					<TooltipContent>
+						Copy <kbd class="demo-kbd">Ctrl</kbd> + <kbd class="demo-kbd">C</kbd>
+					</TooltipContent>
+				</Tooltip>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
 	<Toaster config={toasterConfig} />
 
